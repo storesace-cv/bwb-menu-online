@@ -105,9 +105,8 @@ else
       docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < "$f"
       docker exec "$POSTGRES_CONTAINER" psql -U postgres -d postgres -c \
         "INSERT INTO app_schema_migrations (filename, checksum, applied_at) VALUES ('$filename', '$checksum', now());"
-    done
+  done
   fi
-fi
 
 echo "=== Step 3.6: Nginx apply ==="
 if [[ -f "$APP_DIR/deploy/nginx/apply.sh" ]]; then
