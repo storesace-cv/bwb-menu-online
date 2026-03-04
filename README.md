@@ -9,6 +9,8 @@ Menu online por loja (hostname). Next.js + Supabase self-hosted.
 - `migrations/` — SQL com tracking (`app_schema_migrations`) e checksums (idempotente e seguro)
 - Domínio base: `menu.bwb.pt`; por loja: `<nif><store_number>.menu.bwb.pt` (ex.: `9999999991.menu.bwb.pt` para dev)
 
+Estado do projeto e próximos passos: ver [roadmap.md](roadmap.md).
+
 ## Deploy (local → servidor)
 
 1. Configurar SSH: alias `main-srv-01` ou variáveis `BWB_SERVER_IP` / `BWB_SERVER_HOST` (default `38.19.200.55`).
