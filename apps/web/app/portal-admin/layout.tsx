@@ -51,6 +51,7 @@ export default async function PortalAdminLayout({
         <Link href="/portal-admin" style={{ fontWeight: "bold" }}>Portal Admin</Link>
         <span style={{ color: "#666" }}>{mode === "global" ? "Global" : "Loja"}</span>
         {mode === "global" && <Link href="/portal-admin/tenants">Tenants</Link>}
+        {mode === "global" && <Link href="/portal-admin/users">Utilizadores</Link>}
         <Link href="/portal-admin/menu">Menu</Link>
         {mode === "tenant" && <Link href="/portal-admin/items">Itens</Link>}
         <form action="/api/auth/signout" method="post" style={{ marginLeft: "auto" }}>

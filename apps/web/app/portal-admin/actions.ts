@@ -71,6 +71,24 @@ export async function createCategory(_prev: { error?: string } | null, formData:
   return null;
 }
 
+export async function assignRole(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const userId = (formData.get("user_id") as string)?.trim() ?? "";
+  const roleCode = (formData.get("role_code") as string)?.trim() ?? "";
+  const tenantId = (formData.get("tenant_id") as string)?.trim() || null;
+  const storeId = (formData.get("store_id") as string)?.trim() || null;
+  if (!userId || !roleCode) return { error: "Utilizador e role obrigatórios" };
+  const { error } = await supabase.rpc("admin_assign_role", {
+    p_user_id: userId,
+    p_role_code: roleCode,
+    p_tenant_id: tenantId,
+    p_store_id: storeId,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/users");
+  return null;
+}
+
 export async function createMenuItem(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";
