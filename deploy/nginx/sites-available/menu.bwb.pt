@@ -1,0 +1,36 @@
+# BWB Menu Online — menu.bwb.pt + *.menu.bwb.pt
+# Proxy to app on 127.0.0.1:8103 (8102 is Kong/Supabase).
+# SSL paths: adjust to your cert (certbot / wildcard DNS-01 / Cloudflare origin cert).
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name menu.bwb.pt *.menu.bwb.pt;
+    # Redirect to HTTPS if you use certbot; otherwise remove or comment.
+    # return 301 https://$host$request_uri;
+    location / {
+        proxy_pass http://127.0.0.1:8103;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Uncomment and adjust paths when SSL is configured (e.g. certbot, wildcard).
+# server {
+#     listen 443 ssl http2;
+#     listen [::]:443 ssl http2;
+#     server_name menu.bwb.pt *.menu.bwb.pt;
+#     ssl_certificate     /etc/letsencrypt/live/menu.bwb.pt/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/menu.bwb.pt/privkey.pem;
+#     location / {
+#         proxy_pass http://127.0.0.1:8103;
+#         proxy_http_version 1.1;
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         proxy_set_header X-Forwarded-Proto $scheme;
+#     }
+# }

@@ -1,0 +1,35 @@
+# Instância Supabase: menu-online
+
+Referência da instância Supabase self-hosted usada pelo BWB Menu Online.
+
+| Campo | Valor |
+|-------|--------|
+| Project name | menu-online |
+| Domain | menu.bwb.pt |
+| Public URL | https://menu.bwb.pt |
+| Instance dir | /srv/supabase/instances/menu-online |
+
+## Portas no servidor
+
+### Kong (API gateway — localhost only)
+
+- **HTTP:** 127.0.0.1:8102 → container 8000
+- **HTTPS:** 127.0.0.1:9102 → container 8443
+
+### Analytics (localhost only)
+
+- **HTTP:** 127.0.0.1:4002 → container 4000
+
+### Supavisor (publicado no host)
+
+- **Postgres:** 0.0.0.0:5434 → container 5432
+- **Pooler (transaction):** 0.0.0.0:6545 → container 6543
+
+## App BWB Menu Online (porta 8103)
+
+A app Next.js escuta em **127.0.0.1:8103** para não colidir com Kong (8102). O Nginx faz proxy de `menu.bwb.pt` e `*.menu.bwb.pt` para 8103.
+
+## Ligação da app ao Supabase
+
+- **API/REST (Supabase client):** usar a Public URL `https://menu.bwb.pt` em `NEXT_PUBLIC_SUPABASE_URL`.
+- **Migrações / acesso directo à BD:** usar `host=127.0.0.1 port=5434` (Supavisor) ou o container Postgres da instância, conforme deteção em `deploy/remote-update.sh` (variável `SUPABASE_POSTGRES_CONTAINER` ou deteção por imagem/nome).
