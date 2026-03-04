@@ -146,6 +146,8 @@ if [[ -f "$APP_DIR/.env" ]] && [[ -f "$APP_DIR/scripts/bootstrap-superadmin.ts" 
       echo "Bootstrap dev-tenant skipped or failed"
     fi
   fi
+  # A pasta local/ não vem no git nem é sincronizada; o JSON de demo deve existir no servidor
+  # em APP_DIR/local/menu-demo/ (cópia manual ou passo opcional de update.sh que faz scp apenas do ficheiro).
   if [[ -f "$APP_DIR/scripts/bootstrap-demo-from-json.ts" ]]; then
     if (cd "$APP_DIR/scripts" && export APP_DIR && npx tsx bootstrap-demo-from-json.ts 2>/dev/null); then
       echo "Bootstrap demo-from-json OK"
@@ -159,6 +161,14 @@ echo "=== Step 5: Smoke tests ==="
 for i in 1 2 3 4 5; do
   if curl -sf --connect-timeout 2 "$APP_HEALTH_URL" >/dev/null; then
     echo "Health check PASSED"
+    BASE_URL="${APP_HEALTH_URL%/api/health}"
+    if [[ -x "$APP_DIR/scripts/smoke-test-demo.sh" ]]; then
+      if bash "$APP_DIR/scripts/smoke-test-demo.sh" "$BASE_URL"; then
+        echo "Demo smoke tests PASSED"
+      else
+        echo "WARN: Demo smoke tests failed (host/path matrix)"
+      fi
+    fi
     exit 0
   fi
   sleep 2

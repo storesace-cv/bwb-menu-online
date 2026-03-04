@@ -1,5 +1,6 @@
 # Defaults for BWB Menu Online deploy
 # Source this from update.sh (local) or remote-update.sh (server) as needed.
+# DEMO_MENU_JSON (server): default path for demo bootstrap: $APP_DIR/local/menu-demo/menu-demo.json
 
 APP_DIR="${APP_DIR:-/opt/bwb-menu-online}"
 APP_SERVICE_NAME="${APP_SERVICE_NAME:-bwb-menu-online}"

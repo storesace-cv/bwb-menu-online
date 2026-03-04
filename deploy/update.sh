@@ -29,7 +29,9 @@ else
   SSH_TARGET="$BWB_SERVER_HOST"
 fi
 
-# Note: If deploy ever uses rsync to sync repo, exclude: --exclude '/local' --exclude 'local'
+# Regra /local: NUNCA sincronizar a pasta local. Se no futuro existir rsync/scp de árvore do repo,
+# usar: DEPLOY_EXCLUDE_LOCAL="--exclude '/local' --exclude 'local'"; só é permitido copiar o
+# ficheiro JSON explicitamente (ex.: scp do ficheiro único para o servidor).
 # Upload remote script
 if scp -o ConnectTimeout=10 "$SCRIPT_DIR/remote-update.sh" "$SSH_TARGET:$REMOTE_SCRIPT" 2>/dev/null; then
   echo "Uploaded remote-update.sh to $SSH_TARGET:$REMOTE_SCRIPT"

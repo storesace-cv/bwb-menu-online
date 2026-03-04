@@ -36,12 +36,16 @@ Para desenvolvimento sem NET-bo/StoresAce, pode popular o menu a partir de um fi
 
 1. Crie a pasta `local/menu-demo/` na raiz do projeto.
 2. Coloque o ficheiro `menu-demo.json` nessa pasta (formato de exemplo em `scripts/menu-demo.example.json`).
-3. Defina `DEMO_MENU_JSON` no `.env` (ex.: `./local/menu-demo/menu-demo.json` em local, ou `/opt/bwb-menu-online/local/menu-demo/menu-demo.json` no servidor).
+3. Defina `DEMO_MENU_JSON` no `.env` (ex.: `./local/menu-demo/menu-demo.json` em local). No servidor use `DEMO_MENU_JSON=/opt/bwb-menu-online/local/menu-demo/menu-demo.json` (ou path configurado) e crie o ficheiro nesse path manualmente — a pasta `local/` não vai no deploy.
 4. Execute: `cd scripts && npx tsx bootstrap-demo-from-json.ts` (usa as mesmas RPCs admin para tenant/store/domain; upsert de alergénios, categorias, itens e associações).
 
-No deploy remoto, se `DEMO_MENU_JSON` estiver definido e o ficheiro existir no servidor, o bootstrap demo é executado automaticamente após os outros bootstraps. No servidor, copie manualmente o JSON para o path configurado (a pasta `local/` não vai no git).
+No deploy remoto, se `DEMO_MENU_JSON` estiver definido e o ficheiro existir no servidor, o bootstrap demo é executado automaticamente após os outros bootstraps.
 
 **Regra:** Nos dados demo não se insere moeda (símbolo/código); o preço é numérico; a moeda vem da configuração da loja na UI.
+
+## Política DEMO FIRST (não regressão)
+
+Qualquer alteração a Nginx, middleware host/path, RLS/RPCs, formatação de preço, imagens ou domínios deve incluir verificação de que o menu demo (dados via JSON e `image_url`) continua a funcionar. Os smoke tests por host/path (`scripts/smoke-test-demo.sh`: menu.bwb.pt/portal-admin, 9999999991.menu.bwb.pt, 9999999991.menu.bwb.pt/portal-admin) devem passar após deploy.
 
 ## Variáveis de ambiente
 

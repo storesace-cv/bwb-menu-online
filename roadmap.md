@@ -15,26 +15,11 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Gestão de utilizadores no Global Admin:** Página `/portal-admin/users` para listar e atribuir utilizadores e roles (tenant/store); criar/convitar utilizador via Admin API do Supabase e inserção em `profiles` e `user_role_bindings`; RPCs `admin_list_users` e `admin_assign_role`; API route POST `/api/portal-admin/users`; acessível apenas a superadmin.
 - **UI Sync no Tenant:** Página `/portal-admin/sync` para disparar sync NET-bo e listar `sync_runs` e eventos; RLS para leitura por loja (migration 008); API com verificação `user_has_store_access`.
 - **Settings do Tenant:** Página `/portal-admin/settings` para tema/branding da loja; tabela `store_settings` (configuração por store); link Definições no layout tenant.
+- **DEMO FIRST:** .gitignore e deploy garantem que /local não é sincronizada; bootstrap demo idempotente com path configurável (DEMO_MENU_JSON); script de smoke tests por host/path (`scripts/smoke-test-demo.sh`: menu.bwb.pt/portal-admin, 9999999991.menu.bwb.pt, 9999999991.menu.bwb.pt/portal-admin); política de non-regression documentada no README.
 
 ---
 
 ## Planeado / pendente
-
-**(P0) DEMO FIRST (não regressão; prioridade máxima)**
-- Garantir que o menu demo funciona end-to-end SEM NET-bo/StoresAce:
-  - DEMO_MENU_JSON apontar para /opt/bwb-menu-online/local/menu-demo/menu-demo.json (ou path configurado)
-  - scripts/bootstrap-demo-from-json.ts continua idempotente e não depende de integrações.
-- Garantir que /local é sempre ignorada:
-  - .gitignore mantém /local
-  - deploy (rsync/scp se existir) exclui /local; NUNCA sincronizar a pasta inteira.
-  - deploy só pode copiar (opcional) o ficheiro JSON explicitamente, nunca o diretório.
-- Smoke tests obrigatórios (após deploy):
-  - menu.bwb.pt/portal-admin (login)
-  - 9999999991.menu.bwb.pt (menu público)
-  - 9999999991.menu.bwb.pt/portal-admin (tenant portal)
-- Política de "non-regression":
-  - qualquer mudança em Nginx, middleware host/path, RLS/RPCs, formatação de preço, imagens, ou domínios deve incluir verificação de que o demo continua a renderizar com dados JSON.
-- `{"detail":"Not Found"}`: matriz de smoke-tests por host/path (menu.bwb.pt/portal-admin; <nif><loja>.menu.bwb.pt; <nif><loja>.menu.bwb.pt/portal-admin); validar Nginx→porta correta + rotas existentes.
 
 **NOTA:** Todas as tarefas abaixo devem ser implementadas de forma a NÃO interferir com o modo DEMO (dados via JSON e image_url). O DEMO é a referência de UI/UX durante o desenvolvimento.
 
