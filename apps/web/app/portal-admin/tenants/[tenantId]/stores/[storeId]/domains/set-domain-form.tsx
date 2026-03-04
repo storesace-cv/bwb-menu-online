@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState } from "react-dom";
-import { setStoreDomain } from "../../../../actions";
+import { setStoreDomain } from "../../../../../actions";
 
 export function SetDomainForm({ storeId }: { storeId: string }) {
   const [state, formAction] = useFormState(setStoreDomain, null);

@@ -45,7 +45,7 @@ export default async function Home() {
             {cat.items?.map((item) => {
               const imageSrc =
                 item.image_path != null && item.image_path !== ""
-                  ? (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") + "/storage/v1/object/public/" + item.image_path) ?? null
+                  ? process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") + "/storage/v1/object/public/" + item.image_path
                   : item.image_url ?? null;
               return (
                 <li

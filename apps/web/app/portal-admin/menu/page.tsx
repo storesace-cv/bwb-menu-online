@@ -39,7 +39,7 @@ export default async function MenuPage() {
     list.push({ menu_item_id: ci.menu_item_id, sort_order: ci.sort_order });
     byCategory.set(ci.category_id, list);
   }
-  for (const [, list] of byCategory) list.sort((a, b) => a.sort_order - b.sort_order);
+  Array.from(byCategory.values()).forEach((list) => list.sort((a, b) => a.sort_order - b.sort_order));
 
   return (
     <div>

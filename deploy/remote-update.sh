@@ -124,6 +124,7 @@ fi
 
 echo "=== Step 4: Start stack ==="
 if systemctl is-enabled "${SYSTEMD_UNIT_NAME:-bwb-menu-online.service}" &>/dev/null; then
+  (cd "$APP_DIR" && docker compose build web)
   sudo systemctl restart "${SYSTEMD_UNIT_NAME:-bwb-menu-online.service}"
 else
   docker compose -f "$APP_DIR/docker-compose.yml" up -d --build
