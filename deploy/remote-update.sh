@@ -84,11 +84,12 @@ else
     fi
   fi
   if [[ -z "$POSTGRES_CONTAINER" ]]; then
-    echo "WARN: Postgres container not found (set SUPABASE_POSTGRES_CONTAINER). Skipping migrations."
-  else
-    for f in "$MIGRATIONS_DIR"/*.sql; do
-      [[ -f "$f" ]] || continue
-      filename=$(basename "$f")
+    echo "FATAL: Postgres container not found. Set SUPABASE_POSTGRES_CONTAINER or ensure menu-online instance is running."
+    exit 1
+  fi
+  for f in $(find "$MIGRATIONS_DIR" -maxdepth 1 -name '*.sql' -print | sort -V); do
+    [[ -f "$f" ]] || continue
+    filename=$(basename "$f")
       checksum=$(sha256sum "$f" | awk '{print $1}')
       existing=$(docker exec "$POSTGRES_CONTAINER" psql -U postgres -d postgres -t -A -c \
         "SELECT checksum FROM app_schema_migrations WHERE filename = '$filename'" 2>/dev/null || true)
@@ -127,6 +128,31 @@ if systemctl is-enabled "${SYSTEMD_UNIT_NAME:-bwb-menu-online.service}" &>/dev/n
   sudo systemctl restart "${SYSTEMD_UNIT_NAME:-bwb-menu-online.service}"
 else
   docker compose -f "$APP_DIR/docker-compose.yml" up -d --build
+fi
+
+echo "=== Step 4.5: Bootstraps ==="
+if [[ -f "$APP_DIR/.env" ]] && [[ -f "$APP_DIR/scripts/bootstrap-superadmin.ts" ]]; then
+  (cd "$APP_DIR/scripts" && npm install --no-save 2>/dev/null || true)
+  export APP_DIR
+  if (cd "$APP_DIR/scripts" && npx tsx bootstrap-superadmin.ts 2>/dev/null); then
+    echo "Bootstrap superadmin OK"
+  else
+    echo "Bootstrap superadmin skipped or failed (check SUPABASE_SERVICE_ROLE_KEY)"
+  fi
+  if [[ "${DEPLOY_ENV:-}" = "dev" ]] && [[ -f "$APP_DIR/scripts/bootstrap-dev-tenant.ts" ]]; then
+    if (cd "$APP_DIR/scripts" && npx tsx bootstrap-dev-tenant.ts 2>/dev/null); then
+      echo "Bootstrap dev-tenant OK"
+    else
+      echo "Bootstrap dev-tenant skipped or failed"
+    fi
+  fi
+  if [[ -f "$APP_DIR/scripts/bootstrap-demo-from-json.ts" ]]; then
+    if (cd "$APP_DIR/scripts" && export APP_DIR && npx tsx bootstrap-demo-from-json.ts 2>/dev/null); then
+      echo "Bootstrap demo-from-json OK"
+    else
+      echo "Bootstrap demo-from-json skipped (no DEMO_MENU_JSON or file missing)"
+    fi
+  fi
 fi
 
 echo "=== Step 5: Smoke tests ==="

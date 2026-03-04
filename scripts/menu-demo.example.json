@@ -1,0 +1,25 @@
+{
+  "tenant": { "nif": "999999999", "name": "DEV Tenant" },
+  "store": { "store_number": 1, "name": "DEV Store 1", "source_type": "netbo" },
+  "domain": { "hostname": "9999999991.menu.bwb.pt" },
+  "allergens": [
+    { "code": "GLUTEN", "name": "Cereais com glúten" }
+  ],
+  "categories": [
+    { "name": "Couvert", "description": null, "sort_order": 10, "is_visible": true }
+  ],
+  "items": [
+    {
+      "menu_name": "Pão de alho e manteiga",
+      "menu_description": "Pão tostado com manteiga de alho e ervas.",
+      "menu_price": 900,
+      "prep_minutes": 8,
+      "is_visible": true,
+      "is_featured": false,
+      "sort_order": 10,
+      "image_url": "https://picsum.photos/seed/pao-alho/800/600",
+      "categories": ["Couvert"],
+      "allergens": ["GLUTEN", "MILK"]
+    }
+  ]
+}

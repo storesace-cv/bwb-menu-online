@@ -25,6 +25,7 @@ export type PublicMenuItem = {
   menu_description: string | null;
   menu_price: number | null;
   image_path: string | null;
+  image_url: string | null;
   is_featured: boolean;
   prep_minutes: number | null;
   sort_order: number;

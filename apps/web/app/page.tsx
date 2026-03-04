@@ -42,39 +42,54 @@ export default async function Home() {
             </p>
           )}
           <ul style={{ listStyle: "none", padding: 0 }}>
-            {cat.items?.map((item) => (
-              <li
-                key={item.id}
-                style={{
-                  borderBottom: "1px solid #eee",
-                  padding: "0.75rem 0",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-                  <span>
-                    {item.menu_name}
-                    {item.is_featured && (
-                      <span style={{ marginLeft: "0.5rem", fontSize: "0.75rem", color: "#c00" }}>
-                        Destaque
-                      </span>
-                    )}
-                  </span>
-                  {item.menu_price != null && (
-                    <span>{Number(item.menu_price).toFixed(2)} €</span>
+            {cat.items?.map((item) => {
+              const imageSrc =
+                item.image_path != null && item.image_path !== ""
+                  ? (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") + "/storage/v1/object/public/" + item.image_path) ?? null
+                  : item.image_url ?? null;
+              return (
+                <li
+                  key={item.id}
+                  style={{
+                    borderBottom: "1px solid #eee",
+                    padding: "0.75rem 0",
+                  }}
+                >
+                  {imageSrc && (
+                    <div style={{ marginBottom: "0.5rem" }}>
+                      <img
+                        src={imageSrc}
+                        alt={item.menu_name ?? ""}
+                        style={{ maxWidth: "100%", height: "auto", borderRadius: "8px", maxHeight: "280px", objectFit: "cover" }}
+                      />
+                    </div>
                   )}
-                </div>
-                {item.menu_description && (
-                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.9rem", color: "#555" }}>
-                    {item.menu_description}
-                  </p>
-                )}
-                {item.allergens?.length > 0 && (
-                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#888" }}>
-                    Alergénios: {item.allergens.map((a) => a.code).join(", ")}
-                  </p>
-                )}
-              </li>
-            ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <span>
+                      {item.menu_name}
+                      {item.is_featured && (
+                        <span style={{ marginLeft: "0.5rem", fontSize: "0.75rem", color: "#c00" }}>
+                          Destaque
+                        </span>
+                      )}
+                    </span>
+                    {item.menu_price != null && (
+                      <span>{Number(item.menu_price).toFixed(2)} €</span>
+                    )}
+                  </div>
+                  {item.menu_description && (
+                    <p style={{ margin: "0.25rem 0 0", fontSize: "0.9rem", color: "#555" }}>
+                      {item.menu_description}
+                    </p>
+                  )}
+                  {item.allergens?.length > 0 && (
+                    <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#888" }}>
+                      Alergénios: {item.allergens.map((a) => a.code).join(", ")}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </section>
       ))}

@@ -29,6 +29,7 @@ else
   SSH_TARGET="$BWB_SERVER_HOST"
 fi
 
+# Note: If deploy ever uses rsync to sync repo, exclude: --exclude '/local' --exclude 'local'
 # Upload remote script
 if scp -o ConnectTimeout=10 "$SCRIPT_DIR/remote-update.sh" "$SSH_TARGET:$REMOTE_SCRIPT" 2>/dev/null; then
   echo "Uploaded remote-update.sh to $SSH_TARGET:$REMOTE_SCRIPT"
