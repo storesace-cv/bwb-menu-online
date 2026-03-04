@@ -19,7 +19,31 @@ Este documento regista o que já está feito e o que está planeado, para manter
 ---
 
 ## Planeado / pendente
-- **Opcionais:** Rota pública `/item/[id]` para detalhe de um item do menu; página global `/portal-admin/domains` com vista agregada de domínios.
+
+**(P0) Bloqueadores para produção / multi-cliente**
+- TLS wildcard para subdomínios (*.menu.bwb.pt) OU estratégia Cloudflare (Full/Strict + origin cert) para suportar <nif><loja>.menu.bwb.pt em escala.
+- Gestão e verificação de domínios próprios (custom domains): fluxo add domain → instruções DNS → verificação → marcar verified_at; prevenção de takeover (prova de controlo do domínio).
+- Canonical host / segurança de host: bloquear hosts não reconhecidos (store_domains); redirect 301 para domínio primário quando houver múltiplos.
+- StoresAce connector (paridade com NET-bo): sync StoresAce com logs (sync_runs/sync_events) e upsert em catalog_items; UI de sync suportar fonte por store e mostrar erros.
+
+**(P1) Funcionalidades essenciais do menu (produto)**
+- Moeda/locale por store (store_settings.currency_code + locale) e formatação de preço no menu público (sem hardcode de moeda nos dados).
+- Imagens "a sério" via Supabase Storage: upload + policies + thumbnails + limites e limpeza de órfãs; manter image_url apenas como fallback dev.
+- UX do menu: rota pública /item/[id] (detalhe do item); pesquisa + filtros (alergénios, destaque, categorias); estados: indisponível / esgotado / disponível por horário (opcional simples).
+- Ordenação UX: drag & drop para categorias e itens (persistindo sort_order).
+- Página global /portal-admin/domains com vista agregada de domínios.
+
+**(P2) Robustez, qualidade e operação**
+- Audit log de alterações (domínios, itens, preços, visibilidade) com actor e timestamp.
+- Rate limiting / hardening de endpoints sensíveis (sync, admin APIs).
+- Testes e CI: GitHub Actions (lint/typecheck/build); testes mínimos: middleware host/path, RPC permission checks, bootstrap idempotência, public_menu_by_hostname shape.
+- Observabilidade: logging estruturado com request_id; health matrix (menu.bwb.pt/portal-admin, subdomínio root, subdomínio /portal-admin).
+- Backup/restore: política e scripts de backup Postgres (instância menu-online); export/import de menu (JSON/CSV) para onboarding rápido.
+- Multi-idioma (opcional, recomendado para resorts): i18n para categorias e itens com fallback PT/EN.
+- Templates: clonar menu de uma store para outra / template inicial.
+
+**Nota (bug/diagnóstico)**
+- `{"detail":"Not Found"}`: adicionar tarefa de smoke-tests por host/path (menu.bwb.pt/portal-admin; <nif><loja>.menu.bwb.pt; <nif><loja>.menu.bwb.pt/portal-admin) e validar Nginx→porta correta + rotas existentes.
 
 ---
 
