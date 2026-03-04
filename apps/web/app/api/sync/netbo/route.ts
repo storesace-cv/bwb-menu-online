@@ -6,11 +6,12 @@ import {
   normalizeProduct,
   type NetboConfig,
 } from "@/lib/netbo";
+import { createClient as createServerClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-/** POST /api/sync/netbo — body: { store_id: string }. Server-only; uses store_integrations config. */
+/** POST /api/sync/netbo — body: { store_id: string }. Requires auth + user_has_store_access(store_id). */
 export async function POST(request: NextRequest) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
@@ -35,6 +36,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "store_id required" },
       { status: 400 }
+    );
+  }
+
+  const sessionClient = await createServerClient();
+  const { data: { user } } = await sessionClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { data: hasAccess } = await sessionClient.rpc("user_has_store_access", {
+    p_store_id: storeId,
+  });
+  if (!hasAccess) {
+    return NextResponse.json(
+      { error: "Forbidden: no access to this store" },
+      { status: 403 }
     );
   }
 

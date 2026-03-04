@@ -54,6 +54,7 @@ export default async function PortalAdminLayout({
         {mode === "global" && <Link href="/portal-admin/users">Utilizadores</Link>}
         <Link href="/portal-admin/menu">Menu</Link>
         {mode === "tenant" && <Link href="/portal-admin/items">Itens</Link>}
+        {mode === "tenant" && <Link href="/portal-admin/sync">Sync</Link>}
         <form action="/api/auth/signout" method="post" style={{ marginLeft: "auto" }}>
           <button type="submit">Sair</button>
         </form>
