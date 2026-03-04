@@ -14,11 +14,11 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Sync NET-bo (backend):** `POST /api/sync/netbo` e `lib/netbo` (discovery, auth, fetch products, upsert em `catalog_items`, `sync_runs` e `sync_events`; nunca altera `menu_items`).
 - **Gestão de utilizadores no Global Admin:** Página `/portal-admin/users` para listar e atribuir utilizadores e roles (tenant/store); criar/convitar utilizador via Admin API do Supabase e inserção em `profiles` e `user_role_bindings`; RPCs `admin_list_users` e `admin_assign_role`; API route POST `/api/portal-admin/users`; acessível apenas a superadmin.
 - **UI Sync no Tenant:** Página `/portal-admin/sync` para disparar sync NET-bo e listar `sync_runs` e eventos; RLS para leitura por loja (migration 008); API com verificação `user_has_store_access`.
+- **Settings do Tenant:** Página `/portal-admin/settings` para tema/branding da loja; tabela `store_settings` (configuração por store); link Definições no layout tenant.
 
 ---
 
 ## Planeado / pendente
-- **Settings do Tenant:** Página `/portal-admin/settings` para tema/branding da loja (e eventual configuração por store).
 - **Opcionais:** Rota pública `/item/[id]` para detalhe de um item do menu; página global `/portal-admin/domains` com vista agregada de domínios.
 
 ---

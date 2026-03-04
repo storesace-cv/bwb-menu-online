@@ -107,3 +107,27 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
   revalidatePath("/portal-admin/items");
   return null;
 }
+
+export async function updateStoreSettings(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  if (!storeId) return { error: "Loja obrigatória" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const storeDisplayName = (formData.get("store_display_name") as string)?.trim() ?? "";
+  const primaryColor = (formData.get("primary_color") as string)?.trim() ?? "";
+  const logoUrl = (formData.get("logo_url") as string)?.trim() ?? "";
+  const currencyCode = (formData.get("currency_code") as string)?.trim() ?? "";
+  const settings: Record<string, string> = {};
+  if (storeDisplayName) settings.store_display_name = storeDisplayName;
+  if (primaryColor) settings.primary_color = primaryColor;
+  if (logoUrl) settings.logo_url = logoUrl;
+  if (currencyCode) settings.currency_code = currencyCode;
+  const { error } = await supabase.from("store_settings").upsert(
+    { store_id: storeId, settings, updated_at: new Date().toISOString() },
+    { onConflict: "store_id" }
+  );
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings");
+  return null;
+}
