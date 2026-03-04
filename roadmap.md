@@ -20,6 +20,24 @@ Este documento regista o que já está feito e o que está planeado, para manter
 
 ## Planeado / pendente
 
+**(P0) DEMO FIRST (não regressão; prioridade máxima)**
+- Garantir que o menu demo funciona end-to-end SEM NET-bo/StoresAce:
+  - DEMO_MENU_JSON apontar para /opt/bwb-menu-online/local/menu-demo/menu-demo.json (ou path configurado)
+  - scripts/bootstrap-demo-from-json.ts continua idempotente e não depende de integrações.
+- Garantir que /local é sempre ignorada:
+  - .gitignore mantém /local
+  - deploy (rsync/scp se existir) exclui /local; NUNCA sincronizar a pasta inteira.
+  - deploy só pode copiar (opcional) o ficheiro JSON explicitamente, nunca o diretório.
+- Smoke tests obrigatórios (após deploy):
+  - menu.bwb.pt/portal-admin (login)
+  - 9999999991.menu.bwb.pt (menu público)
+  - 9999999991.menu.bwb.pt/portal-admin (tenant portal)
+- Política de "non-regression":
+  - qualquer mudança em Nginx, middleware host/path, RLS/RPCs, formatação de preço, imagens, ou domínios deve incluir verificação de que o demo continua a renderizar com dados JSON.
+- `{"detail":"Not Found"}`: matriz de smoke-tests por host/path (menu.bwb.pt/portal-admin; <nif><loja>.menu.bwb.pt; <nif><loja>.menu.bwb.pt/portal-admin); validar Nginx→porta correta + rotas existentes.
+
+**NOTA:** Todas as tarefas abaixo devem ser implementadas de forma a NÃO interferir com o modo DEMO (dados via JSON e image_url). O DEMO é a referência de UI/UX durante o desenvolvimento.
+
 **(P0) Bloqueadores para produção / multi-cliente**
 - TLS wildcard para subdomínios (*.menu.bwb.pt) OU estratégia Cloudflare (Full/Strict + origin cert) para suportar <nif><loja>.menu.bwb.pt em escala.
 - Gestão e verificação de domínios próprios (custom domains): fluxo add domain → instruções DNS → verificação → marcar verified_at; prevenção de takeover (prova de controlo do domínio).
@@ -41,9 +59,6 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - Backup/restore: política e scripts de backup Postgres (instância menu-online); export/import de menu (JSON/CSV) para onboarding rápido.
 - Multi-idioma (opcional, recomendado para resorts): i18n para categorias e itens com fallback PT/EN.
 - Templates: clonar menu de uma store para outra / template inicial.
-
-**Nota (bug/diagnóstico)**
-- `{"detail":"Not Found"}`: adicionar tarefa de smoke-tests por host/path (menu.bwb.pt/portal-admin; <nif><loja>.menu.bwb.pt; <nif><loja>.menu.bwb.pt/portal-admin) e validar Nginx→porta correta + rotas existentes.
 
 ---
 
