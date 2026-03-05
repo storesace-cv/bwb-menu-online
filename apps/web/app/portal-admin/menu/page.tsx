@@ -13,7 +13,7 @@ export default async function MenuPage() {
     return (
       <div>
         <h1>Menu</h1>
-        <p>Domínio não associado a nenhuma loja. Configure um domínio em Global Admin (Tenants → Lojas → Domínios).</p>
+        <p>Para gerir o menu, aceda através do subdomínio da loja (ex.: 9999999991.menu.bwb.pt/portal-admin/menu). Em Global Admin pode ver a associação em Tenants → Lojas → coluna Domínios.</p>
       </div>
     );
   }

@@ -40,7 +40,7 @@ async function main() {
     p_tenant_id: tenantId,
     p_store_number: STORE_NUMBER,
     p_name: "DEV STORE 1",
-    p_source_type: "netbo",
+    p_source_type: "demo",
   });
   if (e2) {
     console.error("admin_create_store:", e2.message);

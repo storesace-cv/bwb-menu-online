@@ -1,6 +1,6 @@
 {
   "tenant": { "nif": "999999999", "name": "DEV Tenant" },
-  "store": { "store_number": 1, "name": "DEV Store 1", "source_type": "netbo" },
+  "store": { "store_number": 1, "name": "DEV Store 1", "source_type": "demo" },
   "domain": { "hostname": "9999999991.menu.bwb.pt" },
   "allergens": [
     { "code": "GLUTEN", "name": "Cereais com glúten" }
