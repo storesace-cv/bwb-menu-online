@@ -13,10 +13,10 @@ check() {
   local path="$2"
   local code
   code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 -H "Host: $host" "${BASE_URL}${path}")
-  if [[ "$code" == "200" || "$code" == "302" ]]; then
+  if [[ "$code" == "200" || "$code" == "302" || "$code" == "307" ]]; then
     echo "OK  Host=$host path=$path -> $code"
   else
-    echo "FAIL Host=$host path=$path -> $code (expected 200 or 302)"
+    echo "FAIL Host=$host path=$path -> $code (expected 200, 302 or 307)"
     FAIL=1
   fi
 }
