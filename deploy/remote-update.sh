@@ -134,17 +134,23 @@ echo "=== Step 4.5: Bootstraps ==="
 if [[ -f "$APP_DIR/.env" ]] && [[ -f "$APP_DIR/scripts/bootstrap-superadmin.ts" ]]; then
   (cd "$APP_DIR/scripts" && npm install --no-save 2>/dev/null || true)
   export APP_DIR
-  if (cd "$APP_DIR/scripts" && npx tsx bootstrap-superadmin.ts 2>/dev/null); then
+  bootstrap_err=$(mktemp)
+  if (cd "$APP_DIR/scripts" && npx tsx bootstrap-superadmin.ts 2>"$bootstrap_err"); then
     echo "Bootstrap superadmin OK"
   else
-    echo "Bootstrap superadmin skipped or failed (check SUPABASE_SERVICE_ROLE_KEY)"
+    echo "Bootstrap superadmin skipped or failed (check SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL in .env; Node must be installed on host — see docs/NODE_ON_SERVER.md)"
+    [[ -s "$bootstrap_err" ]] && cat "$bootstrap_err" 1>&2
   fi
+  rm -f "$bootstrap_err"
   if [[ "${DEPLOY_ENV:-}" = "dev" ]] && [[ -f "$APP_DIR/scripts/bootstrap-dev-tenant.ts" ]]; then
-    if (cd "$APP_DIR/scripts" && npx tsx bootstrap-dev-tenant.ts 2>/dev/null); then
+    dev_err=$(mktemp)
+    if (cd "$APP_DIR/scripts" && npx tsx bootstrap-dev-tenant.ts 2>"$dev_err"); then
       echo "Bootstrap dev-tenant OK"
     else
       echo "Bootstrap dev-tenant skipped or failed"
+      [[ -s "$dev_err" ]] && cat "$dev_err" 1>&2
     fi
+    rm -f "$dev_err"
   fi
   # A pasta local/ não vem no git nem é sincronizada; o JSON de demo deve existir no servidor
   # em APP_DIR/local/menu-demo/ (cópia manual ou passo opcional de update.sh que faz scp apenas do ficheiro).
