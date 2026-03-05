@@ -19,6 +19,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Login portal-admin:** Build Docker com ARG/ENV para `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` (inline no bundle); página de login valida URL/key antes de criar cliente e mostra mensagem se em falta; autoComplete nos campos email/password.
 - **Nginx no servidor:** O deploy aplica apenas o vhost `menu.bwb.pt` (ficheiro em `deploy/nginx/sites-available/menu.bwb.pt`); as configurações dos outros sites (bwb.bwb.pt, db-*, zthoteis, default) não são alteradas pelo projeto.
 - **API Supabase no mesmo host:** Nginx encaminha `/auth/`, `/rest/` e `/realtime/` para Kong (127.0.0.1:8102); o resto vai para a app (8103). Login em menu.bwb.pt/portal-admin usa assim o endpoint Auth no mesmo host.
+- **Verificação pós-deploy:** Após cada deploy, confirmação de que o container web tem código e templates atualizados (build no remote-update.sh, health + smoke tests); smoke test aceita 200/302/307 em /portal-admin.
 
 ---
 
