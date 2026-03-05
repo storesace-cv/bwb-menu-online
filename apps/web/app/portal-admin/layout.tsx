@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalMode } from "@/lib/portal-mode";
 import Link from "next/link";
+import { RedirectTo } from "./redirect-client";
 
 const PORTAL_LOGIN = "/portal-admin/login";
 const CHANGE_PASSWORD = "/portal-admin/change-password";
@@ -35,13 +36,16 @@ export default async function PortalAdminLayout({
   }
 
   const { data: { user } } = await supabase.auth.getUser();
+  const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
 
   if (!user) {
+    if (isRsc) return <RedirectTo url={PORTAL_LOGIN} />;
     redirect(PORTAL_LOGIN);
   }
 
   const mustChange = (user.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
   if (mustChange && !pathname.includes("change-password")) {
+    if (isRsc) return <RedirectTo url={CHANGE_PASSWORD} />;
     redirect(CHANGE_PASSWORD);
   }
 
