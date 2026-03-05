@@ -20,12 +20,13 @@ export default function LoginPage() {
       return;
     }
     const supabase = createClient(url, key);
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) {
       setError(err.message);
       return;
     }
-    router.push("/portal-admin");
+    const mustChange = (data?.user?.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
+    router.push(mustChange ? "/portal-admin/change-password" : "/portal-admin");
     router.refresh();
   }
 

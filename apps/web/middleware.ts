@@ -13,7 +13,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(PORTAL_ADMIN, request.url));
   }
 
-  const res = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  requestHeaders.set("x-portal-host", host);
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set("x-pathname", pathname);
   res.headers.set("x-portal-host", host);
   return res;
