@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,7 +19,7 @@ export default function LoginPage() {
       setError("Configuração em falta. Contacte o administrador.");
       return;
     }
-    const supabase = createClient(url, key);
+    const supabase = createClient();
     const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) {
       setError(err.message);
@@ -27,13 +27,18 @@ export default function LoginPage() {
     }
     const mustChange = (data?.user?.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
     const targetUrl = mustChange ? "/portal-admin/change-password" : "/portal-admin";
+    // Enviar log antes da navegação para não ser abortado pelo browser
+    try {
+      await fetch("/api/debug/portal-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "LoginSuccess", url: targetUrl }),
+      });
+    } catch {
+      // ignora falhas de rede
+    }
     router.push(targetUrl);
     router.refresh();
-    fetch("/api/debug/portal-log", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "LoginSuccess", url: targetUrl }),
-    }).catch(() => {});
   }
 
   return (

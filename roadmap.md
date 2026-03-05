@@ -23,6 +23,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Verificação pós-deploy:** Após cada deploy, confirmação de que o container web tem código e templates atualizados (build no remote-update.sh, health + smoke tests); smoke test aceita 200/302/307 em /portal-admin.
 - **Node no servidor para bootstraps:** Bootstraps (superadmin, dev-tenant, demo) correm com Node/npx no host; removido fallback por container temporário; doc [docs/NODE_ON_SERVER.md](docs/NODE_ON_SERVER.md) com instruções de instalação (NodeSource Node 20, nvm); referência no README e em SUPABASE_INSTANCE.md; Node 20 LTS instalado no servidor de produção.
 - **Debug portal-admin:** Logging estruturado `[portal-debug]` em middleware e layout (pathname, host, isRsc, decisões); API POST `/api/debug/portal-log` para eventos do cliente (LoginSuccess, RedirectTo) quando `PORTAL_DEBUG=1`; doc [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) e referência no README; logger compatível com Edge Runtime (console.log).
+- **Sessão em cookies (fix ecrã branco):** Cliente browser Supabase em `lib/supabase-browser.ts` com `createBrowserClient` (@supabase/ssr), guardando a sessão em cookies; login e change-password usam este cliente para que o servidor (createServerClient) veja o utilizador nos pedidos seguintes e não redireccione para login (evita loop e ecrã branco).
 
 ---
 

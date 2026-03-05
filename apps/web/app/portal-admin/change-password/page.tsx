@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase-browser";
 
 export default function ChangePasswordPage() {
   const [password, setPassword] = useState("");
@@ -21,10 +21,7 @@ export default function ChangePasswordPage() {
       setError("Mínimo 8 caracteres.");
       return;
     }
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = createClient();
     const { error: err } = await supabase.auth.updateUser({
       password,
       data: { must_change_password: false },

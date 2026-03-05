@@ -59,3 +59,17 @@ Com isto, após um login bem-sucedido verás também linhas `phase: "client"` co
 4. Verificar: pathname recebido no middleware vs no layout; valor de `isRsc`; se há user após login; decisão do layout (`redirect_login`, `redirect_change_password`, `full_layout`); e, com PORTAL_DEBUG=1, se aparecem eventos `LoginSuccess` e `RedirectTo` na ordem esperada.
 
 Com esta sequência consegue-se identificar a origem do problema (por exemplo pathname errado, isRsc inesperado, ou cliente a não receber o payload esperado) e corrigir com precisão.
+
+## Resultado da verificação (ecrã branco após login)
+
+Numa verificação em servidor, os pedidos a `/portal-admin/change-password` após login bem-sucedido mostraram no layout:
+
+- `userId: "anonymous"`, `mustChangePassword: false`, `decision: "redirect_login"`
+
+Ou seja, o servidor **não vê a sessão** nesses pedidos: o cookie de auth não está a chegar ou a ser lido pelo `createClient()` no layout.
+
+**Causa:** A página de login e a página change-password usavam `createClient` de `@supabase/supabase-js`, que guarda a sessão em **localStorage**. O servidor usa `createServerClient` e lê a sessão dos **cookies**; como nenhum cookie era definido, o layout via sempre `anonymous`.
+
+**Fix aplicado:** Foi criado o cliente browser em `lib/supabase-browser.ts` com `createBrowserClient` de `@supabase/ssr`, que guarda a sessão em cookies. As páginas de login e change-password passaram a usar este cliente; após login, os cookies são enviados nos pedidos seguintes e o layout passa a ver o utilizador.
+
+A página de login envia o evento `LoginSuccess` para `/api/debug/portal-log` **antes** de `router.push`, para o POST não ser abortado pela navegação e aparecer nos logs quando `PORTAL_DEBUG=1`.
