@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-04.
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-05.
 
 ---
 
@@ -27,6 +27,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Fix loop must_change_password:** Após alteração de password na página change-password, o flag é limpo: redirect com `window.location.href` (full page) para o servidor ler o cookie atualizado; chamada a `getSession()` antes do redirect; API `POST /api/portal-admin/clear-must-change-password` persiste `must_change_password: false` em `auth.users` via Admin API (garante que Auth self-hosted não volta a exigir mudança em logins/refresh seguintes).
 - **Domínios na lista de lojas, mensagem Menu e menu-demo para loja 1:** Migration 010 (`source_type` demo em `stores`); bootstrap dev-tenant e `menu-demo.example.json` com loja 1 em modo demo (menu-demo); página Menu quando acedida no host global mostra mensagem a indicar acesso via subdomínio da loja (ex.: 9999999991.menu.bwb.pt/portal-admin/menu); coluna "Domínio(s)" na lista de lojas do tenant (dados via `admin_list_domains`), com hostnames e indicador (primário).
 - **Bootstrap demo fallback (itens em /portal-admin/items):** Se `DEMO_MENU_JSON` ou `local/menu-demo/menu-demo.json` não existir, o bootstrap usa `scripts/menu-demo.example.json` (incluído no repo); assim o servidor passa a ter itens demo na loja 9999999991.menu.bwb.pt mesmo sem ficheiro em local/. Regra "não sincronizar local/" mantida; ficheiros em local/ podem ser lidos/usados quando lá forem colocados (README atualizado).
+- **Apresentação menu-demo (RLS + dados completos):** Migration 011 — `user_has_store_access` devolve true quando `current_user_is_superadmin()`, para o superadmin ver categorias e itens no portal-admin (Menu, Itens) como um cliente normal; `scripts/menu-demo.example.json` passou a ter o menu demo completo (10 categorias, ~50 itens, source_type demo), para o bootstrap importar em qualquer ambiente (incl. servidor) sem depender de ficheiros em /local. Dados sempre lidos da BD (mesmo fluxo que lojas NET-bo/StoresAce).
 
 ---
 
