@@ -16,6 +16,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **UI Sync no Tenant:** Página `/portal-admin/sync` para disparar sync NET-bo e listar `sync_runs` e eventos; RLS para leitura por loja (migration 008); API com verificação `user_has_store_access`.
 - **Settings do Tenant:** Página `/portal-admin/settings` para tema/branding da loja; tabela `store_settings` (configuração por store); link Definições no layout tenant.
 - **DEMO FIRST:** .gitignore e deploy garantem que /local não é sincronizada; bootstrap demo idempotente com path configurável (DEMO_MENU_JSON); script de smoke tests por host/path (`scripts/smoke-test-demo.sh`: menu.bwb.pt/portal-admin, 9999999991.menu.bwb.pt, 9999999991.menu.bwb.pt/portal-admin); política de non-regression documentada no README.
+- **Login portal-admin:** Build Docker com ARG/ENV para `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` (inline no bundle); página de login valida URL/key antes de criar cliente e mostra mensagem se em falta; autoComplete nos campos email/password.
 
 ---
 
