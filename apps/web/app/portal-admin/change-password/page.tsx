@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 
 export default function ChangePasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,8 +28,11 @@ export default function ChangePasswordPage() {
       setError(err.message);
       return;
     }
-    router.push("/portal-admin");
-    router.refresh();
+    // Garantir que a sessão está nos cookies antes do redirect
+    await supabase.auth.getSession();
+    // Persistir flag no servidor (Auth self-hosted pode não guardar data de updateUser)
+    await fetch("/api/portal-admin/clear-must-change-password", { method: "POST" });
+    window.location.href = "/portal-admin";
   }
 
   return (

@@ -62,7 +62,7 @@ Após o bootstrap superadmin ter corrido com sucesso (no deploy ou manualmente),
 - **Email:** `suporte@bwb.pt`
 - **Password inicial:** `naomexer`
 
-Se a password tiver sido alterada depois (Supabase Dashboard ou API), usar a password actual. O bootstrap não redefine a password em utilizadores já existentes.
+Se a password tiver sido alterada depois (Supabase Dashboard ou API), usar a password actual. O bootstrap não redefine a password em utilizadores já existentes. Após alterar a password na primeira entrada, o sistema grava que já não é obrigatório mudar; em logins seguintes não volta a exigir (a API `clear-must-change-password` persiste o flag em `auth.users` para Auth self-hosted).
 
 ## Diagnóstico do portal-admin
 
