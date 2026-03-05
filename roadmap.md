@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-04.
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-05.
 
 ---
 
@@ -25,6 +25,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Debug portal-admin:** Logging estruturado `[portal-debug]` em middleware e layout (pathname, host, isRsc, decisões); API POST `/api/debug/portal-log` para eventos do cliente (LoginSuccess, RedirectTo) quando `PORTAL_DEBUG=1`; doc [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) e referência no README; logger compatível com Edge Runtime (console.log).
 - **Sessão em cookies (fix ecrã branco):** Cliente browser Supabase em `lib/supabase-browser.ts` com `createBrowserClient` (@supabase/ssr), guardando a sessão em cookies; login e change-password usam este cliente para que o servidor (createServerClient) veja o utilizador nos pedidos seguintes e não redireccione para login (evita loop e ecrã branco).
 - **Domínios na lista de lojas, mensagem Menu e menu-demo para loja 1:** Migration 010 (`source_type` demo em `stores`); bootstrap dev-tenant e `menu-demo.example.json` com loja 1 em modo demo (menu-demo); página Menu quando acedida no host global mostra mensagem a indicar acesso via subdomínio da loja (ex.: 9999999991.menu.bwb.pt/portal-admin/menu); coluna "Domínio(s)" na lista de lojas do tenant (dados via `admin_list_domains`), com hostnames e indicador (primário).
+- **Bootstrap demo fallback (itens em /portal-admin/items):** Se `DEMO_MENU_JSON` ou `local/menu-demo/menu-demo.json` não existir, o bootstrap usa `scripts/menu-demo.example.json` (incluído no repo); assim o servidor passa a ter itens demo na loja 9999999991.menu.bwb.pt mesmo sem ficheiro em local/. Regra "não sincronizar local/" mantida; ficheiros em local/ podem ser lidos/usados quando lá forem colocados (README atualizado).
 
 ---
 

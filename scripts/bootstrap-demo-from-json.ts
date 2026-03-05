@@ -34,14 +34,28 @@ async function main() {
   const { config } = await import("dotenv");
   config({ path: envPath });
 
-  const jsonPath = process.env.DEMO_MENU_JSON || resolve(appDir, "local/menu-demo/menu-demo.json");
-  const fullPath = jsonPath.startsWith("/") ? jsonPath : resolve(appDir, jsonPath);
+  const primaryPath =
+    process.env.DEMO_MENU_JSON || resolve(appDir, "local/menu-demo/menu-demo.json");
+  const fullPath = primaryPath.startsWith("/") ? primaryPath : resolve(appDir, primaryPath);
+  const fallbackPath = resolve(appDir, "scripts/menu-demo.example.json");
+
   let raw: string;
+  let usedPath: string;
   try {
     raw = await readFile(fullPath, "utf-8");
-  } catch (e) {
-    console.warn("DEMO_MENU_JSON file not found (skip):", fullPath);
-    process.exit(0);
+    usedPath = fullPath;
+  } catch {
+    try {
+      raw = await readFile(fallbackPath, "utf-8");
+      usedPath = fallbackPath;
+      console.log("Using fallback demo JSON: scripts/menu-demo.example.json");
+    } catch (e) {
+      console.warn("Demo JSON not found (skip). Tried:", fullPath, "and", fallbackPath);
+      process.exit(0);
+    }
+  }
+  if (usedPath === fullPath) {
+    console.log("Using demo JSON:", fullPath);
   }
 
   const data = JSON.parse(raw) as DemoJson;

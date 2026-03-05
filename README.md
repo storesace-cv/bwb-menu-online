@@ -32,14 +32,16 @@ A app escuta em `127.0.0.1:8103` (Docker); Nginx faz proxy de `menu.bwb.pt` e `*
 
 ## Dados demo via JSON (sem moeda nos dados)
 
-Para desenvolvimento sem NET-bo/StoresAce, pode popular o menu a partir de um ficheiro JSON. A pasta `local/` **não é sincronizada** (está em `.gitignore`; o deploy não a envia).
+Para desenvolvimento sem NET-bo/StoresAce, pode popular o menu a partir de um ficheiro JSON. A pasta `local/` **não é sincronizada** no deploy (está em `.gitignore`; o deploy não envia essa pasta). Isso não impede de **utilizar** ficheiros que lá estejam no servidor — ler, copiar, etc. Se colocar `local/menu-demo/menu-demo.json` no servidor (manual ou cópia pontual), o bootstrap usa-o.
 
 1. Crie a pasta `local/menu-demo/` na raiz do projeto.
 2. Coloque o ficheiro `menu-demo.json` nessa pasta (formato de exemplo em `scripts/menu-demo.example.json`).
-3. Defina `DEMO_MENU_JSON` no `.env` (ex.: `./local/menu-demo/menu-demo.json` em local). No servidor use `DEMO_MENU_JSON=/opt/bwb-menu-online/local/menu-demo/menu-demo.json` (ou path configurado) e crie o ficheiro nesse path manualmente — a pasta `local/` não vai no deploy.
+3. Opcional: defina `DEMO_MENU_JSON` no `.env` (ex.: `./local/menu-demo/menu-demo.json`). No servidor pode usar `DEMO_MENU_JSON=/opt/bwb-menu-online/local/menu-demo/menu-demo.json` e colocar o ficheiro nesse path.
 4. Execute: `cd scripts && npx tsx bootstrap-demo-from-json.ts` (usa as mesmas RPCs admin para tenant/store/domain; upsert de alergénios, categorias, itens e associações).
 
-No deploy remoto, se `DEMO_MENU_JSON` estiver definido e o ficheiro existir no servidor, o bootstrap demo é executado automaticamente após os outros bootstraps.
+O bootstrap tenta primeiro `DEMO_MENU_JSON` ou `local/menu-demo/menu-demo.json`. **Se esse ficheiro não existir**, usa o fallback `scripts/menu-demo.example.json` (incluído no repo), para que o servidor tenha sempre dados demo (ex.: itens na loja 9999999991.menu.bwb.pt) mesmo sem ficheiro em `local/`.
+
+No deploy remoto, o bootstrap demo é executado automaticamente após os outros bootstraps; se o ficheiro preferido existir usa-o, caso contrário usa o exemplo.
 
 **Regra:** Nos dados demo não se insere moeda (símbolo/código); o preço é numérico; a moeda vem da configuração da loja na UI.
 
