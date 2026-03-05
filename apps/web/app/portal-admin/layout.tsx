@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalMode } from "@/lib/portal-mode";
+import { portalDebugLog } from "@/lib/portal-debug-log";
 import Link from "next/link";
 import { RedirectTo } from "./redirect-client";
 
@@ -18,8 +19,12 @@ export default async function PortalAdminLayout({
   const pathname = headersList.get("x-pathname") ?? "/portal-admin";
   const mode = getPortalMode(host, pathname);
   const isLoginPage = pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/");
+  const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
+
+  portalDebugLog("layout", { pathname, host, isLoginPage, isRsc });
 
   if (isLoginPage) {
+    portalDebugLog("layout", { pathname, decision: "login_page" });
     return <>{children}</>;
   }
 
@@ -27,6 +32,7 @@ export default async function PortalAdminLayout({
   try {
     supabase = await createClient();
   } catch {
+    portalDebugLog("layout", { pathname, error: "createClient failed" });
     return (
       <div style={{ padding: "2rem" }}>
         <p>Configuração Supabase em falta.</p>
@@ -36,19 +42,27 @@ export default async function PortalAdminLayout({
   }
 
   const { data: { user } } = await supabase.auth.getUser();
-  const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
+  const mustChange = (user?.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
+
+  portalDebugLog("layout", {
+    pathname,
+    userId: user?.id ?? "anonymous",
+    mustChangePassword: mustChange,
+  });
 
   if (!user) {
+    portalDebugLog("layout", { pathname, decision: "redirect_login" });
     if (isRsc) return <RedirectTo url={PORTAL_LOGIN} />;
     redirect(PORTAL_LOGIN);
   }
 
-  const mustChange = (user.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
   if (mustChange && !pathname.includes("change-password")) {
+    portalDebugLog("layout", { pathname, decision: "redirect_change_password" });
     if (isRsc) return <RedirectTo url={CHANGE_PASSWORD} />;
     redirect(CHANGE_PASSWORD);
   }
 
+  portalDebugLog("layout", { pathname, decision: "full_layout" });
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <header style={{ borderBottom: "1px solid #eee", padding: "0.75rem 1.5rem", display: "flex", gap: "1rem", alignItems: "center" }}>

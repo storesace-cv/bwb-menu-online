@@ -61,3 +61,7 @@ Após o bootstrap superadmin ter corrido com sucesso (no deploy ou manualmente),
 - **Password inicial:** `naomexer`
 
 Se a password tiver sido alterada depois (Supabase Dashboard ou API), usar a password actual. O bootstrap não redefine a password em utilizadores já existentes.
+
+## Diagnóstico do portal-admin
+
+Para problemas como ecrã branco após login ou redirects incorrectos, a app regista logs estruturados com prefixo `[portal-debug]`. No servidor: `docker compose logs web 2>&1 | grep '\[portal-debug\]'`. Opcionalmente define `PORTAL_DEBUG=1` no `.env` para incluir eventos do cliente. Ver [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md).

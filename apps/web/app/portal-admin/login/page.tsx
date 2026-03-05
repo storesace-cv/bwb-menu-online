@@ -26,8 +26,14 @@ export default function LoginPage() {
       return;
     }
     const mustChange = (data?.user?.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
-    router.push(mustChange ? "/portal-admin/change-password" : "/portal-admin");
+    const targetUrl = mustChange ? "/portal-admin/change-password" : "/portal-admin";
+    router.push(targetUrl);
     router.refresh();
+    fetch("/api/debug/portal-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "LoginSuccess", url: targetUrl }),
+    }).catch(() => {});
   }
 
   return (

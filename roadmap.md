@@ -22,6 +22,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **API Supabase no mesmo host:** Nginx encaminha `/auth/`, `/rest/` e `/realtime/` para Kong (127.0.0.1:8102); o resto vai para a app (8103). Login em menu.bwb.pt/portal-admin usa assim o endpoint Auth no mesmo host.
 - **Verificação pós-deploy:** Após cada deploy, confirmação de que o container web tem código e templates atualizados (build no remote-update.sh, health + smoke tests); smoke test aceita 200/302/307 em /portal-admin.
 - **Node no servidor para bootstraps:** Bootstraps (superadmin, dev-tenant, demo) correm com Node/npx no host; removido fallback por container temporário; doc [docs/NODE_ON_SERVER.md](docs/NODE_ON_SERVER.md) com instruções de instalação (NodeSource Node 20, nvm); referência no README e em SUPABASE_INSTANCE.md; Node 20 LTS instalado no servidor de produção.
+- **Debug portal-admin:** Logging estruturado `[portal-debug]` em middleware e layout (pathname, host, isRsc, decisões); API POST `/api/debug/portal-log` para eventos do cliente (LoginSuccess, RedirectTo) quando `PORTAL_DEBUG=1`; doc [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) e referência no README; logger compatível com Edge Runtime (console.log).
 
 ---
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { portalDebugLog } from "@/lib/portal-debug-log";
 
 const GLOBAL_HOST = "menu.bwb.pt";
 const PORTAL_ADMIN = "/portal-admin";
@@ -7,6 +8,13 @@ const PORTAL_ADMIN = "/portal-admin";
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? request.headers.get("x-forwarded-host") ?? "";
   const pathname = request.nextUrl.pathname;
+
+  portalDebugLog("middleware", {
+    pathname,
+    host,
+    rsc: request.headers.get("rsc") ?? request.headers.get("RSC") ?? null,
+    redirectRoot: host === GLOBAL_HOST && pathname === "/",
+  });
 
   // menu.bwb.pt root -> redirect to portal-admin
   if (host === GLOBAL_HOST && pathname === "/") {
