@@ -33,6 +33,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Editar e apagar tipos de artigo e itens:** Server actions `updateArticleType`, `deleteArticleType`, `updateMenuItem`, `deleteMenuItem`; página `/portal-admin/article-types` com lista e componente `ArticleTypeRow` (edição inline e apagar com confirmação); página `/portal-admin/items` com coluna Ações (Editar, Apagar); página `/portal-admin/items/[id]/edit` e formulário `EditItemForm` (todos os campos incluindo visibilidade e destaque); `ItemActions` para apagar com confirmação.
 - **GUI /portal-admin (tema efatura):** Tailwind (v3) + PostCSS configurados em `apps/web/` (com `preflight: false` para não afetar o menu público); CSS admin-only em `app/portal-admin/admin.css` importado apenas no layout; componentes UI base em `components/admin/*` (Button/Input/Select/Card/Alert/Spinner/TableContainer); páginas `/portal-admin` migradas para estes componentes; documentação em [docs/GUI_PORTAL_ADMIN.md](docs/GUI_PORTAL_ADMIN.md).
 - **Configuração e conexão NET-BO por loja:** Migration 014 (`source_type` 'none' em `store_integrations`); config por store em `store_integrations.config` (integration_type, netbo_dbname, auth_method, segredos encriptados com `ENCRYPTION_MASTER_KEY`); UI em Definições (tipo de integração, credenciais NET-BO, “Deixe vazio para manter”, toggle eye); “Guardar configuração”, “Testar ligação” (discovery + auth + units?limit=1), “Sincronizar agora” (PULL para `catalog_items`); APIs GET/POST `/api/portal-admin/store/[storeId]/integration` e POST `.../netbo/test-connection`; sync existente adaptado para desencriptar config; doc [docs/CONNECTOR_NETBO.md](docs/CONNECTOR_NETBO.md).
+- **Template "BWB - Branco" (default) e paridade Carpe Diem:** Registry de templates em `lib/menu-templates.ts` com fallback `bwb-branco`; template BWB - Branco com header "Nossos Menus", CTA "Reservar uma mesa" (modal ou URL), hero opcional, bloco "Escolhas do Chefe" (itens em destaque), filtros em tabs (categorias) + Base prato + 3 toggles (Promoções, Take-away, Em destaque) + Limpar, agrupamento por secção (Restaurante / Snack-Bar), footer (contacto, política, texto); seleção do template em Definições (dropdown); `store_settings.settings` com merge no upsert e chaves `menu_template_key`, `hero_text`, `footer_text`, `contact_url`, `privacy_url`, `reservation_url`.
 
 ---
 
@@ -52,7 +53,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 **(P1) Funcionalidades essenciais do menu (produto)**
 - Moeda/locale por store (store_settings.currency_code + locale) e formatação de preço no menu público (sem hardcode de moeda nos dados).
 - Imagens "a sério" via Supabase Storage: upload + policies + thumbnails + limites e limpeza de órfãs; manter image_url apenas como fallback dev.
-- UX do menu: rota pública /item/[id] (detalhe do item); pesquisa + filtros (alergénios, destaque, categorias); estados: indisponível / esgotado / disponível por horário (opcional simples).
+- UX do menu: rota pública /item/[id] (detalhe do item); pesquisa + filtros (alergénios, destaque, categorias); estados: indisponível / esgotado / disponível por horário (opcional simples). Template BWB - Branco já cobre paridade Carpe Diem (header, Escolhas do Chefe, filtros tabs/toggles, secções, footer).
 - Ordenação UX: drag & drop para categorias e itens (persistindo sort_order).
 - Página global /portal-admin/domains com vista agregada de domínios.
 
@@ -63,7 +64,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - Observabilidade: logging estruturado com request_id; health matrix (menu.bwb.pt/portal-admin, subdomínio root, subdomínio /portal-admin).
 - Backup/restore: política e scripts de backup Postgres (instância menu-online); export/import de menu (JSON/CSV) para onboarding rápido.
 - Multi-idioma (opcional, recomendado para resorts): i18n para categorias e itens com fallback PT/EN.
-- Templates: clonar menu de uma store para outra / template inicial.
+- Templates de menu: BWB - Branco (default) com paridade Carpe Diem e seleção em Definições já feito; clonar menu entre lojas / template inicial.
 
 ---
 

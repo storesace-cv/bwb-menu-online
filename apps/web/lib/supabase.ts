@@ -56,6 +56,12 @@ export type PublicMenuStoreSettings = {
   currency_code?: string;
   store_display_name?: string;
   primary_color?: string;
+  menu_template_key?: string;
+  hero_text?: string;
+  footer_text?: string;
+  contact_url?: string;
+  privacy_url?: string;
+  reservation_url?: string;
 };
 
 export type PublicMenuPayload = {

@@ -240,17 +240,39 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   if (!storeId) return { error: "Loja obrigatória" };
   const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
   if (!hasAccess) return { error: "Sem acesso a esta loja" };
+
+  const { data: existing } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
+
   const storeDisplayName = (formData.get("store_display_name") as string)?.trim() ?? "";
   const primaryColor = (formData.get("primary_color") as string)?.trim() ?? "";
   const logoUrl = (formData.get("logo_url") as string)?.trim() ?? "";
   const currencyCode = (formData.get("currency_code") as string)?.trim() ?? "";
-  const settings: Record<string, string> = {};
-  if (storeDisplayName) settings.store_display_name = storeDisplayName;
-  if (primaryColor) settings.primary_color = primaryColor;
-  if (logoUrl) settings.logo_url = logoUrl;
-  if (currencyCode) settings.currency_code = currencyCode;
+  const menuTemplateKey = (formData.get("menu_template_key") as string)?.trim() || "bwb-branco";
+  const heroText = (formData.get("hero_text") as string)?.trim() ?? "";
+  const footerText = (formData.get("footer_text") as string)?.trim() ?? "";
+  const contactUrl = (formData.get("contact_url") as string)?.trim() ?? "";
+  const privacyUrl = (formData.get("privacy_url") as string)?.trim() ?? "";
+  const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
+
+  const merged: Record<string, string> = { ...currentSettings };
+  merged.store_display_name = storeDisplayName;
+  merged.primary_color = primaryColor;
+  merged.logo_url = logoUrl;
+  merged.currency_code = currencyCode;
+  merged.menu_template_key = menuTemplateKey;
+  merged.hero_text = heroText;
+  merged.footer_text = footerText;
+  merged.contact_url = contactUrl;
+  merged.privacy_url = privacyUrl;
+  merged.reservation_url = reservationUrl;
+
   const { error } = await supabase.from("store_settings").upsert(
-    { store_id: storeId, settings, updated_at: new Date().toISOString() },
+    { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
     { onConflict: "store_id" }
   );
   if (error) return { error: error.message };

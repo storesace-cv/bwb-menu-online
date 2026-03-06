@@ -23,6 +23,7 @@ export default async function SettingsPage() {
   const { data: store } = await supabase.from("stores").select("name").eq("id", storeId).single();
   const { data: row } = await supabase.from("store_settings").select("settings").eq("store_id", storeId).single();
   const settings = (row?.settings as Record<string, string> | null) ?? {};
+  const menuTemplateKey = settings.menu_template_key ?? "bwb-branco";
 
   const { data: lastRunRow } = await supabase
     .from("sync_runs")
@@ -50,6 +51,12 @@ export default async function SettingsPage() {
             primary_color: settings.primary_color ?? "",
             logo_url: settings.logo_url ?? "",
             currency_code: settings.currency_code ?? "",
+            menu_template_key: menuTemplateKey,
+            hero_text: settings.hero_text ?? "",
+            footer_text: settings.footer_text ?? "",
+            contact_url: settings.contact_url ?? "",
+            privacy_url: settings.privacy_url ?? "",
+            reservation_url: settings.reservation_url ?? "",
           }}
         />
       </Card>
