@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { MenuTreeClient, type SectionNode } from "./menu-tree-client";
-import { Card } from "@/components/admin";
+import { Card, MultiSelectDropdown } from "@/components/admin";
 
 function normalizeForSearch(s: string): string {
   return (s ?? "")
@@ -26,7 +26,7 @@ function matchesText(
 export default async function MenuPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; categories?: string | string[] }>;
+  searchParams: Promise<{ q?: string; categories?: string | string[]; sections?: string | string[] }>;
 }) {
   const params = await searchParams;
   const headersList = await headers();
@@ -50,6 +50,11 @@ export default async function MenuPage({
     ? params.categories.filter((c): c is string => typeof c === "string")
     : typeof params.categories === "string"
       ? [params.categories]
+      : [];
+  const sectionFilterIds: string[] = Array.isArray(params.sections)
+    ? params.sections.filter((s): s is string => typeof s === "string")
+    : typeof params.sections === "string"
+      ? [params.sections]
       : [];
 
   const { data: sections } = await supabase
@@ -90,7 +95,10 @@ export default async function MenuPage({
   const noSectionCategories = (categoriesFiltered ?? []).filter((c) => !c.section_id);
   const hasNoSection = noSectionCategories.length > 0;
 
-  if (hasNoSection) {
+  const includeNoSection = sectionFilterIds.length === 0 || sectionFilterIds.includes("__none__");
+  const sectionsToInclude = new Set(sectionFilterIds.length > 0 ? sectionFilterIds : null);
+
+  if (hasNoSection && includeNoSection) {
     const catNodes = noSectionCategories
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"))
       .map((cat) => {
@@ -112,6 +120,7 @@ export default async function MenuPage({
   }
 
   for (const sec of sectionsSorted) {
+    if (sectionsToInclude !== null && !sectionsToInclude.has(sec.id)) continue;
     const catsInSection = categoriesFiltered.filter((c) => c.section_id === sec.id);
     const catNodes = catsInSection
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"))
@@ -134,18 +143,25 @@ export default async function MenuPage({
   }
 
   const allCategories = (categories ?? []).sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"));
+  const sectionOptions = [
+    { id: "__none__", label: "Sem secção" },
+    ...(sections ?? []).map((s) => ({ id: s.id, label: s.name ?? "" })),
+  ];
+  const categoryOptions = allCategories.map((c) => ({ id: c.id, label: c.name ?? "" }));
 
   return (
     <div>
+      <nav className="mb-2 text-sm" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-2 text-slate-400">
+          <li>
+            <Link href="/portal-admin" className="hover:text-slate-200 transition-colors">Portal Admin</Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li className="text-slate-100" aria-current="page">Menu</li>
+        </ol>
+      </nav>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Menu</h1>
-      <p className="text-slate-400 mb-2">Categorias e itens da loja (Secção → Categoria → Artigo).</p>
-      <p className="mb-6">
-        <Link href="/portal-admin/settings/items" className="text-emerald-400 hover:text-emerald-300">Ver todos os itens</Link>
-        {" · "}
-        <Link href="/portal-admin/article-types" className="text-emerald-400 hover:text-emerald-300">Tipos de artigo</Link>
-        {" · "}
-        <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">Definições</Link>
-      </p>
+      <p className="text-slate-400 mb-6">Categorias e itens da loja (Secção → Categoria → Artigo).</p>
 
       <section className="mb-6">
         <Card>
@@ -164,21 +180,20 @@ export default async function MenuPage({
                 className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500"
               />
             </div>
-            <div className="flex flex-wrap gap-4 items-center">
-              <span className="text-sm text-slate-400">Categorias:</span>
-              {allCategories.map((cat) => (
-                <label key={cat.id} className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="categories"
-                    value={cat.id}
-                    defaultChecked={categoryFilterIds.includes(cat.id)}
-                    className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  {cat.name}
-                </label>
-              ))}
-            </div>
+            <MultiSelectDropdown
+              label="Secções"
+              name="sections"
+              options={sectionOptions}
+              selectedIds={sectionFilterIds}
+              placeholder="Todas"
+            />
+            <MultiSelectDropdown
+              label="Categorias"
+              name="categories"
+              options={categoryOptions}
+              selectedIds={categoryFilterIds}
+              placeholder="Todas"
+            />
             <button
               type="submit"
               className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm"

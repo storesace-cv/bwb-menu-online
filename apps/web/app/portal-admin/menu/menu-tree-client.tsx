@@ -44,16 +44,44 @@ export function MenuTreeClient({
     });
   };
 
+  const expandAll = () => {
+    setExpandedSections(new Set(allSectionKeys));
+    setExpandedCategories(new Set(allCategoryIds));
+  };
+
+  const collapseAll = () => {
+    setExpandedSections(new Set());
+    setExpandedCategories(new Set());
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 items-center">
+        <button
+          type="button"
+          onClick={expandAll}
+          className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 text-sm"
+          aria-label="Expandir tudo"
+        >
+          Expandir tudo
+        </button>
+        <button
+          type="button"
+          onClick={collapseAll}
+          className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 text-sm"
+          aria-label="Colapsar tudo"
+        >
+          Colapsar tudo
+        </button>
+      </div>
       {tree.map(({ sectionKey, sectionName, categories }) => {
         const isSectionExpanded = expandedSections.has(sectionKey);
         return (
-          <Card key={sectionKey} className="overflow-hidden">
+          <Card key={sectionKey} className="overflow-hidden bg-slate-800 border-slate-700">
             <button
               type="button"
               onClick={() => toggleSection(sectionKey)}
-              className="w-full flex items-center gap-2 text-left py-3 px-4 bg-slate-800/50 hover:bg-slate-800 border-b border-slate-700"
+              className="w-full flex items-center gap-2 text-left py-3 px-4 bg-slate-800 hover:bg-slate-700 border-b border-slate-600"
               aria-expanded={isSectionExpanded}
             >
               <span className="text-slate-400 text-lg leading-none w-6">
@@ -62,7 +90,7 @@ export function MenuTreeClient({
               <span className="text-lg font-bold text-slate-100">{sectionName}</span>
             </button>
             {isSectionExpanded && (
-              <div className="p-4 pt-2">
+              <div className="p-4 pt-2 bg-slate-800">
                 {categories.map(({ categoryId, categoryName, items }) => {
                   const isCatExpanded = expandedCategories.has(categoryId);
                   return (
@@ -70,14 +98,14 @@ export function MenuTreeClient({
                       <button
                         type="button"
                         onClick={() => toggleCategory(categoryId)}
-                        className="flex items-center gap-2 text-left py-2 pl-4 ml-2 border-l-2 border-slate-600 hover:border-emerald-500/50"
+                        className="flex items-center gap-2 text-left py-2 pl-4 ml-2 border-l-2 border-slate-600 hover:border-emerald-500/50 text-slate-200"
                         aria-expanded={isCatExpanded}
                       >
-                        <span className="text-slate-500 text-sm w-4">
+                        <span className="text-slate-400 text-sm w-4">
                           {isCatExpanded ? "▼" : "▶"}
                         </span>
-                        <span className="text-base italic text-slate-300">{categoryName}</span>
-                        <span className="text-slate-500 text-sm">({items.length} itens)</span>
+                        <span className="text-base italic text-slate-200">{categoryName}</span>
+                        <span className="text-slate-400 text-sm">({items.length} itens)</span>
                       </button>
                       {isCatExpanded && (
                         <ul className="list-none pl-0 mt-2 ml-8 space-y-1">
