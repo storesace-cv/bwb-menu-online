@@ -15,6 +15,7 @@ const iconPaths: Record<string, string> = {
   "hot-spice": "/icons/hot-spice.svg",
   "take-away": "/icons/take-away.svg",
   "on-promo": "/icons/on-promo.svg",
+  "prep-time": "/icons/prep-time.svg",
 };
 
 type MenuIconProps = {

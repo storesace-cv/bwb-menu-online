@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { PublicMenuPayload, PublicMenuItem } from "@/lib/supabase";
 import { MenuIcon } from "../menu-icons";
 
@@ -12,72 +12,156 @@ function formatPrice(value: number, currencyCode?: string): string {
   return code === "€" || code === "EUR" ? `${formatted} €` : `${formatted} ${code}`;
 }
 
+/** Modal: Zona 1 — imagem do artigo + ingredientes por baixo. */
+function ImageIngredientsModal({
+  open,
+  onClose,
+  imageSrc,
+  imageAlt,
+  ingredientsText,
+}: {
+  open: boolean;
+  onClose: () => void;
+  imageSrc: string | null;
+  imageAlt: string;
+  ingredientsText: string | null;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Imagem e ingredientes do artigo"
+    >
+      <div
+        className="bg-white rounded-xl shadow-xl max-h-[90vh] w-full max-w-lg overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {imageSrc && (
+          <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100 shrink-0">
+            <img src={imageSrc} alt={imageAlt} className="h-full w-full object-cover" />
+          </div>
+        )}
+        <div className="p-4 overflow-y-auto shrink-0">
+          {ingredientsText && ingredientsText.trim() !== "" ? (
+            <>
+              <h4 className="font-semibold text-gray-900 mb-2">Ingredientes</h4>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">{ingredientsText}</p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-500">Sem lista de ingredientes.</p>
+          )}
+        </div>
+        <div className="p-4 border-t border-gray-200 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2 px-4 rounded-lg bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currencyCode?: string }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
   const imageSrc =
     item.image_path != null && item.image_path !== ""
       ? process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") + "/storage/v1/object/public/" + item.image_path
       : item.image_url ?? null;
+  const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
 
   return (
     <li className="list-none">
       <article className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden">
+        {/* Zona 1 – Imagem do Artigo (clicável → modal com imagem + ingredientes) */}
         {imageSrc && (
-          <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
+          <button
+            type="button"
+            onClick={() => setImageModalOpen(true)}
+            className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400"
+            aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
+          >
             <img
               src={imageSrc}
               alt={item.menu_name ?? ""}
               className="h-full w-full object-cover"
             />
-          </div>
+          </button>
         )}
-        <div className="p-4 flex flex-wrap gap-3 justify-between items-start">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-bold text-lg text-gray-900">{item.menu_name}</h3>
-              <span className="flex items-center gap-1 shrink-0">
-                {item.is_featured && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                    <MenuIcon code="on-promo" size={14} />
-                    em destaque
-                  </span>
-                )}
-                {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
-                {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
-                {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
+        <div className="p-4">
+          {/* Zona A – Ícones informativos, alinhados à direita */}
+          <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px]">
+            {item.is_featured && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                <MenuIcon code="on-promo" size={14} />
+                em destaque
               </span>
-            </div>
-            {item.menu_description && (
-              <p className="mt-1 text-gray-600 text-sm leading-relaxed">{item.menu_description}</p>
             )}
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
-              {item.prep_minutes != null && <span>⏱ {item.prep_minutes}&apos;</span>}
-              {item.menu_ingredients != null && item.menu_ingredients.trim() !== "" && (
-                <button
-                  type="button"
-                  onClick={() => setIngredientsOpen((o) => !o)}
-                  className="text-gray-600 hover:text-gray-900 font-medium inline-flex items-center gap-1"
-                >
-                  Ingredientes <span className="font-bold">{ingredientsOpen ? "−" : "+"}</span>
-                </button>
-              )}
-            </div>
-            {ingredientsOpen && item.menu_ingredients && (
-              <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">{item.menu_ingredients}</p>
-            )}
-            {item.allergens?.length > 0 && (
-              <p className="mt-1 text-xs text-gray-500">
-                Alergénios: {item.allergens.map((a) => a.code).join(", ")}
-              </p>
+            {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
+            {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
+            {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
+          </div>
+          {/* Zona B – Nome do artigo, à esquerda */}
+          <h3 className="font-bold text-lg text-gray-900 text-left mt-1">{item.menu_name}</h3>
+          {item.menu_description && (
+            <p className="mt-1 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>
+          )}
+          {/* Zona C – Ingredientes: "Ingredientes" à esquerda, "+" à direita; ao clicar expande */}
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setIngredientsOpen((o) => !o)}
+              className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+              aria-expanded={ingredientsOpen}
+            >
+              <span>Ingredientes</span>
+              <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
+            </button>
+            {ingredientsOpen && (
+              <div className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">
+                {hasIngredients ? item.menu_ingredients : "—"}
+              </div>
             )}
           </div>
-          <div className="text-right shrink-0">
+          {/* Zona D – Tempo de Preparação (ícone + valor), à esquerda */}
+          {item.prep_minutes != null && (
+            <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
+              <MenuIcon code="prep-time" size={18} />
+              <span>{item.prep_minutes}&apos;</span>
+            </div>
+          )}
+          {/* Zona E – Alergénicos, à esquerda */}
+          {item.allergens && item.allergens.length > 0 && (
+            <p className="mt-2 text-xs text-gray-500 text-left">
+              Alergénios: {item.allergens.map((a) => a.code).join(", ")}
+            </p>
+          )}
+          {/* Zonas F e G – Preço antigo (centro da sua zona) + Preço actual (direita) */}
+          <div className={`mt-3 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
             {item.is_promotion && item.price_old != null && (
-              <div className="text-sm text-gray-500 line-through">{formatPrice(item.price_old, currencyCode)}</div>
+              <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
+                {formatPrice(item.price_old, currencyCode)}
+              </div>
             )}
             {item.menu_price != null && (
               <div
-                className={`font-bold ${item.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}
+                className={`font-bold text-right shrink-0 ${item.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}
               >
                 {formatPrice(item.menu_price, currencyCode)}
               </div>
@@ -85,6 +169,13 @@ export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currenc
           </div>
         </div>
       </article>
+      <ImageIngredientsModal
+        open={imageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+        imageSrc={imageSrc}
+        imageAlt={item.menu_name ?? ""}
+        ingredientsText={item.menu_ingredients}
+      />
     </li>
   );
 }
