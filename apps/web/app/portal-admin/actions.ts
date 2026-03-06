@@ -127,6 +127,34 @@ export async function createArticleType(_prev: { error?: string } | null, formDa
   return null;
 }
 
+export async function updateArticleType(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  const name = (formData.get("name") as string)?.trim() ?? "";
+  const iconCode = (formData.get("icon_code") as string)?.trim() ?? "fish";
+  const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  if (!id || !name) return { error: "ID e nome obrigatórios" };
+  const { error } = await supabase
+    .from("article_types")
+    .update({ name, icon_code: iconCode, sort_order: sortOrder })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/article-types");
+  revalidatePath("/portal-admin/items");
+  return null;
+}
+
+export async function deleteArticleType(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  if (!id) return { error: "ID obrigatório" };
+  const { error } = await supabase.from("article_types").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/article-types");
+  revalidatePath("/portal-admin/items");
+  return null;
+}
+
 export async function createMenuItem(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";
@@ -152,6 +180,54 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
     take_away: takeAway,
     menu_ingredients: menuIngredients,
   });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/items");
+  return null;
+}
+
+export async function updateMenuItem(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  const menuName = (formData.get("menu_name") as string)?.trim() ?? "";
+  const menuDescription = (formData.get("menu_description") as string)?.trim() || null;
+  const menuPrice = parseFloat((formData.get("menu_price") as string) ?? "0");
+  const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  const articleTypeId = (formData.get("article_type_id") as string)?.trim() || null;
+  const isPromotion = formData.get("is_promotion") === "1";
+  const priceOld = parseFloat((formData.get("price_old") as string) ?? "0");
+  const takeAway = formData.get("take_away") === "1";
+  const menuIngredients = (formData.get("menu_ingredients") as string)?.trim() || null;
+  const isVisible = formData.get("is_visible") === "1";
+  const isFeatured = formData.get("is_featured") === "1";
+  if (!id || !menuName) return { error: "ID e nome do item obrigatórios" };
+  const { error } = await supabase
+    .from("menu_items")
+    .update({
+      menu_name: menuName,
+      menu_description: menuDescription,
+      menu_price: isNaN(menuPrice) ? null : menuPrice,
+      sort_order: sortOrder,
+      article_type_id: articleTypeId,
+      is_promotion: isPromotion,
+      price_old: isPromotion && !isNaN(priceOld) ? priceOld : null,
+      take_away: takeAway,
+      menu_ingredients: menuIngredients,
+      is_visible: isVisible,
+      is_featured: isFeatured,
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/items");
+  return null;
+}
+
+export async function deleteMenuItem(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  if (!id) return { error: "ID obrigatório" };
+  const { error } = await supabase.from("menu_items").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/items");

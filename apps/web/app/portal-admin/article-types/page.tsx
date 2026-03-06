@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateArticleTypeForm } from "./create-article-type-form";
-import { MenuIcon } from "@/components/menu-icons";
+import { ArticleTypeRow } from "./article-type-row";
 
 export default async function ArticleTypesPage() {
   const headersList = await headers();
@@ -41,11 +41,7 @@ export default async function ArticleTypesPage() {
         {(!articleTypes || articleTypes.length === 0) && <p style={{ color: "#666" }}>Nenhum tipo definido.</p>}
         <ul style={{ listStyle: "none", paddingLeft: 0 }}>
           {(articleTypes ?? []).map((at) => (
-            <li key={at.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0", borderBottom: "1px solid #eee" }}>
-              <MenuIcon code={at.icon_code} size={24} />
-              <span>{at.name}</span>
-              <span style={{ color: "#888", fontSize: "0.85rem" }}>({at.icon_code})</span>
-            </li>
+            <ArticleTypeRow key={at.id} articleType={at} />
           ))}
         </ul>
       </section>

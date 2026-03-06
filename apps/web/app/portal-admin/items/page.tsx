@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateItemForm } from "./create-item-form";
+import { ItemActions } from "./item-actions";
 import { MenuIcon } from "@/components/menu-icons";
 
 export default async function ItemsPage() {
@@ -58,6 +59,7 @@ export default async function ItemsPage() {
               <th style={{ textAlign: "left", padding: "0.5rem" }}>Ordem</th>
               <th style={{ textAlign: "left", padding: "0.5rem" }}>Visível</th>
               <th style={{ textAlign: "left", padding: "0.5rem" }}>Destaque</th>
+              <th style={{ textAlign: "left", padding: "0.5rem" }}>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -73,6 +75,9 @@ export default async function ItemsPage() {
                   <td style={{ padding: "0.5rem" }}>{i.sort_order}</td>
                   <td style={{ padding: "0.5rem" }}>{i.is_visible ? "Sim" : "Não"}</td>
                   <td style={{ padding: "0.5rem" }}>{i.is_featured ? "★" : "—"}</td>
+                  <td style={{ padding: "0.5rem" }}>
+                    <ItemActions itemId={i.id} menuName={i.menu_name ?? ""} />
+                  </td>
                 </tr>
               );
             })}
