@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { deleteMenuItem } from "../actions";
+import { Button } from "@/components/admin";
 
 export function ItemActions({ itemId, menuName }: { itemId: string; menuName: string }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -13,11 +14,15 @@ export function ItemActions({ itemId, menuName }: { itemId: string; menuName: st
   };
 
   return (
-    <span style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-      <Link href={`/portal-admin/items/${itemId}/edit`}>Editar</Link>
-      <form ref={formRef} action={(fd: FormData) => { void deleteMenuItem(null, fd); }} style={{ display: "inline" }}>
+    <span className="flex gap-2 items-center">
+      <Link href={`/portal-admin/items/${itemId}/edit`} className="text-emerald-400 hover:text-emerald-300 text-sm">
+        Editar
+      </Link>
+      <form ref={formRef} action={(fd: FormData) => { void deleteMenuItem(null, fd); }} className="inline">
         <input type="hidden" name="id" value={itemId} />
-        <button type="button" onClick={handleDeleteClick}>Apagar</button>
+        <Button type="button" variant="outline" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
+          Apagar
+        </Button>
       </form>
     </span>
   );

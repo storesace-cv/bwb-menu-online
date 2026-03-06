@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateTenantForm } from "./create-tenant-form";
+import { Card, TableContainer } from "@/components/admin";
 
 export default async function TenantsPage() {
   const supabase = await createClient();
@@ -9,37 +10,45 @@ export default async function TenantsPage() {
 
   return (
     <div>
-      <h1>Tenants</h1>
-      <p>Listar e criar tenants (Global Admin).</p>
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Tenants</h1>
+      <p className="text-slate-400 mb-6">Listar e criar tenants (Global Admin).</p>
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2>Criar tenant</h2>
-        <CreateTenantForm />
+      <section className="mb-8">
+        <Card>
+          <h2 className="text-lg font-medium text-slate-200 mb-4">Criar tenant</h2>
+          <CreateTenantForm />
+        </Card>
       </section>
 
-      <section style={{ marginTop: "2rem" }}>
-        <h2>Lista</h2>
-        <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: "600px" }}>
-          <thead>
-            <tr style={{ borderBottom: "2px solid #ddd" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>NIF</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Nome</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((t) => (
-              <tr key={t.id} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "0.5rem" }}>{t.nif}</td>
-                <td style={{ padding: "0.5rem" }}>{t.name ?? "—"}</td>
-                <td style={{ padding: "0.5rem" }}>
-                  <Link href={`/portal-admin/tenants/${t.id}/stores`}>Lojas</Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {list.length === 0 && <p style={{ color: "#666" }}>Nenhum tenant.</p>}
+      <section>
+        <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
+        <Card>
+          <TableContainer>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-slate-600">
+                  <th className="text-left py-2 px-3 text-slate-300">NIF</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Nome</th>
+                  <th className="text-left py-2 px-3 text-slate-300"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((t) => (
+                  <tr key={t.id} className="border-b border-slate-700">
+                    <td className="py-2 px-3 text-slate-200">{t.nif}</td>
+                    <td className="py-2 px-3 text-slate-200">{t.name ?? "—"}</td>
+                    <td className="py-2 px-3">
+                      <Link href={`/portal-admin/tenants/${t.id}/stores`} className="text-emerald-400 hover:text-emerald-300">
+                        Lojas
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableContainer>
+          {list.length === 0 && <p className="text-slate-500 py-4">Nenhum tenant.</p>}
+        </Card>
       </section>
     </div>
   );

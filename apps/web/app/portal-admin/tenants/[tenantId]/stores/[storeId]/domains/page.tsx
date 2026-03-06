@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { SetDomainForm } from "./set-domain-form";
+import { Card, TableContainer } from "@/components/admin";
 
 type Props = { params: Promise<{ tenantId: string; storeId: string }> };
 
@@ -13,40 +14,46 @@ export default async function StoreDomainsPage({ params }: Props) {
 
   return (
     <div>
-      <p>
-        <Link href="/portal-admin/tenants">Tenants</Link>
+      <p className="mb-4 text-slate-400">
+        <Link href="/portal-admin/tenants" className="text-emerald-400 hover:text-emerald-300">Tenants</Link>
         {" → "}
-        <Link href={`/portal-admin/tenants/${tenantId}/stores`}>Lojas</Link>
+        <Link href={`/portal-admin/tenants/${tenantId}/stores`} className="text-emerald-400 hover:text-emerald-300">Lojas</Link>
         {" → Domínios"}
       </p>
-      <h1>Domínios da loja</h1>
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Domínios da loja</h1>
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2>Definir domínio</h2>
-        <SetDomainForm storeId={storeId} />
+      <section className="mb-8">
+        <Card>
+          <h2 className="text-lg font-medium text-slate-200 mb-4">Definir domínio</h2>
+          <SetDomainForm storeId={storeId} />
+        </Card>
       </section>
 
-      <section style={{ marginTop: "2rem" }}>
-        <h2>Lista</h2>
-        <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: "600px" }}>
-          <thead>
-            <tr style={{ borderBottom: "2px solid #ddd" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Hostname</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Tipo</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Primário</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((d) => (
-              <tr key={d.id} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "0.5rem" }}>{d.hostname}</td>
-                <td style={{ padding: "0.5rem" }}>{d.domain_type}</td>
-                <td style={{ padding: "0.5rem" }}>{d.is_primary ? "Sim" : "Não"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {list.length === 0 && <p style={{ color: "#666" }}>Nenhum domínio.</p>}
+      <section>
+        <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
+        <Card>
+          <TableContainer>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-slate-600">
+                  <th className="text-left py-2 px-3 text-slate-300">Hostname</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Tipo</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Primário</th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((d) => (
+                  <tr key={d.id} className="border-b border-slate-700">
+                    <td className="py-2 px-3 text-slate-200">{d.hostname}</td>
+                    <td className="py-2 px-3 text-slate-200">{d.domain_type}</td>
+                    <td className="py-2 px-3 text-slate-200">{d.is_primary ? "Sim" : "Não"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableContainer>
+          {list.length === 0 && <p className="text-slate-500 py-4">Nenhum domínio.</p>}
+        </Card>
       </section>
     </div>
   );

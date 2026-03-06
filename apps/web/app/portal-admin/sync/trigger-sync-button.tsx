@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button, Alert, Spinner } from "@/components/admin";
 
 export function TriggerSyncButton({ storeId }: { storeId: string }) {
   const router = useRouter();
@@ -33,14 +34,21 @@ export function TriggerSyncButton({ storeId }: { storeId: string }) {
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-      <button type="button" onClick={handleClick} disabled={loading}>
-        {loading ? "A correr…" : "Disparar sync NET-bo"}
-      </button>
+    <div className="flex items-center gap-4 flex-wrap">
+      <Button type="button" variant="primary" onClick={handleClick} disabled={loading}>
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <Spinner className="inline-block" />
+            A correr…
+          </span>
+        ) : (
+          "Disparar sync NET-bo"
+        )}
+      </Button>
       {message && (
-        <span style={{ color: message.type === "err" ? "crimson" : "green" }}>
+        <Alert variant={message.type === "err" ? "error" : "success"}>
           {message.text}
-        </span>
+        </Alert>
       )}
     </div>
   );

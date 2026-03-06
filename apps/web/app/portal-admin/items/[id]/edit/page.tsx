@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { EditItemForm } from "../../edit-item-form";
+import { Card } from "@/components/admin";
 
 export default async function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,9 +14,9 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
   if (!storeId) {
     return (
       <div>
-        <h1>Editar item</h1>
-        <p>Domínio não associado a nenhuma loja.</p>
-        <p><Link href="/portal-admin/items">← Voltar aos itens</Link></p>
+        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Editar item</h1>
+        <p className="text-slate-400 mb-4">Domínio não associado a nenhuma loja.</p>
+        <p><Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">← Voltar aos itens</Link></p>
       </div>
     );
   }
@@ -30,9 +31,9 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
   if (error || !item) {
     return (
       <div>
-        <h1>Editar item</h1>
-        <p>Item não encontrado ou sem acesso.</p>
-        <p><Link href="/portal-admin/items">← Voltar aos itens</Link></p>
+        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Editar item</h1>
+        <p className="text-slate-400 mb-4">Item não encontrado ou sem acesso.</p>
+        <p><Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">← Voltar aos itens</Link></p>
       </div>
     );
   }
@@ -45,11 +46,11 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
 
   return (
     <div>
-      <h1>Editar item</h1>
-      <p><Link href="/portal-admin/items">← Voltar aos itens</Link></p>
-      <section style={{ marginTop: "1.5rem" }}>
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Editar item</h1>
+      <p className="mb-6"><Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">← Voltar aos itens</Link></p>
+      <Card>
         <EditItemForm item={item} articleTypes={articleTypes ?? []} />
-      </section>
+      </Card>
     </div>
   );
 }

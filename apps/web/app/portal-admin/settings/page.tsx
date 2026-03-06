@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { SettingsForm } from "./settings-form";
+import { Card } from "@/components/admin";
 
 export default async function SettingsPage() {
   const headersList = await headers();
@@ -12,8 +13,8 @@ export default async function SettingsPage() {
   if (!storeId) {
     return (
       <div>
-        <h1>Definições</h1>
-        <p>Domínio não associado a nenhuma loja. Configure um domínio em Global Admin (Tenants → Lojas → Domínios).</p>
+        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Definições</h1>
+        <p className="text-slate-400">Domínio não associado a nenhuma loja. Configure um domínio em Global Admin (Tenants → Lojas → Domínios).</p>
       </div>
     );
   }
@@ -24,10 +25,14 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1>Definições da loja</h1>
-      <p>Tema e branding para o menu público desta loja. {store?.name && `Loja: ${store.name}`}</p>
-      <p><Link href="/portal-admin/menu">← Menu</Link> · <Link href="/portal-admin/sync">Sync</Link></p>
-      <section style={{ marginTop: "1.5rem" }}>
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Definições da loja</h1>
+      <p className="text-slate-400 mb-2">Tema e branding para o menu público desta loja. {store?.name && `Loja: ${store.name}`}</p>
+      <p className="mb-6">
+        <Link href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300">← Menu</Link>
+        {" · "}
+        <Link href="/portal-admin/sync" className="text-emerald-400 hover:text-emerald-300">Sync</Link>
+      </p>
+      <Card>
         <SettingsForm
           storeId={storeId}
           initial={{
@@ -37,7 +42,7 @@ export default async function SettingsPage() {
             currency_code: settings.currency_code ?? "",
           }}
         />
-      </section>
+      </Card>
     </div>
   );
 }

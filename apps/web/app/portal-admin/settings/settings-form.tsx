@@ -2,6 +2,7 @@
 
 import { useFormState } from "react-dom";
 import { updateStoreSettings } from "../actions";
+import { Input, Button, Alert } from "@/components/admin";
 
 export function SettingsForm({
   storeId,
@@ -12,26 +13,42 @@ export function SettingsForm({
 }) {
   const [state, formAction] = useFormState(updateStoreSettings, null);
   return (
-    <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "28rem" }}>
+    <form action={formAction} className="flex flex-col gap-4 max-w-md">
       <input type="hidden" name="store_id" value={storeId} />
-      <label>
-        Nome na loja (menu público)
-        <input name="store_display_name" type="text" defaultValue={initial.store_display_name ?? ""} placeholder="ex: Café Central" />
-      </label>
-      <label>
-        Cor primária
-        <input name="primary_color" type="text" defaultValue={initial.primary_color ?? ""} placeholder="ex: #1976d2" />
-      </label>
-      <label>
-        URL do logótipo
-        <input name="logo_url" type="url" defaultValue={initial.logo_url ?? ""} placeholder="https://..." />
-      </label>
-      <label>
-        Código de moeda
-        <input name="currency_code" type="text" defaultValue={initial.currency_code ?? ""} placeholder="ex: EUR, Kz" />
-      </label>
-      <button type="submit">Guardar</button>
-      {state?.error && <span style={{ color: "crimson" }}>{state.error}</span>}
+      <Input
+        id="store_display_name"
+        name="store_display_name"
+        label="Nome na loja (menu público)"
+        type="text"
+        defaultValue={initial.store_display_name ?? ""}
+        placeholder="ex: Café Central"
+      />
+      <Input
+        id="primary_color"
+        name="primary_color"
+        label="Cor primária"
+        type="text"
+        defaultValue={initial.primary_color ?? ""}
+        placeholder="ex: #1976d2"
+      />
+      <Input
+        id="logo_url"
+        name="logo_url"
+        label="URL do logótipo"
+        type="url"
+        defaultValue={initial.logo_url ?? ""}
+        placeholder="https://..."
+      />
+      <Input
+        id="currency_code"
+        name="currency_code"
+        label="Código de moeda"
+        type="text"
+        defaultValue={initial.currency_code ?? ""}
+        placeholder="ex: EUR, Kz"
+      />
+      <Button type="submit" variant="primary">Guardar</Button>
+      {state?.error && <Alert variant="error">{state.error}</Alert>}
     </form>
   );
 }

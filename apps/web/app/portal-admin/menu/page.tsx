@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateCategoryForm } from "./create-category-form";
 import { CreateSectionForm } from "./create-section-form";
+import { Card } from "@/components/admin";
 
 export default async function MenuPage() {
   const headersList = await headers();
@@ -13,8 +14,10 @@ export default async function MenuPage() {
   if (!storeId) {
     return (
       <div>
-        <h1>Menu</h1>
-        <p>Para gerir o menu, aceda através do subdomínio da loja (ex.: 9999999991.menu.bwb.pt/portal-admin/menu). Em Global Admin pode ver a associação em Tenants → Lojas → coluna Domínios.</p>
+        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Menu</h1>
+        <p className="text-slate-400">
+          Para gerir o menu, aceda através do subdomínio da loja (ex.: 9999999991.menu.bwb.pt/portal-admin/menu). Em Global Admin pode ver a associação em Tenants → Lojas → coluna Domínios.
+        </p>
       </div>
     );
   }
@@ -50,55 +53,63 @@ export default async function MenuPage() {
 
   return (
     <div>
-      <h1>Menu</h1>
-      <p>Categorias e itens da loja (Tenant Admin).</p>
-      <p><Link href="/portal-admin/items">Ver todos os itens</Link> · <Link href="/portal-admin/article-types">Tipos de artigo</Link></p>
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Menu</h1>
+      <p className="text-slate-400 mb-2">Categorias e itens da loja (Tenant Admin).</p>
+      <p className="mb-6">
+        <Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">Ver todos os itens</Link>
+        {" · "}
+        <Link href="/portal-admin/article-types" className="text-emerald-400 hover:text-emerald-300">Tipos de artigo</Link>
+      </p>
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2>Secções</h2>
-        <p style={{ fontSize: "0.9rem", color: "#666" }}>Secção é um nível acima de categoria (ex.: Snack-Bar, Restaurante).</p>
-        <CreateSectionForm storeId={storeId} />
-        {sections && sections.length > 0 && (
-          <ul style={{ listStyle: "none", paddingLeft: 0, marginTop: "0.5rem" }}>
-            {sections.map((s) => (
-              <li key={s.id} style={{ padding: "0.25rem 0" }}>{s.name}</li>
-            ))}
-          </ul>
-        )}
+      <section className="mb-8">
+        <Card>
+          <h2 className="text-lg font-medium text-slate-200 mb-2">Secções</h2>
+          <p className="text-slate-500 text-sm mb-4">Secção é um nível acima de categoria (ex.: Snack-Bar, Restaurante).</p>
+          <CreateSectionForm storeId={storeId} />
+          {sections && sections.length > 0 && (
+            <ul className="list-none pl-0 mt-4 space-y-1">
+              {sections.map((s) => (
+                <li key={s.id} className="text-slate-200 py-1">{s.name}</li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </section>
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2>Nova categoria</h2>
-        <CreateCategoryForm storeId={storeId} sections={sections ?? []} />
+      <section className="mb-8">
+        <Card>
+          <h2 className="text-lg font-medium text-slate-200 mb-4">Nova categoria</h2>
+          <CreateCategoryForm storeId={storeId} sections={sections ?? []} />
+        </Card>
       </section>
 
-      <section style={{ marginTop: "2rem" }}>
-        <h2>Categorias e itens</h2>
-        {(!categories || categories.length === 0) && <p style={{ color: "#666" }}>Nenhuma categoria.</p>}
+      <section>
+        <h2 className="text-lg font-medium text-slate-200 mb-4">Categorias e itens</h2>
+        {(!categories || categories.length === 0) && <p className="text-slate-500">Nenhuma categoria.</p>}
         {categories?.map((cat) => (
-          <div key={cat.id} style={{ marginBottom: "1.5rem", border: "1px solid #eee", padding: "1rem", borderRadius: "8px" }}>
-            <h3 style={{ marginTop: 0 }}>
+          <Card key={cat.id} className="mb-4">
+            <h3 className="text-slate-100 font-medium mt-0">
               {cat.name}
               {cat.section_id && (
-                <span style={{ fontWeight: "normal", color: "#666", fontSize: "0.9rem" }}>
-                  {" "}({sectionById.get(cat.section_id)?.name ?? "—"})
+                <span className="font-normal text-slate-500 text-sm ml-1">
+                  ({sectionById.get(cat.section_id)?.name ?? "—"})
                 </span>
               )}
             </h3>
-            <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+            <ul className="list-none pl-0 space-y-1">
               {(byCategory.get(cat.id) ?? []).map(({ menu_item_id }) => {
                 const item = itemsById.get(menu_item_id);
                 if (!item) return null;
                 return (
-                  <li key={item.id} style={{ padding: "0.25rem 0" }}>
+                  <li key={item.id} className="text-slate-200 py-1">
                     {item.menu_name}
-                    {item.menu_price != null && <span style={{ marginLeft: "0.5rem", color: "#666" }}>{Number(item.menu_price).toFixed(2)} €</span>}
-                    {item.is_featured && <span style={{ marginLeft: "0.5rem", fontSize: "0.85em" }}>★</span>}
+                    {item.menu_price != null && <span className="ml-2 text-slate-500">{Number(item.menu_price).toFixed(2)} €</span>}
+                    {item.is_featured && <span className="ml-2 text-amber-400">★</span>}
                   </li>
                 );
               })}
             </ul>
-          </div>
+          </Card>
         ))}
       </section>
     </div>

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateStoreForm } from "./create-store-form";
+import { Card, TableContainer } from "@/components/admin";
 
 type Props = { params: Promise<{ tenantId: string }> };
 
@@ -30,41 +31,49 @@ export default async function TenantStoresPage({ params }: Props) {
 
   return (
     <div>
-      <p><Link href="/portal-admin/tenants">← Tenants</Link></p>
-      <h1>Lojas do tenant</h1>
+      <p className="mb-4">
+        <Link href="/portal-admin/tenants" className="text-emerald-400 hover:text-emerald-300">← Tenants</Link>
+      </p>
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Lojas do tenant</h1>
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2>Adicionar loja</h2>
-        <CreateStoreForm tenantId={tenantId} />
+      <section className="mb-8">
+        <Card>
+          <h2 className="text-lg font-medium text-slate-200 mb-4">Adicionar loja</h2>
+          <CreateStoreForm tenantId={tenantId} />
+        </Card>
       </section>
 
-      <section style={{ marginTop: "2rem" }}>
-        <h2>Lista</h2>
-        <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: "600px" }}>
-          <thead>
-            <tr style={{ borderBottom: "2px solid #ddd" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Nº</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Nome</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Source</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}>Domínio(s)</th>
-              <th style={{ textAlign: "left", padding: "0.5rem" }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {storesWithDomains.map(({ store: s, domains }) => (
-              <tr key={s.id} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "0.5rem" }}>{s.store_number}</td>
-                <td style={{ padding: "0.5rem" }}>{s.name ?? "—"}</td>
-                <td style={{ padding: "0.5rem" }}>{s.source_type}</td>
-                <td style={{ padding: "0.5rem" }}>{formatDomains(domains)}</td>
-                <td style={{ padding: "0.5rem" }}>
-                  <Link href={`/portal-admin/tenants/${tenantId}/stores/${s.id}/domains`}>Domínios</Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {storesWithDomains.length === 0 && <p style={{ color: "#666" }}>Nenhuma loja.</p>}
+      <section>
+        <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
+        <Card>
+          <TableContainer>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-slate-600">
+                  <th className="text-left py-2 px-3 text-slate-300">Nº</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Nome</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Source</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Domínio(s)</th>
+                  <th className="text-left py-2 px-3 text-slate-300"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {storesWithDomains.map(({ store: s, domains }) => (
+                  <tr key={s.id} className="border-b border-slate-700">
+                    <td className="py-2 px-3 text-slate-200">{s.store_number}</td>
+                    <td className="py-2 px-3 text-slate-200">{s.name ?? "—"}</td>
+                    <td className="py-2 px-3 text-slate-200">{s.source_type}</td>
+                    <td className="py-2 px-3 text-slate-200">{formatDomains(domains)}</td>
+                    <td className="py-2 px-3">
+                      <Link href={`/portal-admin/tenants/${tenantId}/stores/${s.id}/domains`} className="text-emerald-400 hover:text-emerald-300">Domínios</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableContainer>
+          {storesWithDomains.length === 0 && <p className="text-slate-500 py-4">Nenhuma loja.</p>}
+        </Card>
       </section>
     </div>
   );

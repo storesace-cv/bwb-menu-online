@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import { Card, Input, Button, Alert } from "@/components/admin";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -39,36 +40,38 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: "24rem", margin: "2rem auto", padding: "1.5rem", border: "1px solid #eee" }}>
-      <h1>Login — Portal Admin</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="email">Email</label>
-          <input
+    <div className="max-w-md mx-auto pt-12 px-4">
+      <Card>
+        <h1 className="text-xl font-semibold text-slate-100 mb-6">Login — Portal Admin</h1>
+        <form onSubmit={handleSubmit}>
+          <Input
             id="email"
+            label="Email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
           />
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="password">Password</label>
-          <input
+          <Input
             id="password"
+            label="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
           />
-        </div>
-        {error && <p style={{ color: "crimson", marginBottom: "0.5rem" }}>{error}</p>}
-        <button type="submit">Entrar</button>
-      </form>
+          {error && (
+            <div className="mb-4">
+              <Alert variant="error">{error}</Alert>
+            </div>
+          )}
+          <Button type="submit" variant="primary">
+            Entrar
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }

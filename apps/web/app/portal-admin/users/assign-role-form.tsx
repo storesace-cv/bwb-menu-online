@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormState } from "react-dom";
 import { assignRole } from "../actions";
+import { Select, Button, Alert } from "@/components/admin";
 
 type UserRow = { id: string; email: string | null; bindings: unknown[] };
 type Tenant = { id: string; nif: string; name: string | null };
@@ -31,45 +32,49 @@ export function AssignRoleForm({
   };
 
   return (
-    <form action={formAction} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end" }}>
-      <label>
-        Utilizador
-        <select name="user_id" required>
-          <option value="">—</option>
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>{u.email ?? u.id}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Role
-        <select name="role_code" required>
-          <option value="">—</option>
-          {roles.map((r) => (
-            <option key={r.code} value={r.code}>{r.name}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Tenant
-        <select name="tenant_id" value={tenantId} onChange={(e) => onTenantChange(e.target.value)}>
-          <option value="">—</option>
-          {tenants.map((t) => (
-            <option key={t.id} value={t.id}>{t.name ?? t.nif}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Loja
-        <select name="store_id" value={storeId} onChange={(e) => setStoreId(e.target.value)}>
-          <option value="">—</option>
-          {stores.map((s) => (
-            <option key={s.id} value={s.id}>{s.name ?? s.store_number}</option>
-          ))}
-        </select>
-      </label>
-      <button type="submit">Atribuir</button>
-      {state?.error && <span style={{ color: "crimson" }}>{state.error}</span>}
+    <form action={formAction} className="flex flex-wrap gap-4 items-end">
+      <Select id="assign-user" name="user_id" label="Utilizador" required>
+        <option value="">—</option>
+        {users.map((u) => (
+          <option key={u.id} value={u.id}>{u.email ?? u.id}</option>
+        ))}
+      </Select>
+      <Select id="assign-role" name="role_code" label="Role" required>
+        <option value="">—</option>
+        {roles.map((r) => (
+          <option key={r.code} value={r.code}>{r.name}</option>
+        ))}
+      </Select>
+      <Select
+        id="assign-tenant"
+        name="tenant_id"
+        label="Tenant"
+        value={tenantId}
+        onChange={(e) => onTenantChange(e.target.value)}
+      >
+        <option value="">—</option>
+        {tenants.map((t) => (
+          <option key={t.id} value={t.id}>{t.name ?? t.nif}</option>
+        ))}
+      </Select>
+      <Select
+        id="assign-store"
+        name="store_id"
+        label="Loja"
+        value={storeId}
+        onChange={(e) => setStoreId(e.target.value)}
+      >
+        <option value="">—</option>
+        {stores.map((s) => (
+          <option key={s.id} value={s.id}>{s.name ?? s.store_number}</option>
+        ))}
+      </Select>
+      <Button type="submit" variant="primary">Atribuir</Button>
+      {state?.error && (
+        <div className="w-full mt-2">
+          <Alert variant="error">{state.error}</Alert>
+        </div>
+      )}
     </form>
   );
 }

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { TriggerSyncButton } from "./trigger-sync-button";
+import { Card, TableContainer } from "@/components/admin";
 
 export default async function SyncPage() {
   const headersList = await headers();
@@ -13,8 +14,8 @@ export default async function SyncPage() {
   if (!storeId) {
     return (
       <div>
-        <h1>Sync</h1>
-        <p>Domínio não associado a nenhuma loja. Configure um domínio em Global Admin (Tenants → Lojas → Domínios).</p>
+        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Sync</h1>
+        <p className="text-slate-400">Domínio não associado a nenhuma loja. Configure um domínio em Global Admin (Tenants → Lojas → Domínios).</p>
       </div>
     );
   }
@@ -43,77 +44,85 @@ export default async function SyncPage() {
 
   return (
     <div>
-      <h1>Sync NET-bo</h1>
-      <p>Sincronização de produtos a partir do NET-bo para o catálogo da loja. Configure a integração em Global Admin (Tenants → Lojas → Integração).</p>
-      <p><Link href="/portal-admin/menu">← Menu</Link> · <Link href="/portal-admin/items">Itens</Link></p>
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Sync NET-bo</h1>
+      <p className="text-slate-400 mb-2">Sincronização de produtos a partir do NET-bo para o catálogo da loja. Configure a integração em Global Admin (Tenants → Lojas → Integração).</p>
+      <p className="mb-6">
+        <Link href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300">← Menu</Link>
+        {" · "}
+        <Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">Itens</Link>
+      </p>
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2>Disparar sync</h2>
-        <TriggerSyncButton storeId={storeId} />
+      <section className="mb-8">
+        <Card>
+          <h2 className="text-lg font-medium text-slate-200 mb-4">Disparar sync</h2>
+          <TriggerSyncButton storeId={storeId} />
+        </Card>
       </section>
 
-      <section style={{ marginTop: "2rem" }}>
-        <h2>Histórico de syncs</h2>
-        {(!runs || runs.length === 0) && <p style={{ color: "#666" }}>Nenhum sync executado ainda.</p>}
+      <section>
+        <h2 className="text-lg font-medium text-slate-200 mb-4">Histórico de syncs</h2>
+        {(!runs || runs.length === 0) && <p className="text-slate-500">Nenhum sync executado ainda.</p>}
         {runs && runs.length > 0 && (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.9rem" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #ddd", textAlign: "left" }}>
-                  <th style={{ padding: "0.5rem" }}>Run</th>
-                  <th style={{ padding: "0.5rem" }}>Origem</th>
-                  <th style={{ padding: "0.5rem" }}>Estado</th>
-                  <th style={{ padding: "0.5rem" }}>Início</th>
-                  <th style={{ padding: "0.5rem" }}>Fim</th>
-                  <th style={{ padding: "0.5rem" }}>Contagens</th>
-                  <th style={{ padding: "0.5rem" }}>Erro</th>
-                </tr>
-              </thead>
-              <tbody>
-                {runs.map((run) => (
-                  <Fragment key={run.id}>
-                    <tr style={{ borderBottom: "1px solid #eee" }}>
-                      <td style={{ padding: "0.5rem" }} title={run.id}>
-                        {run.id.slice(0, 8)}…
-                      </td>
-                      <td style={{ padding: "0.5rem" }}>{run.source_type}</td>
-                      <td style={{ padding: "0.5rem" }}>{run.status}</td>
-                      <td style={{ padding: "0.5rem" }}>
-                        {run.started_at ? new Date(run.started_at).toLocaleString() : "—"}
-                      </td>
-                      <td style={{ padding: "0.5rem" }}>
-                        {run.finished_at ? new Date(run.finished_at).toLocaleString() : "—"}
-                      </td>
-                      <td style={{ padding: "0.5rem" }}>
-                        {run.counts && typeof run.counts === "object" && !Array.isArray(run.counts)
-                          ? `fetched: ${(run.counts as { fetched?: number }).fetched ?? "-"}, upserted: ${(run.counts as { upserted?: number }).upserted ?? "-"}, errors: ${(run.counts as { errors?: number }).errors ?? "-"}`
-                          : "—"}
-                      </td>
-                      <td style={{ padding: "0.5rem", color: run.error ? "crimson" : undefined }}>
-                        {run.error ? String(run.error).slice(0, 80) : "—"}
-                      </td>
-                    </tr>
-                    {(eventsByRun[run.id]?.length ?? 0) > 0 && (
-                      <tr style={{ borderBottom: "1px solid #eee", backgroundColor: "#f9f9f9" }}>
-                        <td colSpan={7} style={{ padding: "0.5rem 0.5rem 0.5rem 1.5rem" }}>
-                          <details>
-                            <summary style={{ cursor: "pointer" }}>Eventos ({eventsByRun[run.id].length})</summary>
-                            <ul style={{ margin: "0.25rem 0 0 1rem", paddingLeft: "1rem", fontSize: "0.85rem" }}>
-                              {eventsByRun[run.id].map((ev, i) => (
-                                <li key={i} style={{ color: ev.level === "error" ? "crimson" : undefined }}>
-                                  [{ev.level}] {ev.message ?? ""} — {new Date(ev.created_at).toLocaleString()}
-                                </li>
-                              ))}
-                            </ul>
-                          </details>
+          <Card>
+            <TableContainer>
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b-2 border-slate-600 text-left">
+                    <th className="py-2 px-3 text-slate-300">Run</th>
+                    <th className="py-2 px-3 text-slate-300">Origem</th>
+                    <th className="py-2 px-3 text-slate-300">Estado</th>
+                    <th className="py-2 px-3 text-slate-300">Início</th>
+                    <th className="py-2 px-3 text-slate-300">Fim</th>
+                    <th className="py-2 px-3 text-slate-300">Contagens</th>
+                    <th className="py-2 px-3 text-slate-300">Erro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {runs.map((run) => (
+                    <Fragment key={run.id}>
+                      <tr className="border-b border-slate-700">
+                        <td className="py-2 px-3 text-slate-200" title={run.id}>
+                          {run.id.slice(0, 8)}…
+                        </td>
+                        <td className="py-2 px-3 text-slate-200">{run.source_type}</td>
+                        <td className="py-2 px-3 text-slate-200">{run.status}</td>
+                        <td className="py-2 px-3 text-slate-200">
+                          {run.started_at ? new Date(run.started_at).toLocaleString() : "—"}
+                        </td>
+                        <td className="py-2 px-3 text-slate-200">
+                          {run.finished_at ? new Date(run.finished_at).toLocaleString() : "—"}
+                        </td>
+                        <td className="py-2 px-3 text-slate-200">
+                          {run.counts && typeof run.counts === "object" && !Array.isArray(run.counts)
+                            ? `fetched: ${(run.counts as { fetched?: number }).fetched ?? "-"}, upserted: ${(run.counts as { upserted?: number }).upserted ?? "-"}, errors: ${(run.counts as { errors?: number }).errors ?? "-"}`
+                            : "—"}
+                        </td>
+                        <td className={`py-2 px-3 ${run.error ? "text-red-400" : "text-slate-200"}`}>
+                          {run.error ? String(run.error).slice(0, 80) : "—"}
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      {(eventsByRun[run.id]?.length ?? 0) > 0 && (
+                        <tr className="border-b border-slate-700 bg-slate-800/50">
+                          <td colSpan={7} className="py-2 px-3 pl-6">
+                            <details>
+                              <summary className="cursor-pointer text-slate-300">Eventos ({eventsByRun[run.id].length})</summary>
+                              <ul className="mt-1 ml-4 list-disc text-slate-400 text-xs space-y-0.5">
+                                {eventsByRun[run.id].map((ev, i) => (
+                                  <li key={i} className={ev.level === "error" ? "text-red-400" : ""}>
+                                    [{ev.level}] {ev.message ?? ""} — {new Date(ev.created_at).toLocaleString()}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </TableContainer>
+          </Card>
         )}
       </section>
     </div>

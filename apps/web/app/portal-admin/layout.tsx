@@ -1,3 +1,4 @@
+import "./admin.css";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
@@ -5,6 +6,9 @@ import { getPortalMode } from "@/lib/portal-mode";
 import { portalDebugLog } from "@/lib/portal-debug-log";
 import Link from "next/link";
 import { RedirectTo } from "./redirect-client";
+
+const THEME_WRAPPER_CLASS =
+  "admin-theme min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 flex flex-col";
 
 const PORTAL_LOGIN = "/portal-admin/login";
 const CHANGE_PASSWORD = "/portal-admin/change-password";
@@ -25,7 +29,7 @@ export default async function PortalAdminLayout({
 
   if (isLoginPage) {
     portalDebugLog("layout", { pathname, decision: "login_page" });
-    return <>{children}</>;
+    return <div className={THEME_WRAPPER_CLASS}>{children}</div>;
   }
 
   let supabase;
@@ -34,9 +38,11 @@ export default async function PortalAdminLayout({
   } catch {
     portalDebugLog("layout", { pathname, error: "createClient failed" });
     return (
-      <div style={{ padding: "2rem" }}>
-        <p>Configuração Supabase em falta.</p>
-        <Link href={PORTAL_LOGIN}>Login</Link>
+      <div className={THEME_WRAPPER_CLASS}>
+        <div className="p-8 max-w-md mx-auto">
+          <p className="text-slate-300 mb-4">Configuração Supabase em falta.</p>
+          <Link href={PORTAL_LOGIN} className="text-emerald-400 hover:text-emerald-300 underline">Login</Link>
+        </div>
       </div>
     );
   }
@@ -67,23 +73,29 @@ export default async function PortalAdminLayout({
   }
 
   portalDebugLog("layout", { pathname, decision: "full_layout" });
+  const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header style={{ borderBottom: "1px solid #eee", padding: "0.75rem 1.5rem", display: "flex", gap: "1rem", alignItems: "center" }}>
-        <Link href="/portal-admin" style={{ fontWeight: "bold" }}>Portal Admin</Link>
-        <span style={{ color: "#666" }}>{mode === "global" ? "Global" : "Loja"}</span>
-        {mode === "global" && <Link href="/portal-admin/tenants">Tenants</Link>}
-        {mode === "global" && <Link href="/portal-admin/users">Utilizadores</Link>}
-        <Link href="/portal-admin/menu">Menu</Link>
-        {mode === "tenant" && <Link href="/portal-admin/items">Itens</Link>}
-        {mode === "tenant" && <Link href="/portal-admin/article-types">Tipos de artigo</Link>}
-        {mode === "tenant" && <Link href="/portal-admin/sync">Sync</Link>}
-        {mode === "tenant" && <Link href="/portal-admin/settings">Definições</Link>}
-        <form action="/api/auth/signout" method="post" style={{ marginLeft: "auto" }}>
-          <button type="submit">Sair</button>
+    <div className={THEME_WRAPPER_CLASS}>
+      <header className="bg-slate-800/80 border-b border-slate-700 backdrop-blur-sm shadow-md px-4 py-3 flex flex-wrap gap-4 items-center">
+        <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors">Portal Admin</Link>
+        <span className="text-slate-400 text-sm">{mode === "global" ? "Global" : "Loja"}</span>
+        {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass}>Tenants</Link>}
+        {mode === "global" && <Link href="/portal-admin/users" className={linkClass}>Utilizadores</Link>}
+        <Link href="/portal-admin/menu" className={linkClass}>Menu</Link>
+        {mode === "tenant" && <Link href="/portal-admin/items" className={linkClass}>Itens</Link>}
+        {mode === "tenant" && <Link href="/portal-admin/article-types" className={linkClass}>Tipos de artigo</Link>}
+        {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass}>Sync</Link>}
+        {mode === "tenant" && <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>}
+        <form action="/api/auth/signout" method="post" className="ml-auto">
+          <button
+            type="submit"
+            className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+          >
+            Sair
+          </button>
         </form>
       </header>
-      <main style={{ padding: "1.5rem", flex: 1 }}>{children}</main>
+      <main className="flex-1 p-6">{children}</main>
     </div>
   );
 }

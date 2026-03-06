@@ -1,6 +1,6 @@
 "use client";
 
-export const MENU_ICON_CODES = ["fish", "beef", "lobster", "plant"] as const;
+export const MENU_ICON_CODES = ["fish", "beef", "lobster", "plant", "vehicle", "percent"] as const;
 export type MenuIconCode = (typeof MENU_ICON_CODES)[number];
 
 const iconPaths: Record<string, string> = {

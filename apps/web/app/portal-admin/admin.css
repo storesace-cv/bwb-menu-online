@@ -1,0 +1,61 @@
+/* Admin-only styles (loaded only under /portal-admin). Scoped to .admin-theme. */
+
+.admin-theme {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Dark scrollbar */
+.admin-theme ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.admin-theme ::-webkit-scrollbar-track {
+  background: rgb(30 41 59);
+}
+.admin-theme ::-webkit-scrollbar-thumb {
+  background: rgb(71 85 105);
+  border-radius: 4px;
+}
+.admin-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139);
+}
+
+/* Spinner (emerald) */
+.admin-theme .spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid rgb(30 41 59);
+  border-top-color: rgb(16 185 129);
+  border-radius: 50%;
+  animation: admin-spin 0.8s linear infinite;
+}
+@keyframes admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Input legible: fundo branco, texto escuro */
+.admin-theme .input-legible,
+.admin-theme input.input-legible,
+.admin-theme select.input-legible,
+.admin-theme textarea.input-legible {
+  background: white !important;
+  color: rgb(15 23 42) !important;
+}
+.admin-theme .input-legible::placeholder {
+  color: rgb(100 116 139);
+}
+
+/* Grid cards dinâmico */
+.admin-theme .grid-cards-dynamic {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1rem;
+}
+
+/* Table container: max-height + overflow */
+.admin-theme .table-container {
+  max-height: 70vh;
+  overflow: auto;
+}

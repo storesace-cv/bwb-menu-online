@@ -2,6 +2,10 @@
 
 import { useFormState } from "react-dom";
 import { createMenuItem } from "../actions";
+import { Input, Select, Button, Alert } from "@/components/admin";
+
+const inputClass =
+  "w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500";
 
 type ArticleType = { id: string; name: string; icon_code: string };
 
@@ -9,52 +13,47 @@ export function CreateItemForm({ storeId, articleTypes }: { storeId: string; art
   const [state, formAction] = useFormState(createMenuItem, null);
 
   return (
-    <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "32rem" }}>
+    <form action={formAction} className="flex flex-col gap-4 max-w-2xl">
       <input type="hidden" name="store_id" value={storeId} />
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-        <label>
-          Nome * <input name="menu_name" type="text" required placeholder="ex: Bifana" />
-        </label>
-        <label>
-          Descrição <input name="menu_description" type="text" placeholder="Breve descrição" />
-        </label>
+      <div className="flex flex-wrap gap-4">
+        <Input id="item-name" name="menu_name" label="Nome *" type="text" required placeholder="ex: Bifana" />
+        <Input id="item-desc" name="menu_description" label="Descrição" type="text" placeholder="Breve descrição" />
       </div>
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-        <label>
-          Preço <input name="menu_price" type="number" step="0.01" min={0} placeholder="0.00" />
-        </label>
-        <label>
-          Tipo de artigo{" "}
-          <select name="article_type_id">
-            <option value="">Nenhum</option>
-            {articleTypes.map((at) => (
-              <option key={at.id} value={at.id}>{at.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Ordem <input name="sort_order" type="number" defaultValue={0} style={{ width: "4rem" }} />
-        </label>
+      <div className="flex flex-wrap gap-4">
+        <Input id="item-price" name="menu_price" label="Preço" type="number" step="0.01" min={0} placeholder="0.00" />
+        <Select id="item-type" name="article_type_id" label="Tipo de artigo">
+          <option value="">Nenhum</option>
+          {articleTypes.map((at) => (
+            <option key={at.id} value={at.id}>{at.name}</option>
+          ))}
+        </Select>
+        <Input id="item-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} className="w-24" />
       </div>
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-          <input type="checkbox" name="is_promotion" value="1" />
+      <div className="flex flex-wrap gap-6 items-center">
+        <label className="flex items-center gap-2 text-slate-300 text-sm">
+          <input type="checkbox" name="is_promotion" value="1" className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500" />
           Em promoção
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-          Preço antigo <input name="price_old" type="number" step="0.01" min={0} placeholder="0.00" style={{ width: "5rem" }} />
-        </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-          <input type="checkbox" name="take_away" value="1" />
+        <div className="flex items-end gap-2">
+          <Input id="item-price-old" name="price_old" label="Preço antigo" type="number" step="0.01" min={0} placeholder="0.00" className="w-28" />
+        </div>
+        <label className="flex items-center gap-2 text-slate-300 text-sm">
+          <input type="checkbox" name="take_away" value="1" className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500" />
           Take-away
         </label>
       </div>
-      <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-        Ingredientes (texto expansível no menu)
-        <textarea name="menu_ingredients" rows={2} placeholder="Lista de ingredientes, uma por linha" />
-      </label>
-      <button type="submit">Criar item</button>
-      {state?.error && <span style={{ color: "crimson" }}>{state.error}</span>}
+      <div>
+        <label htmlFor="item-ingredients" className="block text-sm font-medium text-slate-300 mb-1">Ingredientes (texto expansível no menu)</label>
+        <textarea
+          id="item-ingredients"
+          name="menu_ingredients"
+          rows={2}
+          placeholder="Lista de ingredientes, uma por linha"
+          className={inputClass}
+        />
+      </div>
+      <Button type="submit" variant="primary">Criar item</Button>
+      {state?.error && <Alert variant="error">{state.error}</Alert>}
     </form>
   );
 }

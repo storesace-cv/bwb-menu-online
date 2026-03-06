@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
+import { Card, Input, Button, Alert } from "@/components/admin";
 
 export default function ChangePasswordPage() {
   const [password, setPassword] = useState("");
@@ -31,37 +32,39 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div style={{ maxWidth: "24rem", margin: "2rem auto", padding: "1.5rem", border: "1px solid #eee" }}>
-      <h1>Alterar palavra-passe</h1>
-      <p>É obrigatório alterar a palavra-passe na primeira entrada.</p>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="password">Nova palavra-passe</label>
-          <input
+    <div className="max-w-md mx-auto pt-12 px-4">
+      <Card>
+        <h1 className="text-xl font-semibold text-slate-100 mb-2">Alterar palavra-passe</h1>
+        <p className="text-slate-400 text-sm mb-6">É obrigatório alterar a palavra-passe na primeira entrada.</p>
+        <form onSubmit={handleSubmit}>
+          <Input
             id="password"
+            label="Nova palavra-passe"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
           />
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="confirm">Confirmar</label>
-          <input
+          <Input
             id="confirm"
+            label="Confirmar"
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required
             minLength={8}
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
           />
-        </div>
-        {error && <p style={{ color: "crimson", marginBottom: "0.5rem" }}>{error}</p>}
-        <button type="submit">Guardar</button>
-      </form>
+          {error && (
+            <div className="mb-4">
+              <Alert variant="error">{error}</Alert>
+            </div>
+          )}
+          <Button type="submit" variant="primary">
+            Guardar
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }

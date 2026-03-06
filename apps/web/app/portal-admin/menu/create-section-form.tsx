@@ -2,21 +2,22 @@
 
 import { useFormState } from "react-dom";
 import { createSection } from "../actions";
+import { Input, Button, Alert } from "@/components/admin";
 
 export function CreateSectionForm({ storeId }: { storeId: string }) {
   const [state, formAction] = useFormState(createSection, null);
 
   return (
-    <form action={formAction} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+    <form action={formAction} className="flex flex-wrap gap-4 items-end">
       <input type="hidden" name="store_id" value={storeId} />
-      <label>
-        Nome <input name="name" type="text" required placeholder="ex: Snack-Bar" />
-      </label>
-      <label>
-        Ordem <input name="sort_order" type="number" defaultValue={0} />
-      </label>
-      <button type="submit">Criar secção</button>
-      {state?.error && <span style={{ color: "crimson" }}>{state.error}</span>}
+      <Input id="section-name" name="name" label="Nome" type="text" required placeholder="ex: Snack-Bar" />
+      <Input id="section-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} />
+      <Button type="submit" variant="primary">Criar secção</Button>
+      {state?.error && (
+        <div className="w-full mt-2">
+          <Alert variant="error">{state.error}</Alert>
+        </div>
+      )}
     </form>
   );
 }

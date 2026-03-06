@@ -2,6 +2,7 @@
 
 import { useFormState } from "react-dom";
 import { createCategory } from "../actions";
+import { Input, Select, Button, Alert } from "@/components/admin";
 
 type Section = { id: string; name: string; sort_order: number };
 
@@ -9,25 +10,22 @@ export function CreateCategoryForm({ storeId, sections }: { storeId: string; sec
   const [state, formAction] = useFormState(createCategory, null);
 
   return (
-    <form action={formAction} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+    <form action={formAction} className="flex flex-wrap gap-4 items-end">
       <input type="hidden" name="store_id" value={storeId} />
-      <label>
-        Nome <input name="name" type="text" required placeholder="ex: Entradas" />
-      </label>
-      <label>
-        Secção{" "}
-        <select name="section_id">
-          <option value="">Nenhuma</option>
-          {sections.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Ordem <input name="sort_order" type="number" defaultValue={0} />
-      </label>
-      <button type="submit">Criar categoria</button>
-      {state?.error && <span style={{ color: "crimson" }}>{state.error}</span>}
+      <Input id="cat-name" name="name" label="Nome" type="text" required placeholder="ex: Entradas" />
+      <Select id="cat-section" name="section_id" label="Secção">
+        <option value="">Nenhuma</option>
+        {sections.map((s) => (
+          <option key={s.id} value={s.id}>{s.name}</option>
+        ))}
+      </Select>
+      <Input id="cat-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} />
+      <Button type="submit" variant="primary">Criar categoria</Button>
+      {state?.error && (
+        <div className="w-full mt-2">
+          <Alert variant="error">{state.error}</Alert>
+        </div>
+      )}
     </form>
   );
 }

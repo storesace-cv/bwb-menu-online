@@ -3,9 +3,8 @@
 import { useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { updateArticleType, deleteArticleType } from "../actions";
-import { MenuIcon } from "@/components/menu-icons";
-
-const ALL_ICON_CODES = ["fish", "beef", "lobster", "plant", "vehicle", "percent"];
+import { MenuIcon, MENU_ICON_CODES } from "@/components/menu-icons";
+import { Input, Select, Button, Alert } from "@/components/admin";
 
 type ArticleType = { id: string; name: string; icon_code: string; sort_order: number };
 
@@ -21,45 +20,42 @@ export function ArticleTypeRow({ articleType }: { articleType: ArticleType }) {
 
   if (editing) {
     return (
-      <li style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0", borderBottom: "1px solid #eee" }}>
-        <form action={updateFormAction} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+      <li className="flex flex-wrap items-center gap-4 py-4 border-b border-slate-700 last:border-b-0">
+        <form action={updateFormAction} className="flex gap-4 flex-wrap items-center">
           <input type="hidden" name="id" value={articleType.id} />
-          <label>
-            Nome <input name="name" type="text" required defaultValue={articleType.name} style={{ minWidth: "8rem" }} />
-          </label>
-          <label>
-            Ícone{" "}
-            <select name="icon_code" style={{ minWidth: "7rem" }} defaultValue={articleType.icon_code}>
-              {ALL_ICON_CODES.map((code) => (
-                <option key={code} value={code}>{code}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Ordem <input name="sort_order" type="number" defaultValue={articleType.sort_order} style={{ width: "4rem" }} />
-          </label>
-          <button type="submit">Guardar</button>
-          <button type="button" onClick={() => setEditing(false)}>
-            Cancelar
-          </button>
+          <Input id={`edit-at-name-${articleType.id}`} name="name" label="Nome" type="text" required defaultValue={articleType.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
+          <Select id={`edit-at-icon-${articleType.id}`} name="icon_code" label="Ícone" defaultValue={articleType.icon_code} className="min-w-[7rem]" wrapperClassName="mb-0">
+            {MENU_ICON_CODES.map((code) => (
+              <option key={code} value={code}>{code}</option>
+            ))}
+          </Select>
+          <Input id={`edit-at-sort-${articleType.id}`} name="sort_order" label="Ordem" type="number" defaultValue={articleType.sort_order} className="w-24" wrapperClassName="mb-0" />
+          <Button type="submit" variant="primary">Guardar</Button>
+          <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
         </form>
-        {updateState?.error && <span style={{ color: "crimson" }}>{updateState.error}</span>}
+        {updateState?.error && (
+          <div className="w-full mt-2">
+            <Alert variant="error">{updateState.error}</Alert>
+          </div>
+        )}
       </li>
     );
   }
 
   return (
-    <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0", borderBottom: "1px solid #eee" }}>
+    <li className="flex items-center gap-3 py-4 border-b border-slate-700 last:border-b-0">
       <MenuIcon code={articleType.icon_code} size={24} />
-      <span>{articleType.name}</span>
-      <span style={{ color: "#888", fontSize: "0.85rem" }}>({articleType.icon_code})</span>
-      <span style={{ color: "#888", fontSize: "0.85rem", marginLeft: "0.25rem" }}>ordem {articleType.sort_order}</span>
-      <button type="button" onClick={() => setEditing(true)} style={{ marginLeft: "0.5rem" }}>
+      <span className="text-slate-200">{articleType.name}</span>
+      <span className="text-slate-500 text-sm">({articleType.icon_code})</span>
+      <span className="text-slate-500 text-sm">ordem {articleType.sort_order}</span>
+      <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm ml-2">
         Editar
-      </button>
-      <form ref={deleteFormRef} action={(fd: FormData) => { void deleteArticleType(null, fd); }} style={{ display: "inline" }}>
+      </Button>
+      <form ref={deleteFormRef} action={(fd: FormData) => { void deleteArticleType(null, fd); }} className="inline">
         <input type="hidden" name="id" value={articleType.id} />
-        <button type="button" onClick={handleDeleteClick}>Apagar</button>
+        <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
+          Apagar
+        </Button>
       </form>
     </li>
   );
