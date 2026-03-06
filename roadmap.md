@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-05.
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-06.
 
 ---
 
@@ -19,7 +19,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Login portal-admin:** Build Docker com ARG/ENV para `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` (inline no bundle); página de login valida URL/key antes de criar cliente e mostra mensagem se em falta; autoComplete nos campos email/password; após login, redirect no cliente para `/portal-admin/change-password` quando `must_change_password`; middleware envia `x-pathname` e `x-portal-host` nos request headers para o layout distinguir rotas.
 - **Portal-admin RSC redirect:** Em pedidos RSC, o layout não usa `redirect()`; usa o componente cliente `RedirectTo` (router.replace) para login e change-password, devolvendo 200 ao cliente e evitando ecrã branco após autenticação.
 - **Nginx no servidor:** O deploy aplica apenas o vhost `menu.bwb.pt` (ficheiro em `deploy/nginx/sites-available/menu.bwb.pt`); as configurações dos outros sites (bwb.bwb.pt, db-*, zthoteis, default) não são alteradas pelo projeto.
-- **API Supabase no mesmo host:** Nginx encaminha `/auth/`, `/rest/` e `/realtime/` para Kong (127.0.0.1:8102); o resto vai para a app (8103). Login em menu.bwb.pt/portal-admin usa assim o endpoint Auth no mesmo host.
+- **API Supabase em db-menu.bwb.pt:** Nginx vhost `db-menu.bwb.pt` faz proxy para Kong (127.0.0.1:8102); `NEXT_PUBLIC_SUPABASE_URL=https://db-menu.bwb.pt`. Menu/app em menu.bwb.pt (8103); Auth/REST/Realtime em db-menu.bwb.pt. .env.example e doc (SUPABASE_INSTANCE.md, README) actualizados; vhost menu.bwb.pt deixou de fazer proxy de /auth|rest|realtime (apenas db-menu.bwb.pt).
 - **Verificação pós-deploy:** Após cada deploy, confirmação de que o container web tem código e templates atualizados (build no remote-update.sh, health + smoke tests); smoke test aceita 200/302/307 em /portal-admin.
 - **Node no servidor para bootstraps:** Bootstraps (superadmin, dev-tenant, demo) correm com Node/npx no host; removido fallback por container temporário; doc [docs/NODE_ON_SERVER.md](docs/NODE_ON_SERVER.md) com instruções de instalação (NodeSource Node 20, nvm); referência no README e em SUPABASE_INSTANCE.md; Node 20 LTS instalado no servidor de produção.
 - **Debug portal-admin:** Logging estruturado `[portal-debug]` em middleware e layout (pathname, host, isRsc, decisões); API POST `/api/debug/portal-log` para eventos do cliente (LoginSuccess, RedirectTo) quando `PORTAL_DEBUG=1`; doc [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) e referência no README; logger compatível com Edge Runtime (console.log).

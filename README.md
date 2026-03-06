@@ -51,9 +51,9 @@ Qualquer alteração a Nginx, middleware host/path, RLS/RPCs, formatação de pr
 
 ## Variáveis de ambiente
 
-Ver `.env.example`. Obrigatórias para a app: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY` para sync). Opcional: `COMMIT_SHA` para `/api/health`. Para bootstrap demo: `DEMO_MENU_JSON` (path do ficheiro JSON).
+Ver `.env.example`. Obrigatórias para a app: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY` para sync). Em produção use `NEXT_PUBLIC_SUPABASE_URL=https://db-menu.bwb.pt`. Opcional: `COMMIT_SHA` para `/api/health`. Para bootstrap demo: `DEMO_MENU_JSON` (path do ficheiro JSON).
 
-No **servidor** (`/opt/bwb-menu-online/.env`), para o deploy conseguir criar o utilizador superadmin automaticamente, são necessários também `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`. É igualmente necessário **Node.js** instalado no host (os bootstraps usam `npx tsx`). Ver [docs/NODE_ON_SERVER.md](docs/NODE_ON_SERVER.md). Sem isto, o bootstrap superadmin falha e o primeiro login no Portal Admin não funcionará até ser corrigido e o script executado.
+No **servidor** (`/opt/bwb-menu-online/.env`), para o deploy conseguir criar o utilizador superadmin automaticamente, são necessários `NEXT_PUBLIC_SUPABASE_URL=https://db-menu.bwb.pt` e `SUPABASE_SERVICE_ROLE_KEY`. É igualmente necessário **Node.js** instalado no host (os bootstraps usam `npx tsx`). Ver [docs/NODE_ON_SERVER.md](docs/NODE_ON_SERVER.md). Sem isto, o bootstrap superadmin falha e o primeiro login no Portal Admin não funcionará até ser corrigido e o script executado.
 
 ## Primeiro login no Portal Admin
 

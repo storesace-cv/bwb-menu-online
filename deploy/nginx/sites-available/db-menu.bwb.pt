@@ -1,35 +1,38 @@
-# BWB Menu Online — menu.bwb.pt + *.menu.bwb.pt
-# Proxy to app on 127.0.0.1:8103. API Supabase em db-menu.bwb.pt (vhost separado).
-# SSL paths: adjust to your cert (certbot / wildcard DNS-01 / Cloudflare origin cert).
+# BWB Menu Online — API Supabase (Kong) em db-menu.bwb.pt
+# Todo o tráfego para 127.0.0.1:8102 (Kong).
+# SSL: certbot para db-menu.bwb.pt ou cert wildcard *.bwb.pt; ajustar paths abaixo.
 
 server {
     listen 80;
     listen [::]:80;
-    server_name menu.bwb.pt *.menu.bwb.pt;
+    server_name db-menu.bwb.pt;
     # return 301 https://$host$request_uri;
     location / {
-        proxy_pass http://127.0.0.1:8103;
+        proxy_pass http://127.0.0.1:8102;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
 
-# SSL: certbot /etc/letsencrypt/live/menu.bwb.pt
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name menu.bwb.pt *.menu.bwb.pt;
-    ssl_certificate     /etc/letsencrypt/live/menu.bwb.pt/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/menu.bwb.pt/privkey.pem;
+    server_name db-menu.bwb.pt;
+    ssl_certificate     /etc/letsencrypt/live/db-menu.bwb.pt/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/db-menu.bwb.pt/privkey.pem;
     location / {
-        proxy_pass http://127.0.0.1:8103;
+        proxy_pass http://127.0.0.1:8102;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
