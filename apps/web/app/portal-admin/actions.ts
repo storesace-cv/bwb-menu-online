@@ -191,7 +191,20 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
   return null;
 }
 
-export async function updateMenuItem(_prev: { error?: string } | null, formData: FormData) {
+function isValidUrl(s: string): boolean {
+  if (!s || !s.trim()) return true;
+  try {
+    new URL(s.trim());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateMenuItem(
+  _prev: { error?: string; success?: boolean } | null,
+  formData: FormData
+) {
   const supabase = await createClient();
   const id = (formData.get("id") as string)?.trim() ?? "";
   const menuName = (formData.get("menu_name") as string)?.trim() ?? "";
@@ -200,12 +213,19 @@ export async function updateMenuItem(_prev: { error?: string } | null, formData:
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
   const articleTypeId = (formData.get("article_type_id") as string)?.trim() || null;
   const isPromotion = formData.get("is_promotion") === "1";
-  const priceOld = parseFloat((formData.get("price_old") as string) ?? "0");
+  const priceOldRaw = (formData.get("price_old") as string)?.trim() ?? "";
+  const priceOld = parseFloat(priceOldRaw);
   const takeAway = formData.get("take_away") === "1";
   const menuIngredients = (formData.get("menu_ingredients") as string)?.trim() || null;
   const isVisible = formData.get("is_visible") === "1";
   const isFeatured = formData.get("is_featured") === "1";
+  const imageUrl = (formData.get("image_url") as string)?.trim() || null;
+
   if (!id || !menuName) return { error: "ID e nome do item obrigatórios" };
+  if (imageUrl !== null && !isValidUrl(imageUrl)) return { error: "URL da imagem inválida." };
+  if (isPromotion && (priceOldRaw === "" || isNaN(priceOld) || priceOld <= 0))
+    return { error: "Preço antigo é obrigatório quando o item está em promoção." };
+
   const { error } = await supabase
     .from("menu_items")
     .update({
@@ -220,12 +240,13 @@ export async function updateMenuItem(_prev: { error?: string } | null, formData:
       menu_ingredients: menuIngredients,
       is_visible: isVisible,
       is_featured: isFeatured,
+      image_url: imageUrl,
     })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/items");
-  return null;
+  return { success: true };
 }
 
 export async function deleteMenuItem(_prev: { error?: string } | null, formData: FormData) {
