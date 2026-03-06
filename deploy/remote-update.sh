@@ -51,6 +51,16 @@ if [[ -n "$ENV_FILE" && -f "$ENV_FILE" ]]; then
   cp "$ENV_FILE" .env
 fi
 
+EXPECTED_COMMIT=$(git rev-parse HEAD)
+# Ensure container will report this deploy's commit (for Step 5 verification)
+if [[ -f "$APP_DIR/.env" ]]; then
+  if grep -q '^COMMIT_SHA=' "$APP_DIR/.env" 2>/dev/null; then
+    sed -i "s/^COMMIT_SHA=.*/COMMIT_SHA=$EXPECTED_COMMIT/" "$APP_DIR/.env"
+  else
+    echo "COMMIT_SHA=$EXPECTED_COMMIT" >> "$APP_DIR/.env"
+  fi
+fi
+
 echo "=== Step 2: Migrations ==="
 MIGRATIONS_DIR="$APP_DIR/migrations"
 if [[ ! -d "$MIGRATIONS_DIR" ]]; then
@@ -164,9 +174,22 @@ if [[ -f "$APP_DIR/.env" ]] && [[ -f "$APP_DIR/scripts/bootstrap-superadmin.ts" 
 fi
 
 echo "=== Step 5: Smoke tests ==="
+HEALTH_RESPONSE=""
 for i in 1 2 3 4 5; do
-  if curl -sf --connect-timeout 2 "$APP_HEALTH_URL" >/dev/null; then
+  HEALTH_RESPONSE=$(curl -sf --connect-timeout 2 "$APP_HEALTH_URL") || true
+  if [[ -n "$HEALTH_RESPONSE" ]]; then
     echo "Health check PASSED"
+    # Verify container reports this deploy's commit (template/code updated)
+    if command -v jq &>/dev/null; then
+      REPORTED_VERSION=$(echo "$HEALTH_RESPONSE" | jq -r '.version // empty')
+    else
+      REPORTED_VERSION=$(echo "$HEALTH_RESPONSE" | grep -o '"version":"[^"]*"' | head -1 | sed 's/"version":"\([^"]*\)"/\1/')
+    fi
+    if [[ -z "$REPORTED_VERSION" || "$REPORTED_VERSION" != "$EXPECTED_COMMIT" ]]; then
+      echo "FATAL: Container version mismatch. Expected $EXPECTED_COMMIT, got ${REPORTED_VERSION:-<empty>}. Template/code may not be updated."
+      exit 1
+    fi
+    echo "Container version verified: $REPORTED_VERSION"
     BASE_URL="${APP_HEALTH_URL%/api/health}"
     if [[ -x "$APP_DIR/scripts/smoke-test-demo.sh" ]]; then
       if bash "$APP_DIR/scripts/smoke-test-demo.sh" "$BASE_URL"; then

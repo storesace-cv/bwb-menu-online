@@ -18,13 +18,13 @@ Estado do projeto e próximos passos: ver [roadmap.md](roadmap.md).
 2. No servidor: clone em `/opt/bwb-menu-online`, configurar `.env` e Supabase instance em `/srv/supabase/instances/menu-online`.
 3. Local: `./deploy/update.sh` — faz upload de `remote-update.sh`, corre no servidor (git pull, migrations, nginx, systemd, smoke test). Em cada deploy, as migrations em `migrations/*.sql` são aplicadas automaticamente ao Postgres da instância Supabase menu-online, por ordem (tracking e checksum em `app_schema_migrations`).
 
-A app escuta em `127.0.0.1:8103` (Docker); Nginx faz proxy de `menu.bwb.pt` e `*.menu.bwb.pt` para essa porta. A porta 8102 é usada pelo Kong (Supabase). Resumo das configs do servidor (deploy vs. referência completa): [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md); instância Supabase: [docs/SUPABASE_INSTANCE.md](docs/SUPABASE_INSTANCE.md).
+A app escuta em `127.0.0.1:8103` (Docker); Nginx faz proxy de `menu.bwb.pt` e `*.menu.bwb.pt` para essa porta. A porta 8102 é usada pelo Kong (Supabase). Resumo das configs do servidor (deploy vs. referência completa): [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md); instância Supabase: [docs/SUPABASE_INSTANCE.md](docs/SUPABASE_INSTANCE.md). O deploy escreve o commit actual em `COMMIT_SHA` no `.env` e, após o health check, verifica que o container reporta esse commit em `/api/health` (versão); se não coincidir, o deploy falha.
 
 ## Checklist de aceitação (primeiro marco)
 
 - **A)** No servidor: `curl http://127.0.0.1:8103/api/health` → 200; `nginx -t` e reload ok.
 - **B)** Browser: `https://9999999991.menu.bwb.pt` mostra menu (seed demo).
-- **C)** Deploy: `./deploy/update.sh` (local) termina com "Health check PASSED".
+- **C)** Deploy: `./deploy/update.sh` (local) termina com "Health check PASSED" e "Container version verified" (commit do deploy confirmado no container).
 
 ## Sync NET-bo (server-only)
 
@@ -52,7 +52,7 @@ Qualquer alteração a Nginx, middleware host/path, RLS/RPCs, formatação de pr
 
 ## Variáveis de ambiente
 
-Ver `.env.example`. Obrigatórias para a app: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY` para sync). Em produção use `NEXT_PUBLIC_SUPABASE_URL=https://db-menu.bwb.pt`. Opcional: `COMMIT_SHA` para `/api/health`. Para bootstrap demo: `DEMO_MENU_JSON` (path do ficheiro JSON).
+Ver `.env.example`. Obrigatórias para a app: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY` para sync). Em produção use `NEXT_PUBLIC_SUPABASE_URL=https://db-menu.bwb.pt`. Opcional: `COMMIT_SHA` para `/api/health` (o deploy actualiza-o no servidor e verifica que o container reporta esse commit). Para bootstrap demo: `DEMO_MENU_JSON` (path do ficheiro JSON).
 
 No **servidor** (`/opt/bwb-menu-online/.env`), para o deploy conseguir criar o utilizador superadmin automaticamente, são necessários `NEXT_PUBLIC_SUPABASE_URL=https://db-menu.bwb.pt` e `SUPABASE_SERVICE_ROLE_KEY`. É igualmente necessário **Node.js** instalado no host (os bootstraps usam `npx tsx`). Ver [docs/NODE_ON_SERVER.md](docs/NODE_ON_SERVER.md). Sem isto, o bootstrap superadmin falha e o primeiro login no Portal Admin não funcionará até ser corrigido e o script executado.
 
