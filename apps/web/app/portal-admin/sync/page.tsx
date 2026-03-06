@@ -45,9 +45,11 @@ export default async function SyncPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Sync NET-bo</h1>
-      <p className="text-slate-400 mb-2">Sincronização de produtos a partir do NET-bo para o catálogo da loja. Configure a integração em Global Admin (Tenants → Lojas → Integração).</p>
+      <p className="text-slate-400 mb-2">Sincronização de produtos a partir do NET-bo para o catálogo da loja. Configure a integração em Definições.</p>
       <p className="mb-6">
         <Link href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300">← Menu</Link>
+        {" · "}
+        <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">Definições</Link>
         {" · "}
         <Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">Itens</Link>
       </p>

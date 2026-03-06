@@ -25,19 +25,26 @@ export type NetboProduct = {
   [key: string]: unknown;
 };
 
-/** Discovery: resolve server from company dbname */
-export async function netboDiscovery(dbname: string): Promise<{ server: string }> {
+/** Discovery: resolve server from company dbname. Robust parsing of server/base_url/url. */
+export async function netboDiscovery(dbname: string): Promise<{ server: string; base_url?: string }> {
   const url = `${COMPANIES_API}/companies/detailed?company=${encodeURIComponent(dbname)}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(AUTH_TIMEOUT_MS) });
   if (!res.ok) {
     throw new Error(`NET-bo discovery failed: ${res.status} ${res.statusText}`);
   }
-  const data = (await res.json()) as { server?: string; [key: string]: unknown };
-  const server = data?.server ?? data?.Server ?? data?.host;
-  if (!server || typeof server !== "string") {
+  const data = (await res.json()) as { server?: string; Server?: string; host?: string; url?: string; base_url?: string; [key: string]: unknown };
+  const raw =
+    data?.server ??
+    data?.Server ??
+    data?.host ??
+    data?.url ??
+    data?.base_url;
+  if (!raw || typeof raw !== "string") {
     throw new Error("NET-bo discovery: server not found in response");
   }
-  return { server: server.replace(/^https?:\/\//, "").replace(/\/$/, "") };
+  const server = raw.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const base_url = `https://${server}.api.net-bo.com`;
+  return { server, base_url };
 }
 
 /** Auth: return token (from api_token or from login endpoint) */
@@ -71,6 +78,60 @@ export async function netboAuth(config: NetboConfig): Promise<string> {
     return token;
   }
   throw new Error("NET-bo: invalid config (auth_method or credentials missing)");
+}
+
+const TEST_TIMEOUT_MS = 15000;
+
+/** Lightweight request for test: GET /api/tables/units?limit=1. Tries token in query first, then header (api_token). */
+async function netboRequestUnits(
+  baseUrl: string,
+  dbname: string,
+  token: string,
+  useTokenInQuery = false
+): Promise<void> {
+  const url = useTokenInQuery
+    ? `${baseUrl}/api/tables/units?db=${encodeURIComponent(dbname)}&limit=1&token=${encodeURIComponent(token)}`
+    : `${baseUrl}/api/tables/units?db=${encodeURIComponent(dbname)}&limit=1`;
+  const res = await fetch(url, {
+    headers: useTokenInQuery ? { Accept: "application/json" } : { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    signal: AbortSignal.timeout(TEST_TIMEOUT_MS),
+  });
+  if (!res.ok) {
+    throw new Error(`NET-bo units test failed: ${res.status} ${res.statusText}`);
+  }
+}
+
+/** Test connection: discovery → auth → GET units?limit=1. For api_token, tries query then header. */
+export async function netboTestConnection(config: NetboConfig): Promise<{
+  base_url: string;
+  auth_method: string;
+  ok: boolean;
+  error?: string;
+}> {
+  try {
+    const disc = await netboDiscovery(config.dbname);
+    const base_url = disc.base_url ?? `https://${disc.server}.api.net-bo.com`;
+    const token = await netboAuth(config);
+    const isApiToken = config.auth_method === "api_token";
+    try {
+      await netboRequestUnits(base_url, config.dbname, token, true);
+    } catch {
+      if (isApiToken) {
+        await netboRequestUnits(base_url, config.dbname, token, false);
+      } else {
+        throw new Error("NET-bo units request failed");
+      }
+    }
+    return { base_url, auth_method: config.auth_method, ok: true };
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e);
+    return {
+      base_url: "",
+      auth_method: config.auth_method ?? "login_password",
+      ok: false,
+      error,
+    };
+  }
 }
 
 /** Fetch products from NET-bo */

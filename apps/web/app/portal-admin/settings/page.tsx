@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { SettingsForm } from "./settings-form";
+import { IntegrationForm } from "./integration-form";
 import { Card } from "@/components/admin";
 
 export default async function SettingsPage() {
@@ -23,6 +24,15 @@ export default async function SettingsPage() {
   const { data: row } = await supabase.from("store_settings").select("settings").eq("store_id", storeId).single();
   const settings = (row?.settings as Record<string, string> | null) ?? {};
 
+  const { data: lastRunRow } = await supabase
+    .from("sync_runs")
+    .select("id, status, started_at, finished_at, counts, error")
+    .eq("store_id", storeId)
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const lastRun = lastRunRow ?? null;
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Definições da loja</h1>
@@ -43,6 +53,10 @@ export default async function SettingsPage() {
           }}
         />
       </Card>
+
+      <div className="mt-6">
+        <IntegrationForm storeId={storeId} lastRun={lastRun} />
+      </div>
     </div>
   );
 }
