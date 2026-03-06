@@ -20,24 +20,21 @@ export default function LoginPage() {
       return;
     }
     const supabase = createClient();
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) {
       setError(err.message);
       return;
     }
-    const mustChange = (data?.user?.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
-    const targetUrl = mustChange ? "/portal-admin/change-password" : "/portal-admin";
-    // Enviar log antes da navegação para não ser abortado pelo browser
     try {
       await fetch("/api/debug/portal-log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "LoginSuccess", url: targetUrl }),
+        body: JSON.stringify({ event: "LoginSuccess", url: "/portal-admin" }),
       });
     } catch {
       // ignora falhas de rede
     }
-    router.push(targetUrl);
+    router.push("/portal-admin");
     router.refresh();
   }
 

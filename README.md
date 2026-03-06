@@ -6,6 +6,7 @@ Menu online por loja (hostname). Next.js + Supabase self-hosted.
 
 - `apps/web` — Next.js (App Router), menu público por hostname, backoffice `/admin`, `/api/health`, `/api/sync/netbo`
 - `deploy/` — Scripts de deploy (update.sh local → remote-update.sh no servidor), nginx e systemd
+- `local/nginx/` — Referência das configurações Nginx actuais do servidor (todos os vhosts); não versionada (`.gitignore`). Ver [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md).
 - `migrations/` — SQL com tracking (`app_schema_migrations`) e checksums (idempotente e seguro)
 - Domínio base: `menu.bwb.pt`; por loja: `<nif><store_number>.menu.bwb.pt` (ex.: `9999999991.menu.bwb.pt` para dev)
 
@@ -17,7 +18,7 @@ Estado do projeto e próximos passos: ver [roadmap.md](roadmap.md).
 2. No servidor: clone em `/opt/bwb-menu-online`, configurar `.env` e Supabase instance em `/srv/supabase/instances/menu-online`.
 3. Local: `./deploy/update.sh` — faz upload de `remote-update.sh`, corre no servidor (git pull, migrations, nginx, systemd, smoke test). Em cada deploy, as migrations em `migrations/*.sql` são aplicadas automaticamente ao Postgres da instância Supabase menu-online, por ordem (tracking e checksum em `app_schema_migrations`).
 
-A app escuta em `127.0.0.1:8103` (Docker); Nginx faz proxy de `menu.bwb.pt` e `*.menu.bwb.pt` para essa porta. A porta 8102 é usada pelo Kong (Supabase); ver [docs/SUPABASE_INSTANCE.md](docs/SUPABASE_INSTANCE.md).
+A app escuta em `127.0.0.1:8103` (Docker); Nginx faz proxy de `menu.bwb.pt` e `*.menu.bwb.pt` para essa porta. A porta 8102 é usada pelo Kong (Supabase). Resumo das configs do servidor (deploy vs. referência completa): [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md); instância Supabase: [docs/SUPABASE_INSTANCE.md](docs/SUPABASE_INSTANCE.md).
 
 ## Checklist de aceitação (primeiro marco)
 

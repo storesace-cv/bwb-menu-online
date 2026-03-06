@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-06.
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2025-03-04.
 
 ---
 
@@ -18,7 +18,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **DEMO FIRST:** .gitignore e deploy garantem que /local não é sincronizada; bootstrap demo idempotente com path configurável (DEMO_MENU_JSON); script de smoke tests por host/path (`scripts/smoke-test-demo.sh`: menu.bwb.pt/portal-admin, 9999999991.menu.bwb.pt, 9999999991.menu.bwb.pt/portal-admin); política de non-regression documentada no README.
 - **Login portal-admin:** Build Docker com ARG/ENV para `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` (inline no bundle); página de login valida URL/key antes de criar cliente e mostra mensagem se em falta; autoComplete nos campos email/password; após login, redirect no cliente para `/portal-admin/change-password` quando `must_change_password`; middleware envia `x-pathname` e `x-portal-host` nos request headers para o layout distinguir rotas.
 - **Portal-admin RSC redirect:** Em pedidos RSC, o layout não usa `redirect()`; usa o componente cliente `RedirectTo` (router.replace) para login e change-password, devolvendo 200 ao cliente e evitando ecrã branco após autenticação.
-- **Nginx no servidor:** O deploy aplica apenas o vhost `menu.bwb.pt` (ficheiro em `deploy/nginx/sites-available/menu.bwb.pt`); as configurações dos outros sites (bwb.bwb.pt, db-*, zthoteis, default) não são alteradas pelo projeto.
+- **Nginx no servidor:** O deploy aplica os vhosts em `deploy/nginx/sites-available/` (menu.bwb.pt e db-menu.bwb.pt); as configurações dos outros sites (bwb.bwb.pt, db-bwb, zthoteis, db-zthoteis, default) não são alteradas pelo projeto. Referência das configs completas do servidor: [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md); cópia de referência em `local/nginx/` (não versionada).
 - **API Supabase em db-menu.bwb.pt:** Nginx vhost `db-menu.bwb.pt` faz proxy para Kong (127.0.0.1:8102); `NEXT_PUBLIC_SUPABASE_URL=https://db-menu.bwb.pt`. Menu/app em menu.bwb.pt (8103); Auth/REST/Realtime em db-menu.bwb.pt. .env.example e doc (SUPABASE_INSTANCE.md, README) actualizados; vhost menu.bwb.pt deixou de fazer proxy de /auth|rest|realtime (apenas db-menu.bwb.pt).
 - **Verificação pós-deploy:** Após cada deploy, confirmação de que o container web tem código e templates atualizados (build no remote-update.sh, health + smoke tests); smoke test aceita 200/302/307 em /portal-admin.
 - **Node no servidor para bootstraps:** Bootstraps (superadmin, dev-tenant, demo) correm com Node/npx no host; removido fallback por container temporário; doc [docs/NODE_ON_SERVER.md](docs/NODE_ON_SERVER.md) com instruções de instalação (NodeSource Node 20, nvm); referência no README e em SUPABASE_INSTANCE.md; Node 20 LTS instalado no servidor de produção.
@@ -28,6 +28,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Domínios na lista de lojas, mensagem Menu e menu-demo para loja 1:** Migration 010 (`source_type` demo em `stores`); bootstrap dev-tenant e `menu-demo.example.json` com loja 1 em modo demo (menu-demo); página Menu quando acedida no host global mostra mensagem a indicar acesso via subdomínio da loja (ex.: 9999999991.menu.bwb.pt/portal-admin/menu); coluna "Domínio(s)" na lista de lojas do tenant (dados via `admin_list_domains`), com hostnames e indicador (primário).
 - **Bootstrap demo fallback (itens em /portal-admin/items):** Se `DEMO_MENU_JSON` ou `local/menu-demo/menu-demo.json` não existir, o bootstrap usa `scripts/menu-demo.example.json` (incluído no repo); assim o servidor passa a ter itens demo na loja 9999999991.menu.bwb.pt mesmo sem ficheiro em local/. Regra "não sincronizar local/" mantida; ficheiros em local/ podem ser lidos/usados quando lá forem colocados (README atualizado).
 - **Apresentação menu-demo (RLS + dados completos):** Migration 011 — `user_has_store_access` devolve true quando `current_user_is_superadmin()`, para o superadmin ver categorias e itens no portal-admin (Menu, Itens) como um cliente normal; `scripts/menu-demo.example.json` passou a ter o menu demo completo (10 categorias, ~50 itens, source_type demo), para o bootstrap importar em qualquer ambiente (incl. servidor) sem depender de ficheiros em /local. Dados sempre lidos da BD (mesmo fluxo que lojas NET-bo/StoresAce).
+- **Doc Nginx e referência do servidor:** Novo [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md) com distinção entre deploy/nginx (vhosts aplicados pelo deploy) e local/nginx (cópia de referência de todas as configs do servidor); tabela de vhosts e portas; README, SUPABASE_INSTANCE e roadmap actualizados com referência a local/nginx.
 
 ---
 

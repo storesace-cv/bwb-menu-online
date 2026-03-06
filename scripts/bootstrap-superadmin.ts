@@ -52,7 +52,7 @@ async function main() {
   const superadminUser = listData2?.users?.find((u) => u.email?.toLowerCase() === EMAIL.toLowerCase());
   if (superadminUser?.id) {
     await supabase.from("profiles").upsert(
-      { id: superadminUser.id, email: EMAIL },
+      { id: superadminUser.id, email: EMAIL, renew_password: true },
       { onConflict: "id" }
     );
     const { error: bindErr } = await supabase.from("user_role_bindings").insert({

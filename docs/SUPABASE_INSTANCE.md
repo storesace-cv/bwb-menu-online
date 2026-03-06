@@ -31,7 +31,7 @@ A app Next.js escuta em **127.0.0.1:8103** para não colidir com Kong (8102). O 
 
 ## Ligação da app ao Supabase
 
-- **API/REST (Supabase client):** usar a Public URL `https://db-menu.bwb.pt` em `NEXT_PUBLIC_SUPABASE_URL`. O Nginx do projeto inclui o vhost `deploy/nginx/sites-available/db-menu.bwb.pt`, que faz proxy de `db-menu.bwb.pt` para Kong (127.0.0.1:8102). É necessário certificado SSL para `db-menu.bwb.pt` (certbot ou wildcard *.bwb.pt).
+- **API/REST (Supabase client):** usar a Public URL `https://db-menu.bwb.pt` em `NEXT_PUBLIC_SUPABASE_URL`. O deploy aplica o vhost em `deploy/nginx/sites-available/db-menu.bwb.pt` (proxy de `db-menu.bwb.pt` para Kong em 127.0.0.1:8102). Uma cópia de referência de todas as configs Nginx do servidor está em `local/nginx/` (ver [SERVER_NGINX.md](SERVER_NGINX.md)). É necessário certificado SSL para `db-menu.bwb.pt` (certbot ou wildcard *.bwb.pt).
 - **Migrações / acesso directo à BD:** usar `host=127.0.0.1 port=5434` (Supavisor) ou o container Postgres da instância, conforme deteção em `deploy/remote-update.sh` (variável `SUPABASE_POSTGRES_CONTAINER` ou deteção por imagem/nome).
 
 ## Bootstrap superadmin (deploy / primeiro login)

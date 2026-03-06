@@ -42,12 +42,16 @@ export default async function PortalAdminLayout({
   }
 
   const { data: { user } } = await supabase.auth.getUser();
-  const mustChange = (user?.user_metadata as { must_change_password?: boolean })?.must_change_password === true;
+  let mustRenew = false;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("renew_password").eq("id", user.id).single();
+    mustRenew = profile?.renew_password === true;
+  }
 
   portalDebugLog("layout", {
     pathname,
     userId: user?.id ?? "anonymous",
-    mustChangePassword: mustChange,
+    mustRenewPassword: mustRenew,
   });
 
   if (!user) {
@@ -56,7 +60,7 @@ export default async function PortalAdminLayout({
     redirect(PORTAL_LOGIN);
   }
 
-  if (mustChange && !pathname.includes("change-password")) {
+  if (mustRenew && !pathname.includes("change-password")) {
     portalDebugLog("layout", { pathname, decision: "redirect_change_password" });
     if (isRsc) return <RedirectTo url={CHANGE_PASSWORD} />;
     redirect(CHANGE_PASSWORD);

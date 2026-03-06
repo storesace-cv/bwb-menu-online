@@ -20,17 +20,12 @@ export default function ChangePasswordPage() {
       return;
     }
     const supabase = createClient();
-    const { error: err } = await supabase.auth.updateUser({
-      password,
-      data: { must_change_password: false },
-    });
+    const { error: err } = await supabase.auth.updateUser({ password });
     if (err) {
       setError(err.message);
       return;
     }
-    // Garantir que a sessão está nos cookies antes do redirect
     await supabase.auth.getSession();
-    // Persistir flag no servidor (Auth self-hosted pode não guardar data de updateUser)
     await fetch("/api/portal-admin/clear-must-change-password", { method: "POST" });
     window.location.href = "/portal-admin";
   }

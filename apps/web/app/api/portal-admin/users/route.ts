@@ -46,12 +46,12 @@ export async function POST(request: NextRequest) {
   const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
 
   let newUser: { id: string };
-  if (password) {
+  const withPassword = !!password;
+  if (withPassword) {
     const { data, error } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { must_change_password: false },
     });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
       email,
       password: tempPassword,
       email_confirm: true,
-      user_metadata: { must_change_password: true, invited: true },
     });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -78,7 +77,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { error: profileErr } = await admin.from("profiles").upsert(
-    { id: newUser.id, email },
+    { id: newUser.id, email, renew_password: !withPassword },
     { onConflict: "id" }
   );
   if (profileErr) {
