@@ -54,16 +54,35 @@ export async function setStoreDomain(_prev: { error?: string } | null, formData:
   return null;
 }
 
-export async function createCategory(_prev: { error?: string } | null, formData: FormData) {
+export async function createSection(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";
   const name = (formData.get("name") as string)?.trim() ?? "";
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
   if (!storeId || !name) return { error: "Loja e nome obrigatórios" };
+  const { error } = await supabase.from("menu_sections").insert({
+    store_id: storeId,
+    name,
+    sort_order: sortOrder,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/sections");
+  return null;
+}
+
+export async function createCategory(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  const name = (formData.get("name") as string)?.trim() ?? "";
+  const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  const sectionId = (formData.get("section_id") as string)?.trim() || null;
+  if (!storeId || !name) return { error: "Loja e nome obrigatórios" };
   const { error } = await supabase.from("menu_categories").insert({
     store_id: storeId,
     name,
     sort_order: sortOrder,
+    section_id: sectionId || null,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
@@ -89,18 +108,49 @@ export async function assignRole(_prev: { error?: string } | null, formData: For
   return null;
 }
 
+export async function createArticleType(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  const name = (formData.get("name") as string)?.trim() ?? "";
+  const iconCode = (formData.get("icon_code") as string)?.trim() ?? "fish";
+  const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  if (!storeId || !name) return { error: "Loja e nome obrigatórios" };
+  const { error } = await supabase.from("article_types").insert({
+    store_id: storeId,
+    name,
+    icon_code: iconCode,
+    sort_order: sortOrder,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/article-types");
+  revalidatePath("/portal-admin/items");
+  return null;
+}
+
 export async function createMenuItem(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";
   const menuName = (formData.get("menu_name") as string)?.trim() ?? "";
+  const menuDescription = (formData.get("menu_description") as string)?.trim() || null;
   const menuPrice = parseFloat((formData.get("menu_price") as string) ?? "0");
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  const articleTypeId = (formData.get("article_type_id") as string)?.trim() || null;
+  const isPromotion = formData.get("is_promotion") === "1";
+  const priceOld = parseFloat((formData.get("price_old") as string) ?? "0");
+  const takeAway = formData.get("take_away") === "1";
+  const menuIngredients = (formData.get("menu_ingredients") as string)?.trim() || null;
   if (!storeId || !menuName) return { error: "Loja e nome do item obrigatórios" };
   const { error } = await supabase.from("menu_items").insert({
     store_id: storeId,
     menu_name: menuName,
+    menu_description: menuDescription,
     menu_price: isNaN(menuPrice) ? null : menuPrice,
     sort_order: sortOrder,
+    article_type_id: articleTypeId,
+    is_promotion: isPromotion,
+    price_old: isPromotion && !isNaN(priceOld) ? priceOld : null,
+    take_away: takeAway,
+    menu_ingredients: menuIngredients,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");

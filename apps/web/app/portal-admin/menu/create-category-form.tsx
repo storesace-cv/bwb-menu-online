@@ -3,7 +3,9 @@
 import { useFormState } from "react-dom";
 import { createCategory } from "../actions";
 
-export function CreateCategoryForm({ storeId }: { storeId: string }) {
+type Section = { id: string; name: string; sort_order: number };
+
+export function CreateCategoryForm({ storeId, sections }: { storeId: string; sections: Section[] }) {
   const [state, formAction] = useFormState(createCategory, null);
 
   return (
@@ -11,6 +13,15 @@ export function CreateCategoryForm({ storeId }: { storeId: string }) {
       <input type="hidden" name="store_id" value={storeId} />
       <label>
         Nome <input name="name" type="text" required placeholder="ex: Entradas" />
+      </label>
+      <label>
+        Secção{" "}
+        <select name="section_id">
+          <option value="">Nenhuma</option>
+          {sections.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
       </label>
       <label>
         Ordem <input name="sort_order" type="number" defaultValue={0} />

@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateCategoryForm } from "./create-category-form";
+import { CreateSectionForm } from "./create-section-form";
 
 export default async function MenuPage() {
   const headersList = await headers();
@@ -18,9 +19,14 @@ export default async function MenuPage() {
     );
   }
 
+  const { data: sections } = await supabase
+    .from("menu_sections")
+    .select("id, name, sort_order")
+    .eq("store_id", storeId)
+    .order("sort_order");
   const { data: categories } = await supabase
     .from("menu_categories")
-    .select("id, name, sort_order")
+    .select("id, name, sort_order, section_id")
     .eq("store_id", storeId)
     .order("sort_order");
   const { data: categoryItems } = await supabase
@@ -32,6 +38,7 @@ export default async function MenuPage() {
     .eq("store_id", storeId)
     .order("sort_order");
 
+  const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
   const itemsById = new Map((items ?? []).map((i) => [i.id, i]));
   const byCategory = new Map<string, { menu_item_id: string; sort_order: number }[]>();
   for (const ci of categoryItems ?? []) {
@@ -45,11 +52,24 @@ export default async function MenuPage() {
     <div>
       <h1>Menu</h1>
       <p>Categorias e itens da loja (Tenant Admin).</p>
-      <p><Link href="/portal-admin/items">Ver todos os itens</Link></p>
+      <p><Link href="/portal-admin/items">Ver todos os itens</Link> · <Link href="/portal-admin/article-types">Tipos de artigo</Link></p>
+
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2>Secções</h2>
+        <p style={{ fontSize: "0.9rem", color: "#666" }}>Secção é um nível acima de categoria (ex.: Snack-Bar, Restaurante).</p>
+        <CreateSectionForm storeId={storeId} />
+        {sections && sections.length > 0 && (
+          <ul style={{ listStyle: "none", paddingLeft: 0, marginTop: "0.5rem" }}>
+            {sections.map((s) => (
+              <li key={s.id} style={{ padding: "0.25rem 0" }}>{s.name}</li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section style={{ marginTop: "1.5rem" }}>
         <h2>Nova categoria</h2>
-        <CreateCategoryForm storeId={storeId} />
+        <CreateCategoryForm storeId={storeId} sections={sections ?? []} />
       </section>
 
       <section style={{ marginTop: "2rem" }}>
@@ -57,7 +77,14 @@ export default async function MenuPage() {
         {(!categories || categories.length === 0) && <p style={{ color: "#666" }}>Nenhuma categoria.</p>}
         {categories?.map((cat) => (
           <div key={cat.id} style={{ marginBottom: "1.5rem", border: "1px solid #eee", padding: "1rem", borderRadius: "8px" }}>
-            <h3 style={{ marginTop: 0 }}>{cat.name}</h3>
+            <h3 style={{ marginTop: 0 }}>
+              {cat.name}
+              {cat.section_id && (
+                <span style={{ fontWeight: "normal", color: "#666", fontSize: "0.9rem" }}>
+                  {" "}({sectionById.get(cat.section_id)?.name ?? "—"})
+                </span>
+              )}
+            </h3>
             <ul style={{ listStyle: "none", paddingLeft: 0 }}>
               {(byCategory.get(cat.id) ?? []).map(({ menu_item_id }) => {
                 const item = itemsById.get(menu_item_id);

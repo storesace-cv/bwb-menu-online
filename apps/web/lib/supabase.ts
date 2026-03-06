@@ -11,12 +11,26 @@ function getSupabase(): SupabaseClient {
   return createClient(url, key);
 }
 
+export type PublicMenuSection = {
+  id: string;
+  name: string;
+  sort_order: number;
+};
+
 export type PublicMenuCategory = {
   id: string;
   name: string;
   description: string | null;
   sort_order: number;
+  section_id: string | null;
+  section_name: string | null;
   items: PublicMenuItem[];
+};
+
+export type PublicArticleType = {
+  id: string;
+  name: string;
+  icon_code: string;
 };
 
 export type PublicMenuItem = {
@@ -29,11 +43,26 @@ export type PublicMenuItem = {
   is_featured: boolean;
   prep_minutes: number | null;
   sort_order: number;
+  is_promotion: boolean;
+  price_old: number | null;
+  take_away: boolean;
+  menu_ingredients: string | null;
+  article_type: PublicArticleType | null;
   allergens: { code: string; name: string }[];
+};
+
+export type PublicMenuStoreSettings = {
+  logo_url?: string;
+  currency_code?: string;
+  store_display_name?: string;
+  primary_color?: string;
 };
 
 export type PublicMenuPayload = {
   store_id: string | null;
+  store_name: string | null;
+  store_settings?: PublicMenuStoreSettings;
+  sections: PublicMenuSection[];
   categories: PublicMenuCategory[];
   error?: string;
 };
@@ -49,6 +78,9 @@ export async function getPublicMenuByHostname(
     if (error) {
       return {
         store_id: null,
+        store_name: null,
+        store_settings: undefined,
+        sections: [],
         categories: [],
         error: error.message,
       };
@@ -56,9 +88,9 @@ export async function getPublicMenuByHostname(
     if (data?.categories) {
       return data as PublicMenuPayload;
     }
-    return (data as PublicMenuPayload) ?? { store_id: null, categories: [] };
+    return (data as PublicMenuPayload) ?? { store_id: null, store_name: null, store_settings: undefined, sections: [], categories: [] };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Configuração Supabase em falta";
-    return { store_id: null, categories: [], error: msg };
+    return { store_id: null, store_name: null, store_settings: undefined, sections: [], categories: [], error: msg };
   }
 }

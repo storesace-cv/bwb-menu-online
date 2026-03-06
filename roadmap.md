@@ -29,12 +29,16 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Bootstrap demo fallback (itens em /portal-admin/items):** Se `DEMO_MENU_JSON` ou `local/menu-demo/menu-demo.json` não existir, o bootstrap usa `scripts/menu-demo.example.json` (incluído no repo); assim o servidor passa a ter itens demo na loja 9999999991.menu.bwb.pt mesmo sem ficheiro em local/. Regra "não sincronizar local/" mantida; ficheiros em local/ podem ser lidos/usados quando lá forem colocados (README atualizado).
 - **Apresentação menu-demo (RLS + dados completos):** Migration 011 — `user_has_store_access` devolve true quando `current_user_is_superadmin()`, para o superadmin ver categorias e itens no portal-admin (Menu, Itens) como um cliente normal; `scripts/menu-demo.example.json` passou a ter o menu demo completo (10 categorias, ~50 itens, source_type demo), para o bootstrap importar em qualquer ambiente (incl. servidor) sem depender de ficheiros em /local. Dados sempre lidos da BD (mesmo fluxo que lojas NET-bo/StoresAce).
 - **Doc Nginx e referência do servidor:** Novo [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md) com distinção entre deploy/nginx (vhosts aplicados pelo deploy) e local/nginx (cópia de referência de todas as configs do servidor); tabela de vhosts e portas; README, SUPABASE_INSTANCE e roadmap actualizados com referência a local/nginx.
+- **Menu tipo Carpe Diem (secções, tipos, ícones, UI):** Migration 013 — tabelas `menu_sections` e `article_types` (com `icon_code`); categorias com `section_id`; itens com `article_type_id`, `is_promotion`, `price_old`, `take_away`, `menu_ingredients`; seis ícones de sistema (fish, beef, lobster, plant, vehicle, percent). Portal-admin: CRUD secções, tipos de artigo (com seleção de ícone), itens com novos campos; link "Tipos de artigo" no menu tenant. Menu público: header com logo/nome da loja, pesquisa, breadcrumb por secção, cards com ingredientes expansíveis (clicar +), ícones de tipo/promo/take-away, tempo de preparação, preço (e preço antigo em promoções); RPC e payload público alargados.
 
 ---
 
 ## Planeado / pendente
 
 **NOTA:** Todas as tarefas abaixo devem ser implementadas de forma a NÃO interferir com o modo DEMO (dados via JSON e image_url). O DEMO é a referência de UI/UX durante o desenvolvimento.
+
+**(P0) Diagnóstico / correção**
+- Ecrã branco ou loop após login no portal-admin: usar logs `[portal-debug]` (middleware, layout, `/api/debug/portal-log`) para identificar causa; confirmar que cookies de sessão são lidos pelo servidor após redirect.
 
 **(P0) Bloqueadores para produção / multi-cliente**
 - TLS wildcard para subdomínios (*.menu.bwb.pt) OU estratégia Cloudflare (Full/Strict + origin cert) para suportar <nif><loja>.menu.bwb.pt em escala.
