@@ -19,3 +19,10 @@ body {
   background: var(--background);
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* Menu público (template BWB - Branco): cor primária configurável por loja */
+.menu-public {
+  --menu-primary: #8b6914;
+  --menu-primary-foreground: #fff;
+  --menu-primary-muted: rgba(139, 105, 20, 0.12);
+}

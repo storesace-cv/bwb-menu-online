@@ -2,8 +2,16 @@
 
 import { useFormState } from "react-dom";
 import { createArticleType } from "../actions";
-import { MENU_ICON_CODES, MenuIcon } from "@/components/menu-icons";
-import { Input, Select, Button, Alert } from "@/components/admin";
+import { ARTICLE_TYPE_ICON_CODES, MenuIcon } from "@/components/menu-icons";
+import { Input, Button, Alert } from "@/components/admin";
+
+const ICON_LABELS: Record<(typeof ARTICLE_TYPE_ICON_CODES)[number], string> = {
+  fish: "Peixe",
+  meat: "Carne",
+  seafood: "Marisco",
+  veggie: "Vegetariano",
+  "hot-spice": "Picante",
+};
 
 export function CreateArticleTypeForm({ storeId }: { storeId: string }) {
   const [state, formAction] = useFormState(createArticleType, null);
@@ -12,11 +20,7 @@ export function CreateArticleTypeForm({ storeId }: { storeId: string }) {
     <form action={formAction} className="flex flex-wrap gap-4 items-end">
       <input type="hidden" name="store_id" value={storeId} />
       <Input id="at-name" name="name" label="Nome" type="text" required placeholder="ex: Carne" />
-      <Select id="at-icon" name="icon_code" label="Ícone" className="min-w-[7rem]">
-        {MENU_ICON_CODES.map((code) => (
-          <option key={code} value={code}>{code}</option>
-        ))}
-      </Select>
+      <ArticleTypeIconPicker name="icon_code" defaultValue="fish" />
       <Input id="at-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} className="w-24" />
       <Button type="submit" variant="primary">Criar tipo</Button>
       {state?.error && (
@@ -29,20 +33,29 @@ export function CreateArticleTypeForm({ storeId }: { storeId: string }) {
 }
 
 export function ArticleTypeIconPicker({ name, defaultValue }: { name: string; defaultValue?: string }) {
+  const value = defaultValue ?? "fish";
   return (
-    <div className="flex gap-2 flex-wrap items-center">
-      {MENU_ICON_CODES.map((code) => (
-        <label key={code} className="flex items-center cursor-pointer text-slate-300">
-          <input
-            type="radio"
-            name={name}
-            value={code}
-            defaultChecked={code === (defaultValue ?? "fish")}
-            className="rounded-full border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500 mr-1"
-          />
-          <MenuIcon code={code} size={20} />
-        </label>
-      ))}
+    <div className="flex flex-col gap-2">
+      <span className="text-sm font-medium text-slate-300">Ícone</span>
+      <div className="flex gap-2 flex-wrap items-center" role="group" aria-label="Escolher ícone do tipo de artigo">
+        {ARTICLE_TYPE_ICON_CODES.map((code) => (
+          <label
+            key={code}
+            className="flex items-center cursor-pointer rounded-lg border-2 border-slate-600 bg-slate-800/80 p-2 hover:border-emerald-500 hover:bg-slate-700/80 has-[:checked]:border-emerald-500 has-[:checked]:ring-2 has-[:checked]:ring-emerald-500/50"
+            title={ICON_LABELS[code]}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={code}
+              defaultChecked={code === value}
+              className="sr-only"
+              aria-label={ICON_LABELS[code]}
+            />
+            <MenuIcon code={code} size={28} />
+          </label>
+        ))}
+      </div>
     </div>
   );
 }

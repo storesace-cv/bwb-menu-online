@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import type { PublicMenuPayload, PublicMenuItem } from "@/lib/supabase";
 import { MenuIcon } from "../menu-icons";
 
+const FALLBACK_PRIMARY = "#8b6914";
+
 function formatPrice(value: number, currencyCode?: string): string {
   const formatted = value.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const code = (currencyCode || "€").trim();
@@ -18,86 +20,71 @@ export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currenc
       : item.image_url ?? null;
 
   return (
-    <li
-      style={{
-        borderBottom: "1px solid #eee",
-        padding: "0.75rem 0",
-        listStyle: "none",
-      }}
-    >
-      {imageSrc && (
-        <div style={{ marginBottom: "0.5rem" }}>
-          <img
-            src={imageSrc}
-            alt={item.menu_name ?? ""}
-            style={{ maxWidth: "100%", height: "auto", borderRadius: "8px", maxHeight: "280px", objectFit: "cover" }}
-          />
-        </div>
-      )}
-      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", alignItems: "flex-start" }}>
-        <div style={{ flex: "1 1 60%" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-            <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>{item.menu_name}</span>
-            {item.is_featured && (
-              <span style={{ fontSize: "0.75rem", color: "#c00" }}>em destaque</span>
-            )}
-            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-              {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} />}
-              {item.is_promotion && <MenuIcon code="percent" size={22} />}
-              {item.take_away && <MenuIcon code="vehicle" size={22} />}
-            </span>
+    <li className="list-none">
+      <article className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden">
+        {imageSrc && (
+          <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
+            <img
+              src={imageSrc}
+              alt={item.menu_name ?? ""}
+              className="h-full w-full object-cover"
+            />
           </div>
-          {item.menu_description && (
-            <p style={{ margin: "0.25rem 0 0", fontSize: "0.9rem", color: "#555" }}>{item.menu_description}</p>
-          )}
-          <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-            {item.prep_minutes != null && (
-              <span style={{ fontSize: "0.85rem", color: "#666" }}>⏱ {item.prep_minutes}&apos;</span>
+        )}
+        <div className="p-4 flex flex-wrap gap-3 justify-between items-start">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-bold text-lg text-gray-900">{item.menu_name}</h3>
+              <span className="flex items-center gap-1 shrink-0">
+                {item.is_featured && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                    <MenuIcon code="on-promo" size={14} />
+                    em destaque
+                  </span>
+                )}
+                {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
+                {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
+                {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
+              </span>
+            </div>
+            {item.menu_description && (
+              <p className="mt-1 text-gray-600 text-sm leading-relaxed">{item.menu_description}</p>
             )}
-            {(item.menu_ingredients != null && item.menu_ingredients.trim() !== "") && (
-              <button
-                type="button"
-                onClick={() => setIngredientsOpen((o) => !o)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  fontSize: "0.9rem",
-                  color: "#555",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                }}
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+              {item.prep_minutes != null && <span>⏱ {item.prep_minutes}&apos;</span>}
+              {item.menu_ingredients != null && item.menu_ingredients.trim() !== "" && (
+                <button
+                  type="button"
+                  onClick={() => setIngredientsOpen((o) => !o)}
+                  className="text-gray-600 hover:text-gray-900 font-medium inline-flex items-center gap-1"
+                >
+                  Ingredientes <span className="font-bold">{ingredientsOpen ? "−" : "+"}</span>
+                </button>
+              )}
+            </div>
+            {ingredientsOpen && item.menu_ingredients && (
+              <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">{item.menu_ingredients}</p>
+            )}
+            {item.allergens?.length > 0 && (
+              <p className="mt-1 text-xs text-gray-500">
+                Alergénios: {item.allergens.map((a) => a.code).join(", ")}
+              </p>
+            )}
+          </div>
+          <div className="text-right shrink-0">
+            {item.is_promotion && item.price_old != null && (
+              <div className="text-sm text-gray-500 line-through">{formatPrice(item.price_old, currencyCode)}</div>
+            )}
+            {item.menu_price != null && (
+              <div
+                className={`font-bold ${item.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}
               >
-                Ingredientes <span style={{ fontWeight: "bold" }}>{ingredientsOpen ? "−" : "+"}</span>
-              </button>
+                {formatPrice(item.menu_price, currencyCode)}
+              </div>
             )}
           </div>
-          {ingredientsOpen && item.menu_ingredients && (
-            <p style={{ margin: "0.5rem 0 0", fontSize: "0.9rem", color: "#555", whiteSpace: "pre-wrap" }}>
-              {item.menu_ingredients}
-            </p>
-          )}
-          {item.allergens?.length > 0 && (
-            <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#888" }}>
-              Alergénios: {item.allergens.map((a) => a.code).join(", ")}
-            </p>
-          )}
         </div>
-        <div style={{ textAlign: "right", flex: "0 0 auto" }}>
-          {item.is_promotion && item.price_old != null && (
-            <div style={{ textDecoration: "line-through", fontSize: "0.9rem", color: "#888" }}>
-              {formatPrice(item.price_old, currencyCode)}
-            </div>
-          )}
-          {item.menu_price != null && (
-            <div style={{ fontWeight: "bold", fontSize: item.is_promotion ? "1.1rem" : "1rem", color: item.is_promotion ? "#b8860b" : "inherit" }}>
-              {formatPrice(item.menu_price, currencyCode)}
-            </div>
-          )}
-        </div>
-      </div>
+      </article>
     </li>
   );
 }
@@ -129,6 +116,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
   const footerText = menu.store_settings?.footer_text;
   const contactUrl = menu.store_settings?.contact_url;
   const privacyUrl = menu.store_settings?.privacy_url;
+  const primaryColor = (menu.store_settings?.primary_color?.trim() || FALLBACK_PRIMARY) as string;
 
   const featuredItems = useMemo(() => collectFeaturedItems(menu), [menu]);
 
@@ -201,69 +189,69 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
     return result;
   }, [menu.sections, filteredCategories]);
 
+  const clearFilters = () => {
+    setCategoryFilter("");
+    setTypeFilter("");
+    setTogglePromo(false);
+    setToggleTakeAway(false);
+    setToggleFeatured(false);
+  };
+
   return (
-    <div>
-      <header style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+    <div
+      className="menu-public-contents"
+      style={
+        {
+          "--menu-primary": primaryColor,
+          "--menu-primary-foreground": "#fff",
+        } as React.CSSProperties
+      }
+    >
+      {/* Header */}
+      <header className="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <div className="flex items-center gap-4">
           {menu.store_settings?.logo_url ? (
-            <img src={menu.store_settings.logo_url} alt={storeName} style={{ maxHeight: "48px", width: "auto", objectFit: "contain" }} />
+            <img
+              src={menu.store_settings.logo_url}
+              alt={storeName}
+              className="max-h-12 w-auto object-contain"
+            />
           ) : (
-            <h1 style={{ margin: 0, fontSize: "1.5rem" }}>{storeName}</h1>
+            <h1 className="m-0 text-2xl font-bold text-gray-900">{storeName}</h1>
           )}
-          <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600, color: "#333" }}>Nossos Menus</h2>
+          <h2 className="m-0 text-xl font-semibold text-gray-700">Nossos Menus</h2>
         </div>
         <button
           type="button"
           onClick={() => (reservationUrl ? window.open(reservationUrl, "_blank") : setReservationModalOpen(true))}
-          style={{
-            padding: "0.5rem 1rem",
-            background: "#8b6914",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
+          className="px-5 py-2.5 rounded-lg font-semibold text-white cursor-pointer transition-opacity hover:opacity-90 shadow-md"
+          style={{ backgroundColor: "var(--menu-primary)" }}
         >
           Reservar uma mesa
         </button>
       </header>
 
+      {/* Reservation modal */}
       {reservationModalOpen && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="reservation-modal-title"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]"
           onClick={() => setReservationModalOpen(false)}
         >
           <div
-            style={{
-              background: "#fff",
-              padding: "1.5rem",
-              borderRadius: "8px",
-              maxWidth: "24rem",
-              width: "90%",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
-            }}
+            className="bg-white p-6 rounded-xl max-w-sm w-[90%] shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="reservation-modal-title" style={{ marginTop: 0 }}>Reservar uma mesa</h3>
-            <p style={{ color: "#555", fontSize: "0.9rem" }}>
+            <h3 id="reservation-modal-title" className="mt-0 text-lg font-semibold">Reservar uma mesa</h3>
+            <p className="text-gray-600 text-sm mt-1">
               Em breve poderá efectuar a sua reserva aqui. Entretanto, contacte-nos directamente.
             </p>
             <button
               type="button"
               onClick={() => setReservationModalOpen(false)}
-              style={{ padding: "0.35rem 0.75rem", marginTop: "0.5rem" }}
+              className="mt-3 px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 font-medium"
             >
               Fechar
             </button>
@@ -271,16 +259,26 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
         </div>
       )}
 
+      {/* Hero (text banner) */}
       {heroText && (
-        <section style={{ marginBottom: "1.5rem", padding: "1rem", background: "#f8f8f8", borderRadius: "8px", color: "#444" }}>
-          <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{heroText}</p>
+        <section
+          className="mb-8 p-6 rounded-xl text-gray-800"
+          style={{ backgroundColor: "color-mix(in srgb, var(--menu-primary) 12%, white)" }}
+        >
+          <p className="m-0 text-lg leading-relaxed whitespace-pre-wrap">{heroText}</p>
         </section>
       )}
 
+      {/* Escolhas do Chefe */}
       {featuredItems.length > 0 && (
-        <section style={{ marginBottom: "1.5rem" }}>
-          <h2 style={{ fontSize: "1.25rem", marginBottom: "0.75rem", color: "#8b6914" }}>Escolhas do Chefe</h2>
-          <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
+        <section className="mb-8">
+          <h2
+            className="text-xl font-semibold mb-4 pb-2 border-b-2"
+            style={{ borderColor: "var(--menu-primary)", color: "var(--menu-primary)" }}
+          >
+            Escolhas do Chefe
+          </h2>
+          <ul className="p-0 m-0 list-none grid gap-6 sm:grid-cols-1">
             {featuredItems.map((item) => (
               <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
             ))}
@@ -288,51 +286,47 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
         </section>
       )}
 
-      <section style={{ marginBottom: "1.5rem" }}>
-        <div style={{ marginBottom: "0.75rem", overflowX: "auto", display: "flex", gap: "0.35rem", flexWrap: "nowrap", paddingBottom: "0.25rem" }}>
-          <button
-            type="button"
-            onClick={() => setCategoryFilter("")}
-            style={{
-              padding: "0.4rem 0.75rem",
-              border: "1px solid #ccc",
-              borderRadius: "6px",
-              background: categoryFilter === "" ? "#8b6914" : "#fff",
-              color: categoryFilter === "" ? "#fff" : "#333",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            TUDO
-          </button>
-          {categoryOptions.map((c) => (
+      {/* Filters: category tabs + chips */}
+      <section className="mb-6">
+        <div className="mb-3 p-2 rounded-lg bg-gray-50 border border-gray-200">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Categorias</p>
+          <div className="overflow-x-auto flex gap-2 flex-nowrap pb-1">
             <button
-              key={c.id}
               type="button"
-              onClick={() => setCategoryFilter(c.id)}
-              style={{
-                padding: "0.4rem 0.75rem",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
-                background: categoryFilter === c.id ? "#8b6914" : "#fff",
-                color: categoryFilter === c.id ? "#fff" : "#333",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
+              onClick={() => setCategoryFilter("")}
+              className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shrink-0 cursor-pointer border transition-colors"
+              style={
+                categoryFilter === ""
+                  ? { backgroundColor: "var(--menu-primary)", color: "var(--menu-primary-foreground)", borderColor: "var(--menu-primary)" }
+                  : { backgroundColor: "#fff", color: "#374151", borderColor: "#d1d5db" }
+              }
             >
-              {c.name}
+              TUDO
             </button>
-          ))}
+            {categoryOptions.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCategoryFilter(c.id)}
+                className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shrink-0 cursor-pointer border transition-colors"
+                style={
+                  categoryFilter === c.id
+                    ? { backgroundColor: "var(--menu-primary)", color: "var(--menu-primary-foreground)", borderColor: "var(--menu-primary)" }
+                    : { backgroundColor: "#fff", color: "#374151", borderColor: "#d1d5db" }
+                }
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
+        <div className="flex flex-wrap gap-2 items-center">
+          <label className="flex items-center gap-2 text-sm text-gray-700">
             Base prato
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              style={{ padding: "0.35rem 0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+              className="py-2 pl-3 pr-8 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
             >
               <option value="">TUDO</option>
               {typeOptions.map((t) => (
@@ -340,51 +334,74 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
               ))}
             </select>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.9rem" }}>
-            <input type="checkbox" checked={togglePromo} onChange={(e) => setTogglePromo(e.target.checked)} />
-            Promoções
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.9rem" }}>
-            <input type="checkbox" checked={toggleTakeAway} onChange={(e) => setToggleTakeAway(e.target.checked)} />
-            Take-away
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.9rem" }}>
-            <input type="checkbox" checked={toggleFeatured} onChange={(e) => setToggleFeatured(e.target.checked)} />
-            Em destaque
-          </label>
           <button
             type="button"
-            onClick={() => { setCategoryFilter(""); setTypeFilter(""); setTogglePromo(false); setToggleTakeAway(false); setToggleFeatured(false); }}
-            style={{ padding: "0.35rem 0.75rem", border: "1px solid #999", borderRadius: "4px", background: "#f0f0f0", cursor: "pointer" }}
+            onClick={() => setTogglePromo(!togglePromo)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+              togglePromo ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-300"
+            }`}
+            style={togglePromo ? { backgroundColor: "var(--menu-primary)" } : undefined}
+          >
+            Promoções
+          </button>
+          <button
+            type="button"
+            onClick={() => setToggleTakeAway(!toggleTakeAway)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+              toggleTakeAway ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-300"
+            }`}
+            style={toggleTakeAway ? { backgroundColor: "var(--menu-primary)" } : undefined}
+          >
+            Take-away
+          </button>
+          <button
+            type="button"
+            onClick={() => setToggleFeatured(!toggleFeatured)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+              toggleFeatured ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-300"
+            }`}
+            style={toggleFeatured ? { backgroundColor: "var(--menu-primary)" } : undefined}
+          >
+            Em destaque
+          </button>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 cursor-pointer"
           >
             Limpar
           </button>
         </div>
       </section>
 
-      <nav style={{ marginBottom: "1rem", fontSize: "0.9rem", color: "#666" }} aria-label="Breadcrumb">
+      {/* Breadcrumb */}
+      <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
         HOME
         {storeName && ` / ${storeName}`}
         {currentSectionName && ` / ${currentSectionName}`}
       </nav>
 
+      {/* Sections & categories */}
       {filteredCategories.length === 0 ? (
-        <p style={{ color: "#666" }}>Nenhum item corresponde aos filtros.</p>
+        <p className="text-gray-600">Nenhum item corresponde aos filtros.</p>
       ) : (
         categoriesBySection.map((group) => (
-          <div key={group.sectionId ?? "_none"} style={{ marginBottom: "2.5rem" }}>
-            <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem", color: "#333", borderBottom: "2px solid #8b6914", paddingBottom: "0.35rem" }}>
+          <div key={group.sectionId ?? "_none"} className="mb-10">
+            <h2
+              className="text-xl font-semibold mb-4 pb-2 border-b-2 text-gray-900"
+              style={{ borderColor: "var(--menu-primary)" }}
+            >
               {group.sectionName}
             </h2>
             {group.categories.map((cat) => (
-              <section key={cat.id} style={{ marginBottom: "1.5rem" }}>
-                <h3 style={{ fontSize: "1.25rem", marginBottom: "0.5rem", color: "#8b6914" }}>
+              <section key={cat.id} className="mb-8">
+                <h3 className="text-lg font-semibold mb-2 text-gray-800" style={{ color: "var(--menu-primary)" }}>
                   {cat.name}
                 </h3>
                 {cat.description && (
-                  <p style={{ color: "#666", marginBottom: "0.75rem" }}>{cat.description}</p>
+                  <p className="text-gray-600 text-sm mb-4">{cat.description}</p>
                 )}
-                <ul style={{ padding: 0, margin: 0 }}>
+                <ul className="p-0 m-0 list-none grid gap-6">
                   {cat.items?.map((item) => (
                     <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
                   ))}
@@ -395,20 +412,25 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
         ))
       )}
 
-      <footer style={{ marginTop: "2.5rem", paddingTop: "1rem", borderTop: "1px solid #eee", fontSize: "0.9rem", color: "#666" }}>
+      {/* Footer */}
+      <footer className="mt-10 pt-6 border-t border-gray-200 text-sm text-gray-600">
         {footerText && (
-          <div style={{ marginBottom: "0.5rem", whiteSpace: "pre-wrap" }}>{footerText}</div>
+          <div className="mb-3 whitespace-pre-wrap">{footerText}</div>
         )}
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+        <div className="flex gap-4 flex-wrap">
           {contactUrl && (
-            <a href={contactUrl} style={{ color: "#8b6914" }}>Contacte-nos</a>
+            <a href={contactUrl} className="font-medium hover:underline" style={{ color: "var(--menu-primary)" }}>
+              Contacte-nos
+            </a>
           )}
           {privacyUrl && (
-            <a href={privacyUrl} style={{ color: "#8b6914" }}>Política de Privacidade</a>
+            <a href={privacyUrl} className="font-medium hover:underline" style={{ color: "var(--menu-primary)" }}>
+              Política de Privacidade
+            </a>
           )}
         </div>
         {!footerText && !contactUrl && !privacyUrl && (
-          <p style={{ margin: 0 }}>© {storeName}</p>
+          <p className="m-0">© {storeName}</p>
         )}
       </footer>
     </div>

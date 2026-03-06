@@ -1,15 +1,20 @@
 "use client";
 
-export const MENU_ICON_CODES = ["fish", "beef", "lobster", "plant", "vehicle", "percent"] as const;
-export type MenuIconCode = (typeof MENU_ICON_CODES)[number];
+/** Selectable in portal-admin for article types. */
+export const ARTICLE_TYPE_ICON_CODES = ["fish", "meat", "seafood", "veggie", "hot-spice"] as const;
+export type ArticleTypeIconCode = (typeof ARTICLE_TYPE_ICON_CODES)[number];
+
+/** Reserved by app for take-away and promotion badges; not selectable as article type. */
+export const RESERVED_APP_ICONS = ["take-away", "on-promo"] as const;
 
 const iconPaths: Record<string, string> = {
   fish: "/icons/fish.svg",
-  beef: "/icons/beef.svg",
-  lobster: "/icons/lobster.svg",
-  plant: "/icons/plant.svg",
-  vehicle: "/icons/vehicle.svg",
-  percent: "/icons/percent.svg",
+  meat: "/icons/meat.svg",
+  seafood: "/icons/seafood.svg",
+  veggie: "/icons/veggie.svg",
+  "hot-spice": "/icons/hot-spice.svg",
+  "take-away": "/icons/take-away.svg",
+  "on-promo": "/icons/on-promo.svg",
 };
 
 type MenuIconProps = {
@@ -19,7 +24,7 @@ type MenuIconProps = {
   "aria-hidden"?: boolean;
 };
 
-/** Renders a menu symbol by code (article type: fish, beef, lobster, plant; app: vehicle, percent). */
+/** Renders a menu symbol by code (article types: fish, meat, seafood, veggie, hot-spice; app reserved: take-away, on-promo). */
 export function MenuIcon({ code, className, size = 24, "aria-hidden": ariaHidden }: MenuIconProps) {
   const src = iconPaths[code];
   if (!src) return null;

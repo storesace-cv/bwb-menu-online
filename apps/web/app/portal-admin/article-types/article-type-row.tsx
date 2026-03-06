@@ -3,8 +3,9 @@
 import { useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { updateArticleType, deleteArticleType } from "../actions";
-import { MenuIcon, MENU_ICON_CODES } from "@/components/menu-icons";
-import { Input, Select, Button, Alert } from "@/components/admin";
+import { MenuIcon } from "@/components/menu-icons";
+import { ArticleTypeIconPicker } from "./create-article-type-form";
+import { Input, Button, Alert } from "@/components/admin";
 
 type ArticleType = { id: string; name: string; icon_code: string; sort_order: number };
 
@@ -24,11 +25,7 @@ export function ArticleTypeRow({ articleType }: { articleType: ArticleType }) {
         <form action={updateFormAction} className="flex gap-4 flex-wrap items-center">
           <input type="hidden" name="id" value={articleType.id} />
           <Input id={`edit-at-name-${articleType.id}`} name="name" label="Nome" type="text" required defaultValue={articleType.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
-          <Select id={`edit-at-icon-${articleType.id}`} name="icon_code" label="Ícone" defaultValue={articleType.icon_code} className="min-w-[7rem]" wrapperClassName="mb-0">
-            {MENU_ICON_CODES.map((code) => (
-              <option key={code} value={code}>{code}</option>
-            ))}
-          </Select>
+          <ArticleTypeIconPicker name="icon_code" defaultValue={articleType.icon_code} />
           <Input id={`edit-at-sort-${articleType.id}`} name="sort_order" label="Ordem" type="number" defaultValue={articleType.sort_order} className="w-24" wrapperClassName="mb-0" />
           <Button type="submit" variant="primary">Guardar</Button>
           <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
