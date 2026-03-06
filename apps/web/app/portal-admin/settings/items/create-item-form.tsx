@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState } from "react-dom";
-import { createMenuItem } from "../actions";
+import { createMenuItem } from "../../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
 
 const inputClass =

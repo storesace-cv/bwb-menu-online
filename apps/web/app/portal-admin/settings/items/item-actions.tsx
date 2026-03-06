@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import { deleteMenuItem } from "../actions";
+import { deleteMenuItem } from "../../actions";
 import { Button } from "@/components/admin";
 
 export function ItemActions({ itemId, menuName }: { itemId: string; menuName: string }) {
@@ -15,7 +15,7 @@ export function ItemActions({ itemId, menuName }: { itemId: string; menuName: st
 
   return (
     <span className="flex gap-2 items-center">
-      <Link href={`/portal-admin/items/${itemId}/edit`} className="text-emerald-400 hover:text-emerald-300 text-sm">
+      <Link href={`/portal-admin/settings/items/${itemId}/edit`} className="text-emerald-400 hover:text-emerald-300 text-sm">
         Editar
       </Link>
       <form ref={formRef} action={(fd: FormData) => { void deleteMenuItem(null, fd); }} className="inline">

@@ -51,7 +51,7 @@ export default async function SyncPage() {
         {" · "}
         <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">Definições</Link>
         {" · "}
-        <Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">Itens</Link>
+        <Link href="/portal-admin/settings/items" className="text-emerald-400 hover:text-emerald-300">Gestão de Artigos</Link>
       </p>
 
       <section className="mb-8">

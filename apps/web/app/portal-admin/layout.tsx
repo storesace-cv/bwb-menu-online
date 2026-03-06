@@ -82,7 +82,6 @@ export default async function PortalAdminLayout({
         {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass}>Tenants</Link>}
         {mode === "global" && <Link href="/portal-admin/users" className={linkClass}>Utilizadores</Link>}
         <Link href="/portal-admin/menu" className={linkClass}>Menu</Link>
-        {mode === "tenant" && <Link href="/portal-admin/items" className={linkClass}>Itens</Link>}
         {mode === "tenant" && <Link href="/portal-admin/article-types" className={linkClass}>Tipos de artigo</Link>}
         {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass}>Sync</Link>}
         {mode === "tenant" && <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>}

@@ -3,7 +3,7 @@
 import { useFormState } from "react-dom";
 import { useState } from "react";
 import Link from "next/link";
-import { updateMenuItem } from "../actions";
+import { updateMenuItem } from "../../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
 
 const inputClass =
@@ -226,7 +226,7 @@ export function EditItemForm({ item, articleTypes }: { item: MenuItem; articleTy
       {/* 9. Botões */}
       <div className="flex flex-wrap gap-3 items-center">
         <Link
-          href="/portal-admin/items"
+          href="/portal-admin/settings/items"
           className="px-4 py-2 border border-slate-600 text-slate-200 hover:bg-slate-700 hover:border-slate-500 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500"
         >
           Cancelar

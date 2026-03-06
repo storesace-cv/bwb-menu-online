@@ -33,7 +33,7 @@ export default async function ArticleTypesPage() {
       <p className="mb-6">
         <Link href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300">← Menu</Link>
         {" · "}
-        <Link href="/portal-admin/items" className="text-emerald-400 hover:text-emerald-300">Itens</Link>
+        <Link href="/portal-admin/settings/items" className="text-emerald-400 hover:text-emerald-300">Gestão de Artigos</Link>
       </p>
 
       <section className="mb-8">

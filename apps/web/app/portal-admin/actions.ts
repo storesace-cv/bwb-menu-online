@@ -72,7 +72,7 @@ export async function createSection(_prev: { error?: string } | null, formData: 
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
-  revalidatePath("/portal-admin/sections");
+  revalidatePath("/portal-admin/settings/sections");
   return null;
 }
 
@@ -91,7 +91,82 @@ export async function createCategory(_prev: { error?: string } | null, formData:
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
-  revalidatePath("/portal-admin/items");
+  revalidatePath("/portal-admin/settings/items");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
+
+export async function updateSection(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  const name = (formData.get("name") as string)?.trim() ?? "";
+  const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  if (!id || !name) return { error: "ID e nome obrigatórios" };
+  const { data: row } = await supabase.from("menu_sections").select("store_id").eq("id", id).single();
+  if (!row) return { error: "Secção não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { error } = await supabase
+    .from("menu_sections")
+    .update({ name, sort_order: sortOrder })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/sections");
+  return null;
+}
+
+export async function deleteSection(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  if (!id) return { error: "ID obrigatório" };
+  const { data: row } = await supabase.from("menu_sections").select("store_id").eq("id", id).single();
+  if (!row) return { error: "Secção não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { data: cats } = await supabase.from("menu_categories").select("id").eq("section_id", id).limit(1);
+  if (cats && cats.length > 0) return { error: "Não pode apagar secção com categorias associadas. Desassocie primeiro." };
+  const { error } = await supabase.from("menu_sections").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/sections");
+  return null;
+}
+
+export async function updateCategory(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  const name = (formData.get("name") as string)?.trim() ?? "";
+  const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  const sectionId = (formData.get("section_id") as string)?.trim() || null;
+  if (!id || !name) return { error: "ID e nome obrigatórios" };
+  const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
+  if (!row) return { error: "Categoria não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { error } = await supabase
+    .from("menu_categories")
+    .update({ name, sort_order: sortOrder, section_id: sectionId || null })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
+
+export async function deleteCategory(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  if (!id) return { error: "ID obrigatório" };
+  const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
+  if (!row) return { error: "Categoria não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  await supabase.from("menu_category_items").delete().eq("category_id", id);
+  const { error } = await supabase.from("menu_categories").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/categories");
   return null;
 }
 
@@ -128,7 +203,7 @@ export async function createArticleType(_prev: { error?: string } | null, formDa
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/article-types");
-  revalidatePath("/portal-admin/items");
+  revalidatePath("/portal-admin/settings/items");
   return null;
 }
 
@@ -145,7 +220,7 @@ export async function updateArticleType(_prev: { error?: string } | null, formDa
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/article-types");
-  revalidatePath("/portal-admin/items");
+  revalidatePath("/portal-admin/settings/items");
   return null;
 }
 
@@ -156,7 +231,7 @@ export async function deleteArticleType(_prev: { error?: string } | null, formDa
   const { error } = await supabase.from("article_types").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/article-types");
-  revalidatePath("/portal-admin/items");
+  revalidatePath("/portal-admin/settings/items");
   return null;
 }
 
@@ -187,7 +262,7 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
-  revalidatePath("/portal-admin/items");
+  revalidatePath("/portal-admin/settings/items");
   return null;
 }
 
@@ -245,7 +320,7 @@ export async function updateMenuItem(
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
-  revalidatePath("/portal-admin/items");
+  revalidatePath("/portal-admin/settings/items");
   return { success: true };
 }
 
@@ -256,7 +331,7 @@ export async function deleteMenuItem(_prev: { error?: string } | null, formData:
   const { error } = await supabase.from("menu_items").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
-  revalidatePath("/portal-admin/items");
+  revalidatePath("/portal-admin/settings/items");
   return null;
 }
 
@@ -303,5 +378,6 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   );
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/settings");
+  revalidatePath("/portal-admin/settings/app");
   return null;
 }
