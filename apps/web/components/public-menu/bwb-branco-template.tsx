@@ -108,10 +108,10 @@ function RowCards({ items, currencyCode }: { items: [PublicMenuItem, PublicMenuI
         <button
           type="button"
           onClick={() => setImageModalOpen((o) => [true, o[1]])}
-          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none"
+          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
           aria-label={`Ver imagem e ingredientes de ${left.menu_name ?? "artigo"}`}
         >
-          <img src={imageSrcLeft} alt={left.menu_name ?? ""} className="h-full w-full object-cover" />
+          <img src={imageSrcLeft} alt={left.menu_name ?? ""} className="h-full w-full object-cover border-0" />
         </button>
         <div className="px-3 pt-2 pb-0 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
           {left.article_type && <MenuIcon code={left.article_type.icon_code} size={22} className="shrink-0" />}
@@ -176,10 +176,10 @@ function RowCards({ items, currencyCode }: { items: [PublicMenuItem, PublicMenuI
             <button
               type="button"
               onClick={() => setImageModalOpen((o) => [o[0], true])}
-              className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none"
+              className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
               aria-label={`Ver imagem e ingredientes de ${right.menu_name ?? "artigo"}`}
             >
-              <img src={imageSrcRight!} alt={right.menu_name ?? ""} className="h-full w-full object-cover" />
+              <img src={imageSrcRight!} alt={right.menu_name ?? ""} className="h-full w-full object-cover border-0" />
             </button>
             <div className="px-3 pt-2 pb-0 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
               {right.article_type && <MenuIcon code={right.article_type.icon_code} size={22} className="shrink-0" />}
@@ -275,10 +275,10 @@ export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currenc
         <button
           type="button"
           onClick={() => setImageModalOpen(true)}
-          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none"
+          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
-          <img src={imageSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover" />
+          <img src={imageSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" />
         </button>
         <div className="p-3 flex flex-col flex-1 min-h-0">
           <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">
