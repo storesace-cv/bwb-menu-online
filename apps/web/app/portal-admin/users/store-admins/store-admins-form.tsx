@@ -1,0 +1,64 @@
+"use client";
+
+import { useState } from "react";
+import { Input, Button, Alert, Card, MultiSelectDropdown, type MultiSelectOption } from "@/components/admin";
+
+export function StoreAdminsForm({ storeOptions }: { storeOptions: MultiSelectOption[] }) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(false);
+    const form = e.currentTarget;
+    const checked = form.querySelectorAll<HTMLInputElement>('input[name="store_ids"]:checked');
+    const storeIds = Array.from(checked).map((c) => c.value).filter(Boolean);
+    if (storeIds.length === 0) {
+      setError("Selecione pelo menos uma loja.");
+      return;
+    }
+    const res = await fetch("/api/portal-admin/users/store-admins", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), store_ids: storeIds }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error ?? res.statusText);
+      return;
+    }
+    setSuccess(true);
+    setEmail("");
+    window.dispatchEvent(new CustomEvent("store-admins-refresh"));
+  }
+
+  return (
+    <Card>
+      <h2 className="text-lg font-medium text-slate-200 mb-4">Criar Admin de Loja</h2>
+      <form onSubmit={handleSubmit} className="flex flex-wrap gap-4 items-end">
+        <div className="min-w-[200px]">
+          <Input
+            id="store-admin-email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <MultiSelectDropdown
+          label="Lojas"
+          name="store_ids"
+          options={storeOptions}
+          selectedIds={[]}
+          placeholder="Selecionar lojas"
+        />
+        <Button type="submit">Criar</Button>
+      </form>
+      {error && <Alert variant="error" className="mt-4">{error}</Alert>}
+      {success && <Alert variant="success" className="mt-4">Admin criado. Foi enviado um email com os dados de acesso.</Alert>}
+    </Card>
+  );
+}

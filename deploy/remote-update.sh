@@ -132,6 +132,14 @@ else
   echo "No systemd apply.sh, skipping."
 fi
 
+echo "=== Step 3.8: Apply Supabase SMTP ==="
+export INSTANCE_DIR
+if [[ -x "$APP_DIR/deploy/supabase/apply_smtp.sh" ]]; then
+  bash "$APP_DIR/deploy/supabase/apply_smtp.sh"
+else
+  echo "No deploy/supabase/apply_smtp.sh or not executable, skipping."
+fi
+
 echo "=== Step 4: Start stack ==="
 if systemctl is-enabled "${SYSTEMD_UNIT_NAME:-bwb-menu-online.service}" &>/dev/null; then
   (cd "$APP_DIR" && docker compose build web)

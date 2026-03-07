@@ -72,6 +72,22 @@ export default async function PortalAdminLayout({
     redirect(CHANGE_PASSWORD);
   }
 
+  let canAccessSettings = true;
+  if (mode === "tenant") {
+    const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
+    if (storeId) {
+      const { data: can } = await supabase.rpc("current_user_can_access_settings", { p_store_id: storeId });
+      canAccessSettings = can === true;
+    } else {
+      canAccessSettings = false;
+    }
+    if (!canAccessSettings && pathname.startsWith("/portal-admin/settings")) {
+      portalDebugLog("layout", { pathname, decision: "redirect_no_settings_access" });
+      if (isRsc) return <RedirectTo url="/portal-admin/menu" />;
+      redirect("/portal-admin/menu");
+    }
+  }
+
   portalDebugLog("layout", { pathname, decision: "full_layout" });
   const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";
   return (
@@ -83,7 +99,8 @@ export default async function PortalAdminLayout({
         {mode === "global" && <Link href="/portal-admin/users" className={linkClass}>Utilizadores</Link>}
         <Link href="/portal-admin/menu" className={linkClass}>Menu</Link>
         {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass}>Sync</Link>}
-        {mode === "tenant" && <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>}
+        {mode === "tenant" && canAccessSettings && <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>}
+        {mode === "tenant" && canAccessSettings && <Link href="/portal-admin/users" className={linkClass}>Utilizadores</Link>}
         <form action="/api/auth/signout" method="post" className="ml-auto">
           <button
             type="submit"
