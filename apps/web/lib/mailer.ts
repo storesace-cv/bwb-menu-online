@@ -67,7 +67,7 @@ export async function sendWelcomeOrResetEmail(options: SendWelcomeOrResetOptions
   const mailOptions = {
     from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
     to,
-    subject: isReset ? "BWB Menu Online — Palavra-passe reposta" : "BWB Menu Online — Acesso ao Portal Admin",
+    subject: isReset ? "Reset de Password" : "BWB Menu Online — Acesso ao Portal Admin",
     html,
     text: `${isResetText}\n\nEmail: ${to}\nPassword (por defeito): ${passwordDefault}\n\nAceder: ${portalUrl}`,
   };

@@ -9,6 +9,7 @@ type StoreAdminRow = {
   id: string;
   email: string | null;
   created_at: string;
+  deleted_at?: string | null;
   bindings: { role_code: string; store_id: string | null; store_name: string | null }[];
 };
 

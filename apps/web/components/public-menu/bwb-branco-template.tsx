@@ -369,7 +369,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
           >
             Escolhas do Chefe
           </h2>
-          <ul className="p-0 m-0 list-none grid gap-6 sm:grid-cols-1">
+          <ul className="p-0 m-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {featuredItems.map((item) => (
               <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
             ))}
@@ -492,7 +492,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
                 {cat.description && (
                   <p className="text-gray-600 text-sm mb-4">{cat.description}</p>
                 )}
-                <ul className="p-0 m-0 list-none grid gap-6">
+                <ul className="p-0 m-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {cat.items?.map((item) => (
                     <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
                   ))}

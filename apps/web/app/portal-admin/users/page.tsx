@@ -7,12 +7,16 @@ import { AssignRoleForm } from "./assign-role-form";
 import { StoreUsersForm } from "./store-users-form";
 import { StoreUsersTable } from "./store-users-table";
 import { RefreshOnStoreUsersEvent } from "./refresh-store-users";
-import { Card, TableContainer } from "@/components/admin";
+import { RolesInfoCard } from "./roles-info-card";
+import { GlobalUsersTable } from "./global-users-table";
+import { RolesInfoCard } from "./roles-info-card";
+import { Card } from "@/components/admin";
 
 type UserRow = {
   id: string;
   email: string | null;
   created_at: string;
+  deleted_at: string | null;
   bindings: { role_code: string; tenant_id: string | null; tenant_name: string | null; store_id: string | null; store_name: string | null }[];
 };
 
@@ -20,6 +24,7 @@ type StoreUserRow = {
   id: string;
   email: string | null;
   created_at: string;
+  deleted_at?: string | null;
   store_id: string;
   store_name: string | null;
 };
@@ -67,6 +72,15 @@ export default async function UsersPage() {
           <StoreUsersForm />
         </section>
 
+        <section className="mb-8">
+          <RolesInfoCard
+            roles={[
+              { code: "store_user", name: "Utilizador de Loja", description: "Acesso ao portal da loja (menu, artigos). Não pode aceder ao menu Definições nem gerir outros utilizadores." },
+              { code: "store_admin", name: "Admin de Loja", description: "Acesso total ao portal da loja, incluindo Definições e gestão de utilizadores. Pode criar e gerir utilizadores da loja." },
+            ]}
+          />
+        </section>
+
         <section>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
           <StoreUsersTable list={storeUsers} />
@@ -92,6 +106,17 @@ export default async function UsersPage() {
     { code: "tenant_admin", name: "Tenant Admin" },
     { code: "store_editor", name: "Store Editor" },
     { code: "viewer", name: "Viewer" },
+    { code: "store_admin", name: "Admin de Loja" },
+    { code: "store_user", name: "Utilizador de Loja" },
+  ];
+
+  const rolesWithDescriptions = [
+    { code: "superadmin", name: "Super Admin", description: "Acesso total ao portal global (menu.bwb.pt). Pode gerir tenants, lojas, utilizadores e atribuir qualquer perfil." },
+    { code: "tenant_admin", name: "Tenant Admin", description: "Administrador do tenant. Acesso às lojas do tenant." },
+    { code: "store_editor", name: "Store Editor", description: "Editor de conteúdo da loja (menu, itens)." },
+    { code: "viewer", name: "Viewer", description: "Apenas visualização na loja." },
+    { code: "store_admin", name: "Admin de Loja", description: "Admin da loja. Acesso total ao portal da loja, incluindo Definições e gestão de utilizadores da loja." },
+    { code: "store_user", name: "Utilizador de Loja", description: "Utilizador da loja. Acesso ao portal da loja exceto ao menu Definições." },
   ];
 
   return (
@@ -118,39 +143,13 @@ export default async function UsersPage() {
         </Card>
       </section>
 
+      <section className="mb-8">
+        <RolesInfoCard roles={rolesWithDescriptions} />
+      </section>
+
       <section>
         <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
-        <Card>
-          <TableContainer>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-slate-600">
-                  <th className="text-left py-2 px-3 text-slate-300">Email</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Roles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} className="border-b border-slate-700">
-                    <td className="py-2 px-3 text-slate-200">{u.email ?? "—"}</td>
-                    <td className="py-2 px-3 text-slate-200">
-                      {u.bindings?.length
-                        ? u.bindings.map((b) => (
-                            <span key={`${b.role_code}-${b.tenant_id ?? ""}-${b.store_id ?? ""}`} className="block">
-                              {b.role_code}
-                              {b.tenant_name && ` (${b.tenant_name})`}
-                              {b.store_name && ` → ${b.store_name}`}
-                            </span>
-                          ))
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </TableContainer>
-          {users.length === 0 && <p className="text-slate-500 py-4">Nenhum utilizador.</p>}
-        </Card>
+        <GlobalUsersTable users={users} />
       </section>
     </div>
   );

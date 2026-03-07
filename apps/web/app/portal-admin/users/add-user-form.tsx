@@ -74,7 +74,7 @@ export function AddUserForm({
       />
       <Select
         id="user-role"
-        label="Role"
+        label="Perfil"
         value={roleCode}
         onChange={(e) => setRoleCode(e.target.value)}
         required
