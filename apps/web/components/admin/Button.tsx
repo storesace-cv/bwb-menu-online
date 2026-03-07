@@ -14,7 +14,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   warning:
     "bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-500 disabled:opacity-60 disabled:cursor-not-allowed",
   outline:
-    "border border-slate-600 text-slate-200 hover:bg-slate-700 hover:border-slate-500 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed",
+    "bg-[#079669] border border-[#079669] text-white hover:bg-emerald-600 hover:border-emerald-600 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed",
 };
 
 export function Button({

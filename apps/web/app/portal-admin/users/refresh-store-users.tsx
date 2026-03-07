@@ -7,7 +7,7 @@ export function RefreshOnStoreUsersEvent() {
   const router = useRouter();
   useEffect(() => {
     function onRefresh() {
-      router.refresh();
+      setTimeout(() => router.refresh(), 0);
     }
     window.addEventListener("store-users-refresh", onRefresh);
     return () => window.removeEventListener("store-users-refresh", onRefresh);

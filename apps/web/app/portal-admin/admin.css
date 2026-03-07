@@ -59,3 +59,20 @@
   max-height: 70vh;
   overflow: auto;
 }
+
+/* Contraste: evitar fundo claro com texto claro; usar emerald (#079669) para fundos de botões/áreas com texto branco */
+.admin-theme button[class*="outline"],
+.admin-theme .bg-white.text-white,
+.admin-theme .bg-white.text-slate-100,
+.admin-theme .bg-slate-100.text-white,
+.admin-theme .bg-slate-100.text-slate-100,
+.admin-theme .bg-gray-100.text-white,
+.admin-theme .bg-gray-50.text-white {
+  background-color: #079669 !important;
+  color: #fff !important;
+  border-color: #079669;
+}
+.admin-theme button[class*="outline"]:hover {
+  background-color: #059669 !important;
+  border-color: #059669;
+}

@@ -14,6 +14,13 @@ O script `deploy/supabase/apply_smtp.sh` lê as variáveis do `.env` da app e ap
 
 **Nota:** A app Next.js também envia emails (boas-vindas ao criar utilizador, reset de password) através de `lib/mailer.ts`, usando as mesmas variáveis `GOTRUE_SMTP_*` do `.env`. O container **web** da app usa `env_file: .env`, pelo que deve ter essas variáveis definidas para que os emails de criação de utilizadores e de reset sejam enviados correctamente.
 
+## Logotipo nos emails
+
+Os templates de email (welcome/reset) incluem um logotipo. O URL da imagem é construído como `{NEXT_PUBLIC_APP_URL}/email/bwb-white-compact.jpeg`. Para o logotipo aparecer nos clientes de email:
+
+1. **Ficheiro:** Colocar uma imagem com o nome `bwb-white-compact.jpeg` na pasta `apps/web/public/email/` (no deploy, isso corresponde a `https://<domínio>/email/bwb-white-compact.jpeg`). Recomenda-se uma versão compacta do logotipo BWB em fundo transparente ou escuro (ex.: 140px de largura), em JPEG ou PNG.
+2. **URL base:** No servidor, definir `NEXT_PUBLIC_APP_URL` no `.env` com o domínio público (ex.: `https://menu.bwb.pt`), para o URL da imagem ser absoluto e acessível quando o cliente de email faz o GET. Sem este ficheiro, o lugar do logotipo aparece como imagem partida nos emails.
+
 ## Paths no servidor
 
 | O quê | Path |
