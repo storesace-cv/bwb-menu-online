@@ -358,8 +358,30 @@ export async function batchUpdateItemsSectionCategory(
       .limit(1)
       .maybeSingle();
     targetCategoryId = firstCat?.id ?? null;
+    if (!targetCategoryId) {
+      const { data: sectionRow } = await supabase
+        .from("menu_sections")
+        .select("store_id")
+        .eq("id", sectionId)
+        .single();
+      if (!sectionRow) return { error: "Secção inválida." };
+      const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: sectionRow.store_id });
+      if (!hasAccess) return { error: "Sem acesso a esta loja." };
+      const { data: newCat, error: insertErr } = await supabase
+        .from("menu_categories")
+        .insert({
+          store_id: sectionRow.store_id,
+          section_id: sectionId,
+          name: "Geral",
+          sort_order: 0,
+        })
+        .select("id")
+        .single();
+      if (insertErr || !newCat) return { error: "Não foi possível criar a categoria na secção." };
+      targetCategoryId = newCat.id;
+    }
   }
-  if (!targetCategoryId) return { error: "A secção escolhida não tem categorias. Crie uma categoria nesta secção (Menu → categorias) ou seleccione uma categoria no segundo campo." };
+  if (!targetCategoryId) return { error: "Escolha uma secção ou uma categoria." };
 
   const { data: catRow } = await supabase
     .from("menu_categories")
