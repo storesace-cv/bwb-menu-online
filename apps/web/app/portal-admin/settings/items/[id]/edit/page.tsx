@@ -70,6 +70,14 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
   const currentSectionId = firstCategory?.section_id ?? null;
   const currentCategoryId = firstCategoryId;
 
+  const { data: settingsRow } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const settings = (settingsRow?.settings as Record<string, unknown>) ?? {};
+  const aiEnabled = !!settings.ai_enabled;
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Editar item</h1>
@@ -82,6 +90,8 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
           categories={categories ?? []}
           currentSectionId={currentSectionId}
           currentCategoryId={currentCategoryId}
+          storeId={storeId}
+          aiEnabled={aiEnabled}
         />
       </Card>
     </div>

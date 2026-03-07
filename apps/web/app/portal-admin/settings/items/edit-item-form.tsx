@@ -1,10 +1,11 @@
 "use client";
 
 import { useFormState } from "react-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { updateMenuItem } from "../../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
+import { GenerateDescriptionBlock } from "./generate-description-block";
 
 const inputClass =
   "w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500";
@@ -46,6 +47,8 @@ export function EditItemForm({
   categories,
   currentSectionId,
   currentCategoryId,
+  storeId,
+  aiEnabled,
 }: {
   item: MenuItem;
   articleTypes: ArticleType[];
@@ -53,9 +56,14 @@ export function EditItemForm({
   categories: Category[];
   currentSectionId: string | null;
   currentCategoryId: string | null;
+  storeId: string;
+  aiEnabled: boolean;
 }) {
   const [state, formAction] = useFormState(updateMenuItem, null);
   const [isPromotion, setIsPromotion] = useState(item.is_promotion);
+  const nameRef = useRef<HTMLTextAreaElement>(null);
+  const ingredientsRef = useRef<HTMLTextAreaElement>(null);
+  const descRef = useRef<HTMLTextAreaElement>(null);
 
   const previewUrl = imagePreviewUrl(item);
 
@@ -93,6 +101,7 @@ export function EditItemForm({
           Nome *
         </label>
         <textarea
+          ref={nameRef}
           id="edit-name"
           name="menu_name"
           required
@@ -105,10 +114,22 @@ export function EditItemForm({
 
       {/* 3. Descrição */}
       <div className="w-full">
-        <label htmlFor="edit-desc" className="block text-sm font-medium text-slate-300 mb-1">
-          Descrição
-        </label>
+        <div className="flex flex-wrap items-center gap-3 mb-1">
+          <label htmlFor="edit-desc" className="block text-sm font-medium text-slate-300">
+            Descrição
+          </label>
+          <GenerateDescriptionBlock
+            storeId={storeId}
+            aiEnabled={aiEnabled}
+            getCurrentName={() => nameRef.current?.value ?? ""}
+            getCurrentIngredients={() => ingredientsRef.current?.value ?? ""}
+            onApply={(s) => {
+              if (descRef.current) descRef.current.value = s;
+            }}
+          />
+        </div>
         <textarea
+          ref={descRef}
           id="edit-desc"
           name="menu_description"
           rows={3}
@@ -124,6 +145,7 @@ export function EditItemForm({
           Ingredientes (texto expansível no menu)
         </label>
         <textarea
+          ref={ingredientsRef}
           id="edit-ingredients"
           name="menu_ingredients"
           rows={3}

@@ -37,6 +37,7 @@ export default async function SettingsPage() {
     { href: "/portal-admin/settings/items", label: "Gestão de Artigos", description: "Criar, editar e apagar artigos do menu." },
     { href: "/portal-admin/article-types", label: "Tipos de artigo", description: "Ícones e tipos de artigo (peixe, carne, marisco, etc.)." },
     { href: "/portal-admin/settings/app", label: "Parâmetros App", description: "Tema, branding, template e integração NET-BO." },
+    { href: "/portal-admin/settings/ai", label: "ChatGPT / Grok", description: "Configurar IA para gerar descrições (OpenAI ou xAI, BYO-KEY)." },
     { href: "/portal-admin/users", label: "Utilizadores", description: "Gerir utilizadores da loja." },
   ];
 

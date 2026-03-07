@@ -53,17 +53,24 @@ export default async function SettingsItemsPage() {
 
   const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
   const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
-  const categoriesByItem = new Map<string, { category_id: string; sort_order: number }[]>();
+  const categoriesByItem = new Map<string, { category_id: string; sort_order: number; has_section: boolean }[]>();
   for (const row of mciRows ?? []) {
     const cat = categoryById.get(row.category_id);
     if (!cat) continue;
     const list = categoriesByItem.get(row.menu_item_id) ?? [];
-    list.push({ category_id: row.category_id, sort_order: cat.sort_order ?? 999 });
+    list.push({
+      category_id: row.category_id,
+      sort_order: cat.sort_order ?? 999,
+      has_section: !!cat.section_id,
+    });
     categoriesByItem.set(row.menu_item_id, list);
   }
   const itemSectionCategory: Record<string, { sectionName: string; categoryName: string }> = {};
   Array.from(categoriesByItem.entries()).forEach(([menuItemId, list]) => {
-    list.sort((a, b) => a.sort_order - b.sort_order);
+    list.sort((a, b) => {
+      if (a.has_section !== b.has_section) return a.has_section ? -1 : 1;
+      return a.sort_order - b.sort_order;
+    });
     const firstCatId = list[0]?.category_id;
     const cat = firstCatId ? categoryById.get(firstCatId) : null;
     const sec = cat?.section_id ? sectionById.get(cat.section_id) : null;
@@ -72,6 +79,19 @@ export default async function SettingsItemsPage() {
       categoryName: cat?.name ?? "—",
     };
   });
+  for (const item of items ?? []) {
+    if (!(item.id in itemSectionCategory)) {
+      itemSectionCategory[item.id] = { sectionName: "—", categoryName: "—" };
+    }
+  }
+
+  const { data: settingsRow } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const settings = (settingsRow?.settings as Record<string, unknown>) ?? {};
+  const aiEnabled = !!settings.ai_enabled;
 
   return (
     <div>
@@ -87,7 +107,7 @@ export default async function SettingsItemsPage() {
       <section className="mb-8">
         <Card>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Novo item</h2>
-          <CreateItemForm storeId={storeId} articleTypes={articleTypes ?? []} />
+          <CreateItemForm storeId={storeId} articleTypes={articleTypes ?? []} aiEnabled={aiEnabled} />
         </Card>
       </section>
 

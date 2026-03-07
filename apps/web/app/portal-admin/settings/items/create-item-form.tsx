@@ -3,13 +3,22 @@
 import { useFormState } from "react-dom";
 import { createMenuItem } from "../../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
+import { GenerateDescriptionBlock } from "./generate-description-block";
 
 const inputClass =
   "w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500";
 
 type ArticleType = { id: string; name: string; icon_code: string };
 
-export function CreateItemForm({ storeId, articleTypes }: { storeId: string; articleTypes: ArticleType[] }) {
+export function CreateItemForm({
+  storeId,
+  articleTypes,
+  aiEnabled = false,
+}: {
+  storeId: string;
+  articleTypes: ArticleType[];
+  aiEnabled?: boolean;
+}) {
   const [state, formAction] = useFormState(createMenuItem, null);
 
   return (
@@ -17,7 +26,30 @@ export function CreateItemForm({ storeId, articleTypes }: { storeId: string; art
       <input type="hidden" name="store_id" value={storeId} />
       <div className="flex flex-wrap gap-4">
         <Input id="item-name" name="menu_name" label="Nome *" type="text" required placeholder="ex: Bifana" />
-        <Input id="item-desc" name="menu_description" label="Descrição" type="text" placeholder="Breve descrição" />
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-3 mb-1">
+            <label htmlFor="item-desc" className="block text-sm font-medium text-slate-300">
+              Descrição
+            </label>
+            <GenerateDescriptionBlock
+              storeId={storeId}
+              aiEnabled={aiEnabled}
+              getCurrentName={() => (document.getElementById("item-name") as HTMLInputElement)?.value ?? ""}
+              getCurrentIngredients={() => (document.getElementById("item-ingredients") as HTMLTextAreaElement)?.value ?? ""}
+              onApply={(s) => {
+                const el = document.getElementById("item-desc");
+                if (el && "value" in el) (el as HTMLInputElement).value = s;
+              }}
+            />
+          </div>
+          <input
+            id="item-desc"
+            name="menu_description"
+            type="text"
+            placeholder="Breve descrição"
+            className={inputClass}
+          />
+        </div>
       </div>
       <div className="flex flex-wrap gap-4">
         <Input id="item-price" name="menu_price" label="Preço" type="number" step="0.01" min={0} placeholder="0.00" />
