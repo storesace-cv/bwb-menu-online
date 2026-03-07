@@ -62,7 +62,7 @@ export default async function SettingsItemsPage() {
     categoriesByItem.set(row.menu_item_id, list);
   }
   const itemSectionCategory: Record<string, { sectionName: string; categoryName: string }> = {};
-  for (const [menuItemId, list] of categoriesByItem) {
+  Array.from(categoriesByItem.entries()).forEach(([menuItemId, list]) => {
     list.sort((a, b) => a.sort_order - b.sort_order);
     const firstCatId = list[0]?.category_id;
     const cat = firstCatId ? categoryById.get(firstCatId) : null;
@@ -71,7 +71,7 @@ export default async function SettingsItemsPage() {
       sectionName: sec?.name ?? "—",
       categoryName: cat?.name ?? "—",
     };
-  }
+  });
 
   return (
     <div>
