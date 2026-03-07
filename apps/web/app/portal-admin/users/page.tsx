@@ -9,7 +9,6 @@ import { StoreUsersTable } from "./store-users-table";
 import { RefreshOnStoreUsersEvent } from "./refresh-store-users";
 import { RolesInfoCard } from "./roles-info-card";
 import { GlobalUsersTable } from "./global-users-table";
-import { RolesInfoCard } from "./roles-info-card";
 import { Card } from "@/components/admin";
 
 type UserRow = {
