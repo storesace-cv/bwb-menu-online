@@ -108,30 +108,25 @@ function RowCards({ items, currencyCode }: { items: [PublicMenuItem, PublicMenuI
         <button
           type="button"
           onClick={() => setImageModalOpen((o) => [true, o[1]])}
-          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400"
+          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none"
           aria-label={`Ver imagem e ingredientes de ${left.menu_name ?? "artigo"}`}
         >
           <img src={imageSrcLeft} alt={left.menu_name ?? ""} className="h-full w-full object-cover" />
         </button>
-        <div className="p-4 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
-          {left.is_featured && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-              <MenuIcon code="on-promo" size={14} /> em destaque
-            </span>
-          )}
+        <div className="px-3 pt-2 pb-0 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
           {left.article_type && <MenuIcon code={left.article_type.icon_code} size={22} className="shrink-0" />}
           {left.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
           {left.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
         </div>
-        <div className="px-4 pb-1 min-h-0">
+        <div className="px-3 pb-0 min-h-0">
           <h3 className="font-bold text-lg text-gray-900 text-left">{left.menu_name}</h3>
         </div>
-        <div className="px-4 min-h-0">
+        <div className="px-3 min-h-0">
           {left.menu_description ? (
             <p className="text-gray-600 text-sm leading-relaxed text-left">{left.menu_description}</p>
           ) : null}
         </div>
-        <div className="px-4 py-1 min-h-0">
+        <div className="px-3 py-0.5 min-h-0">
           <button
             type="button"
             onClick={() => setIngredientsOpen((o) => [!o[0], o[1]])}
@@ -142,22 +137,22 @@ function RowCards({ items, currencyCode }: { items: [PublicMenuItem, PublicMenuI
             <span className="font-bold shrink-0 ml-2">{ingredientsOpen[0] ? "−" : "+"}</span>
           </button>
           {ingredientsOpen[0] && (
-            <div className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">{hasIngLeft ? left.menu_ingredients : "—"}</div>
+            <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngLeft ? left.menu_ingredients : "—"}</div>
           )}
         </div>
-        <div className="px-4 min-h-0 flex items-center">
+        <div className="px-3 min-h-0 flex items-center">
           {left.prep_minutes != null && (
             <span className="flex items-center gap-1.5 text-sm text-gray-500">
               <MenuIcon code="prep-time" size={18} /> {left.prep_minutes}&apos;
             </span>
           )}
         </div>
-        <div className="px-4 min-h-0">
+        <div className="px-3 min-h-0">
           {left.allergens && left.allergens.length > 0 && (
             <p className="text-xs text-gray-500 text-left">Alergénios: {left.allergens.map((a) => a.code).join(", ")}</p>
           )}
         </div>
-        <div className={`p-4 pt-2 flex items-center gap-4 min-h-0 ${left.is_promotion && left.price_old != null ? "" : "justify-end"}`}>
+        <div className={`px-3 pt-1 flex items-center gap-4 min-h-0 ${left.is_promotion && left.price_old != null ? "" : "justify-end"}`}>
           {left.is_promotion && left.price_old != null && (
             <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
               {formatPrice(left.price_old, currencyCode)}
@@ -181,30 +176,25 @@ function RowCards({ items, currencyCode }: { items: [PublicMenuItem, PublicMenuI
             <button
               type="button"
               onClick={() => setImageModalOpen((o) => [o[0], true])}
-              className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400"
+              className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none"
               aria-label={`Ver imagem e ingredientes de ${right.menu_name ?? "artigo"}`}
             >
               <img src={imageSrcRight!} alt={right.menu_name ?? ""} className="h-full w-full object-cover" />
             </button>
-            <div className="p-4 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
-              {right.is_featured && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                  <MenuIcon code="on-promo" size={14} /> em destaque
-                </span>
-              )}
+            <div className="px-3 pt-2 pb-0 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
               {right.article_type && <MenuIcon code={right.article_type.icon_code} size={22} className="shrink-0" />}
               {right.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
               {right.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
             </div>
-            <div className="px-4 pb-1 min-h-0">
+            <div className="px-3 pb-0 min-h-0">
               <h3 className="font-bold text-lg text-gray-900 text-left">{right.menu_name}</h3>
             </div>
-            <div className="px-4 min-h-0">
+            <div className="px-3 min-h-0">
               {right.menu_description ? (
                 <p className="text-gray-600 text-sm leading-relaxed text-left">{right.menu_description}</p>
               ) : null}
             </div>
-            <div className="px-4 py-1 min-h-0">
+            <div className="px-3 py-0.5 min-h-0">
               <button
                 type="button"
                 onClick={() => setIngredientsOpen((o) => [o[0], !o[1]])}
@@ -215,22 +205,22 @@ function RowCards({ items, currencyCode }: { items: [PublicMenuItem, PublicMenuI
                 <span className="font-bold shrink-0 ml-2">{ingredientsOpen[1] ? "−" : "+"}</span>
               </button>
               {ingredientsOpen[1] && (
-                <div className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">{hasIngRight ? right.menu_ingredients : "—"}</div>
+                <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngRight ? right.menu_ingredients : "—"}</div>
               )}
             </div>
-            <div className="px-4 min-h-0 flex items-center">
+            <div className="px-3 min-h-0 flex items-center">
               {right.prep_minutes != null && (
                 <span className="flex items-center gap-1.5 text-sm text-gray-500">
                   <MenuIcon code="prep-time" size={18} /> {right.prep_minutes}&apos;
                 </span>
               )}
             </div>
-            <div className="px-4 min-h-0">
+            <div className="px-3 min-h-0">
               {right.allergens && right.allergens.length > 0 && (
                 <p className="text-xs text-gray-500 text-left">Alergénios: {right.allergens.map((a) => a.code).join(", ")}</p>
               )}
             </div>
-            <div className={`p-4 pt-2 flex items-center gap-4 min-h-0 ${right.is_promotion && right.price_old != null ? "" : "justify-end"}`}>
+            <div className={`px-3 pt-1 flex items-center gap-4 min-h-0 ${right.is_promotion && right.price_old != null ? "" : "justify-end"}`}>
               {right.is_promotion && right.price_old != null && (
                 <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
                   {formatPrice(right.price_old, currencyCode)}
@@ -285,27 +275,22 @@ export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currenc
         <button
           type="button"
           onClick={() => setImageModalOpen(true)}
-          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400"
+          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
           <img src={imageSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover" />
         </button>
-        <div className="p-4 flex flex-col flex-1 min-h-0">
+        <div className="p-3 flex flex-col flex-1 min-h-0">
           <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">
-            {item.is_featured && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                <MenuIcon code="on-promo" size={14} /> em destaque
-              </span>
-            )}
             {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
             {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
             {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
           </div>
-          <h3 className="font-bold text-lg text-gray-900 text-left mt-1">{item.menu_name}</h3>
+          <h3 className="font-bold text-lg text-gray-900 text-left mt-0.5">{item.menu_name}</h3>
           {item.menu_description && (
-            <p className="mt-1 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>
+            <p className="mt-0.5 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>
           )}
-          <div className="mt-2">
+          <div className="mt-1">
             <button
               type="button"
               onClick={() => setIngredientsOpen((o) => !o)}
@@ -316,19 +301,19 @@ export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currenc
               <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
             </button>
             {ingredientsOpen && (
-              <div className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
+              <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
             )}
           </div>
           {item.prep_minutes != null && (
-            <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
+            <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
               <MenuIcon code="prep-time" size={18} />
               <span>{item.prep_minutes}&apos;</span>
             </div>
           )}
           {item.allergens && item.allergens.length > 0 && (
-            <p className="mt-2 text-xs text-gray-500 text-left">Alergénios: {item.allergens.map((a) => a.code).join(", ")}</p>
+            <p className="mt-1 text-xs text-gray-500 text-left">Alergénios: {item.allergens.map((a) => a.code).join(", ")}</p>
           )}
-          <div className={`mt-3 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
+          <div className={`mt-2 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
             {item.is_promotion && item.price_old != null && (
               <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
                 {formatPrice(item.price_old, currencyCode)}
