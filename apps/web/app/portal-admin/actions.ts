@@ -295,11 +295,20 @@ export async function updateMenuItem(
   const isVisible = formData.get("is_visible") === "1";
   const isFeatured = formData.get("is_featured") === "1";
   const imageUrl = (formData.get("image_url") as string)?.trim() || null;
+  const sectionId = (formData.get("section_id") as string)?.trim() || null;
+  const categoryId = (formData.get("category_id") as string)?.trim() || null;
 
   if (!id || !menuName) return { error: "ID e nome do item obrigatórios" };
   if (imageUrl !== null && !isValidUrl(imageUrl)) return { error: "URL da imagem inválida." };
   if (isPromotion && (priceOldRaw === "" || isNaN(priceOld) || priceOld <= 0))
     return { error: "Preço antigo é obrigatório quando o item está em promoção." };
+
+  const { data: itemRow, error: itemErr } = await supabase
+    .from("menu_items")
+    .select("store_id")
+    .eq("id", id)
+    .single();
+  if (itemErr || !itemRow) return { error: "Item não encontrado." };
 
   const { error } = await supabase
     .from("menu_items")
@@ -319,6 +328,56 @@ export async function updateMenuItem(
     })
     .eq("id", id);
   if (error) return { error: error.message };
+
+  if (sectionId || categoryId) {
+    let targetCategoryId: string | null = categoryId;
+    if (!targetCategoryId && sectionId) {
+      const { data: firstCat } = await supabase
+        .from("menu_categories")
+        .select("id")
+        .eq("section_id", sectionId)
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      targetCategoryId = firstCat?.id ?? null;
+      if (!targetCategoryId) {
+        const { data: sectionRow } = await supabase
+          .from("menu_sections")
+          .select("store_id")
+          .eq("id", sectionId)
+          .single();
+        if (!sectionRow) return { error: "Secção inválida." };
+        const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: sectionRow.store_id });
+        if (!hasAccess) return { error: "Sem acesso a esta loja." };
+        const { data: newCat, error: insertErr } = await supabase
+          .from("menu_categories")
+          .insert({
+            store_id: sectionRow.store_id,
+            section_id: sectionId,
+            name: "Geral",
+            sort_order: 0,
+          })
+          .select("id")
+          .single();
+        if (insertErr || !newCat) return { error: "Não foi possível criar a categoria na secção." };
+        targetCategoryId = newCat.id;
+      }
+    }
+    if (targetCategoryId) {
+      const { data: catRow } = await supabase
+        .from("menu_categories")
+        .select("store_id")
+        .eq("id", targetCategoryId)
+        .single();
+      if (!catRow) return { error: "Categoria inválida." };
+      if (catRow.store_id !== itemRow.store_id) return { error: "Categoria de outra loja." };
+      const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: catRow.store_id });
+      if (!hasAccess) return { error: "Sem acesso a esta loja." };
+      await supabase.from("menu_category_items").delete().eq("menu_item_id", id);
+      await supabase.from("menu_category_items").insert({ category_id: targetCategoryId, menu_item_id: id });
+    }
+  }
+
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/items");
   return { success: true };
@@ -344,59 +403,90 @@ export async function batchUpdateItemsSectionCategory(
   const itemIds = (itemIdsRaw ? JSON.parse(itemIdsRaw) : []) as string[];
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
   const categoryId = (formData.get("category_id") as string)?.trim() || null;
+  const batchArticleTypeId = (formData.get("batch_article_type_id") as string)?.trim() || null;
+  const batchIsVisible = (formData.get("batch_is_visible") as string) ?? "";
+  const batchIsFeatured = (formData.get("batch_is_featured") as string) ?? "";
+  const batchTakeAway = (formData.get("batch_take_away") as string) ?? "";
+  const batchIsPromotion = (formData.get("batch_is_promotion") as string) ?? "";
 
   if (!itemIds?.length) return { error: "Selecione pelo menos um artigo." };
-  if (!sectionId && !categoryId) return { error: "Escolha uma secção e/ou uma categoria." };
+  const hasSectionOrCategory = !!(sectionId || categoryId);
+  const hasBatchFields =
+    !!batchArticleTypeId ||
+    batchIsVisible !== "" ||
+    batchIsFeatured !== "" ||
+    batchTakeAway !== "" ||
+    batchIsPromotion !== "";
+  if (!hasSectionOrCategory && !hasBatchFields)
+    return { error: "Selecione pelo menos uma alteração a aplicar." };
 
-  let targetCategoryId: string | null = categoryId;
-  if (!targetCategoryId && sectionId) {
-    const { data: firstCat } = await supabase
-      .from("menu_categories")
-      .select("id")
-      .eq("section_id", sectionId)
-      .order("sort_order", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    targetCategoryId = firstCat?.id ?? null;
-    if (!targetCategoryId) {
-      const { data: sectionRow } = await supabase
-        .from("menu_sections")
-        .select("store_id")
-        .eq("id", sectionId)
-        .single();
-      if (!sectionRow) return { error: "Secção inválida." };
-      const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: sectionRow.store_id });
-      if (!hasAccess) return { error: "Sem acesso a esta loja." };
-      const { data: newCat, error: insertErr } = await supabase
+  let targetCategoryId: string | null = null;
+  let catRow: { store_id: string } | null = null;
+
+  if (hasSectionOrCategory) {
+    targetCategoryId = categoryId;
+    if (!targetCategoryId && sectionId) {
+      const { data: firstCat } = await supabase
         .from("menu_categories")
-        .insert({
-          store_id: sectionRow.store_id,
-          section_id: sectionId,
-          name: "Geral",
-          sort_order: 0,
-        })
         .select("id")
+        .eq("section_id", sectionId)
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      targetCategoryId = firstCat?.id ?? null;
+      if (!targetCategoryId) {
+        const { data: sectionRow } = await supabase
+          .from("menu_sections")
+          .select("store_id")
+          .eq("id", sectionId)
+          .single();
+        if (!sectionRow) return { error: "Secção inválida." };
+        const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: sectionRow.store_id });
+        if (!hasAccess) return { error: "Sem acesso a esta loja." };
+        const { data: newCat, error: insertErr } = await supabase
+          .from("menu_categories")
+          .insert({
+            store_id: sectionRow.store_id,
+            section_id: sectionId,
+            name: "Geral",
+            sort_order: 0,
+          })
+          .select("id")
+          .single();
+        if (insertErr || !newCat) return { error: "Não foi possível criar a categoria na secção." };
+        targetCategoryId = newCat.id;
+      }
+    }
+    if (targetCategoryId) {
+      const { data: cRow } = await supabase
+        .from("menu_categories")
+        .select("store_id")
+        .eq("id", targetCategoryId)
         .single();
-      if (insertErr || !newCat) return { error: "Não foi possível criar a categoria na secção." };
-      targetCategoryId = newCat.id;
+      if (!cRow) return { error: "Categoria inválida." };
+      catRow = cRow;
+      const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: catRow.store_id });
+      if (!hasAccess) return { error: "Sem acesso a esta loja." };
     }
   }
-  if (!targetCategoryId) return { error: "Escolha uma secção ou uma categoria." };
 
-  const { data: catRow } = await supabase
-    .from("menu_categories")
-    .select("store_id")
-    .eq("id", targetCategoryId)
-    .single();
-  if (!catRow) return { error: "Categoria inválida." };
-  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: catRow.store_id });
-  if (!hasAccess) return { error: "Sem acesso a esta loja." };
+  const menuItemsUpdate: Record<string, unknown> = {};
+  if (batchArticleTypeId !== null) menuItemsUpdate.article_type_id = batchArticleTypeId || null;
+  if (batchIsVisible !== "") menuItemsUpdate.is_visible = batchIsVisible === "1";
+  if (batchIsFeatured !== "") menuItemsUpdate.is_featured = batchIsFeatured === "1";
+  if (batchTakeAway !== "") menuItemsUpdate.take_away = batchTakeAway === "1";
+  if (batchIsPromotion !== "") menuItemsUpdate.is_promotion = batchIsPromotion === "1";
 
   for (const menuItemId of itemIds) {
     const { data: itemRow } = await supabase.from("menu_items").select("store_id").eq("id", menuItemId).single();
-    if (!itemRow || itemRow.store_id !== catRow.store_id) continue;
-    await supabase.from("menu_category_items").delete().eq("menu_item_id", menuItemId);
-    await supabase.from("menu_category_items").insert({ category_id: targetCategoryId, menu_item_id: menuItemId });
+    if (!itemRow) continue;
+    if (targetCategoryId && catRow && itemRow.store_id === catRow.store_id) {
+      await supabase.from("menu_category_items").delete().eq("menu_item_id", menuItemId);
+      await supabase.from("menu_category_items").insert({ category_id: targetCategoryId, menu_item_id: menuItemId });
+    }
+    if (Object.keys(menuItemsUpdate).length > 0) {
+      await supabase.from("menu_items").update(menuItemsUpdate).eq("id", menuItemId);
+    }
   }
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/items");

@@ -318,12 +318,12 @@ export function ItemsListClient({
           aria-label="Alteração em Lote"
         >
           <div
-            className="bg-slate-800 border border-slate-600 rounded-xl shadow-xl max-w-md w-full p-6"
+            className="bg-slate-800 border border-slate-600 rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-medium text-slate-100 mb-4">Alteração em Lote</h3>
             <p className="text-slate-400 text-sm mb-4">
-              {selectedIds.size} artigo(s) selecionado(s). Escolha uma secção e/ou categoria para aplicar.
+              {selectedIds.size} artigo(s) selecionado(s). Escolha as alterações a aplicar (deixe em branco para não alterar).
             </p>
             {batchState?.error && (
               <p className="text-red-400 text-sm mb-4">{batchState.error}</p>
@@ -358,6 +358,52 @@ export function ItemsListClient({
                   ))}
                 </select>
               </label>
+              <label className="block text-sm text-slate-300">
+                Tipo de artigo
+                <select
+                  name="batch_article_type_id"
+                  className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200"
+                >
+                  <option value="">— Não alterar —</option>
+                  {articleTypes.map((at) => (
+                    <option key={at.id} value={at.id}>{at.name}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-sm text-slate-300">
+                  Visível no menu
+                  <select name="batch_is_visible" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Destaque
+                  <select name="batch_is_featured" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Take-away
+                  <select name="batch_take_away" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Em promoção
+                  <select name="batch_is_promotion" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+              </div>
               <div className="flex gap-3 justify-end pt-2">
                 <Button type="button" variant="outline" onClick={() => setBatchModalOpen(false)}>
                   Cancelar

@@ -10,6 +10,8 @@ const inputClass =
   "w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500";
 
 type ArticleType = { id: string; name: string; icon_code: string };
+type Section = { id: string; name: string };
+type Category = { id: string; name: string; section_id: string | null };
 
 type MenuItem = {
   id: string;
@@ -37,7 +39,21 @@ function imagePreviewUrl(item: MenuItem): string | null {
   return null;
 }
 
-export function EditItemForm({ item, articleTypes }: { item: MenuItem; articleTypes: ArticleType[] }) {
+export function EditItemForm({
+  item,
+  articleTypes,
+  sections,
+  categories,
+  currentSectionId,
+  currentCategoryId,
+}: {
+  item: MenuItem;
+  articleTypes: ArticleType[];
+  sections: Section[];
+  categories: Category[];
+  currentSectionId: string | null;
+  currentCategoryId: string | null;
+}) {
   const [state, formAction] = useFormState(updateMenuItem, null);
   const [isPromotion, setIsPromotion] = useState(item.is_promotion);
 
@@ -115,6 +131,36 @@ export function EditItemForm({ item, articleTypes }: { item: MenuItem; articleTy
           defaultValue={item.menu_ingredients ?? ""}
           className={inputClass}
         />
+      </div>
+
+      {/* 4b. Secção + Categoria (mesma linha) */}
+      <div className="flex flex-wrap gap-4 items-end">
+        <Select
+          id="edit-section"
+          name="section_id"
+          label="Secção"
+          defaultValue={currentSectionId ?? ""}
+        >
+          <option value="">— Nenhuma —</option>
+          {sections.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </Select>
+        <Select
+          id="edit-category"
+          name="category_id"
+          label="Categoria"
+          defaultValue={currentCategoryId ?? ""}
+        >
+          <option value="">— Nenhuma —</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
       </div>
 
       {/* 5. Ordem + Tipo de artigo */}

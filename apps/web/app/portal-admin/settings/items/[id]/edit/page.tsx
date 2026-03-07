@@ -44,12 +44,45 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
     .eq("store_id", storeId)
     .order("sort_order");
 
+  const { data: sections } = await supabase
+    .from("menu_sections")
+    .select("id, name")
+    .eq("store_id", storeId)
+    .order("sort_order");
+  const { data: categories } = await supabase
+    .from("menu_categories")
+    .select("id, name, section_id, sort_order")
+    .eq("store_id", storeId)
+    .order("sort_order");
+
+  const { data: mciRows } = await supabase
+    .from("menu_category_items")
+    .select("category_id")
+    .eq("menu_item_id", id);
+  const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
+  const sortedMci = (mciRows ?? []).slice().sort((a, b) => {
+    const orderA = categoryById.get(a.category_id)?.sort_order ?? 999;
+    const orderB = categoryById.get(b.category_id)?.sort_order ?? 999;
+    return orderA - orderB;
+  });
+  const firstCategoryId = sortedMci[0]?.category_id ?? null;
+  const firstCategory = firstCategoryId ? categoryById.get(firstCategoryId) : null;
+  const currentSectionId = firstCategory?.section_id ?? null;
+  const currentCategoryId = firstCategoryId;
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Editar item</h1>
       <p className="mb-6"><Link href="/portal-admin/settings/items" className="text-emerald-400 hover:text-emerald-300">← Voltar aos itens</Link></p>
       <Card>
-        <EditItemForm item={item} articleTypes={articleTypes ?? []} />
+        <EditItemForm
+          item={item}
+          articleTypes={articleTypes ?? []}
+          sections={sections ?? []}
+          categories={categories ?? []}
+          currentSectionId={currentSectionId}
+          currentCategoryId={currentCategoryId}
+        />
       </Card>
     </div>
   );
