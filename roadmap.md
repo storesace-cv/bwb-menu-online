@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-06 (Utilizadores em Definições, menu público 2 colunas, altura igual dos cards, imagem por defeito).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-07 (menu público: zonas alinhadas por linha com CSS Grid subgrid).
 
 ---
 
@@ -45,6 +45,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Utilizadores como submenu de Definições:** No portal-admin, "Utilizadores" deixa de ser link no header e passa a ser opção dentro do hub Definições (`/portal-admin/settings`); em modo global o hub mostra "Utilizadores"; em modo tenant o hub inclui Secções, Categorias, Gestão de Artigos, Tipos de artigo, Parâmetros App e Utilizadores.
 - **Menu público: máx 2 colunas e altura uniforme:** Em tablets e computadores a grelha de artigos passa a no máximo 2 colunas (`grid-cols-1 sm:grid-cols-2`); a altura dos cards por linha é uniforme (referência = card mais alto da linha), com `h-full` e flex no `ItemCard`.
 - **Imagem por defeito no menu público:** Quando o artigo não tem `image_path` nem `image_url`, é usada a imagem `/images/no_image_product.jpg` (cópia de `local/menu-demo/no_image_product_0.jpg` em `apps/web/public/images/`).
+- **Menu público: zonas alinhadas por linha (flexível):** Em 2 colunas (tablet/desktop), as zonas dos cards na mesma linha (descrição, Ingredientes, tempo, alergénios, preço) passam a alinhar entre si; altura de cada zona = máximo dos dois cards (CSS Grid com `subgrid`), sem alturas mínimas fixas. Componente `RowCards` para pares de itens; mobile mantém 1 coluna com `ItemCard`.
 - **Bootstrap superadmin (fix deploy):** `renew_password` só definido como `true` quando o superadmin é criado na primeira execução; em deploys seguintes o upsert do profile não inclui `renew_password`, evitando forçar alteração de password após cada deploy.
 - **SMTP Supabase no deploy:** Script `deploy/supabase/apply_smtp.sh` aplica variáveis `GOTRUE_SMTP_*` do `.env` da app ao serviço auth da instância menu-online (secrets/smtp.env + env_file no compose); Step 3.8 em `remote-update.sh`; documentação [docs/SMTP_SUPABASE.md](docs/SMTP_SUPABASE.md) (paths, aplicar e testar, política de não commitar secrets).
 
