@@ -99,6 +99,13 @@ async function main() {
     process.exit(1);
   }
 
+  const { data: storeRow } = await supabase
+    .from("stores")
+    .select("menu_cleared_at")
+    .eq("id", storeId)
+    .single();
+  const skipMenuRepopulation = storeRow?.menu_cleared_at != null;
+
   let allergensCreated = 0;
   let allergensUpdated = 0;
   const allergenIdByCode: Record<string, string> = {};
@@ -120,6 +127,11 @@ async function main() {
     }
   }
   console.log("Allergens: created", allergensCreated, "updated", allergensUpdated);
+
+  if (skipMenuRepopulation) {
+    console.log("Store menu was explicitly cleared; skipping menu repopulation.");
+    process.exit(0);
+  }
 
   const categoryIdByName: Record<string, string> = {};
   for (const c of data.categories || []) {

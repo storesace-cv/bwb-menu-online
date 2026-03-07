@@ -76,3 +76,23 @@
   background-color: #059669 !important;
   border-color: #059669;
 }
+
+/* Contraste global: elementos interativos sem fundo explícito usam tema escuro (evitar fundos brancos). */
+.admin-theme button:not([class*="bg-"]) {
+  background-color: rgb(30 41 59);
+  color: rgb(226 232 240);
+  border: 1px solid rgb(71 85 105);
+}
+.admin-theme button:not([class*="bg-"]):hover {
+  background-color: rgb(51 65 85);
+}
+.admin-theme input:not(.input-legible),
+.admin-theme select:not(.input-legible),
+.admin-theme textarea:not(.input-legible) {
+  background-color: rgb(30 41 59);
+  color: rgb(226 232 240);
+  border: 1px solid rgb(71 85 105);
+}
+.admin-theme input:not(.input-legible)::placeholder {
+  color: rgb(148 163 184);
+}
