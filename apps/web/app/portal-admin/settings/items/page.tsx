@@ -53,7 +53,7 @@ export default async function SettingsItemsPage() {
 
   const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
   const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
-  const categoriesByItem = new Map<string, { category_id: string; sort_order: number; has_section: boolean }[]>();
+  const categoriesByItem = new Map<string, { category_id: string; sort_order: number; has_section: boolean; cat_name: string }[]>();
   for (const row of mciRows ?? []) {
     const cat = categoryById.get(row.category_id);
     if (!cat) continue;
@@ -62,12 +62,15 @@ export default async function SettingsItemsPage() {
       category_id: row.category_id,
       sort_order: cat.sort_order ?? 999,
       has_section: !!cat.section_id,
+      cat_name: cat.name,
     });
     categoriesByItem.set(row.menu_item_id, list);
   }
   const itemSectionCategory: Record<string, { sectionName: string; categoryName: string }> = {};
   Array.from(categoriesByItem.entries()).forEach(([menuItemId, list]) => {
     list.sort((a, b) => {
+      if (a.cat_name === "Geral" && b.cat_name !== "Geral") return 1;
+      if (b.cat_name === "Geral" && a.cat_name !== "Geral") return -1;
       if (a.has_section !== b.has_section) return a.has_section ? -1 : 1;
       return a.sort_order - b.sort_order;
     });
