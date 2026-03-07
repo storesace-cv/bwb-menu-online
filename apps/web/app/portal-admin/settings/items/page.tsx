@@ -2,9 +2,8 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateItemForm } from "./create-item-form";
-import { ItemActions } from "./item-actions";
-import { MenuIcon } from "@/components/menu-icons";
-import { Card, TableContainer } from "@/components/admin";
+import { ItemsListClient } from "./items-list-client";
+import { Card } from "@/components/admin";
 
 export default async function SettingsItemsPage() {
   const headersList = await headers();
@@ -32,11 +31,47 @@ export default async function SettingsItemsPage() {
     .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id")
     .eq("store_id", storeId)
     .order("sort_order");
-  const { data: typesRows } = await supabase
-    .from("article_types")
-    .select("id, name, icon_code")
-    .eq("store_id", storeId);
-  const typeById = new Map((typesRows ?? []).map((t) => [t.id, t]));
+
+  const { data: sections } = await supabase
+    .from("menu_sections")
+    .select("id, name, sort_order")
+    .eq("store_id", storeId)
+    .order("sort_order");
+  const { data: categories } = await supabase
+    .from("menu_categories")
+    .select("id, name, section_id, sort_order")
+    .eq("store_id", storeId)
+    .order("sort_order");
+
+  const itemIds = (items ?? []).map((i) => i.id);
+  const { data: mciRows } = itemIds.length > 0
+    ? await supabase
+        .from("menu_category_items")
+        .select("menu_item_id, category_id")
+        .in("menu_item_id", itemIds)
+    : { data: [] as { menu_item_id: string; category_id: string }[] };
+
+  const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
+  const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
+  const categoriesByItem = new Map<string, { category_id: string; sort_order: number }[]>();
+  for (const row of mciRows ?? []) {
+    const cat = categoryById.get(row.category_id);
+    if (!cat) continue;
+    const list = categoriesByItem.get(row.menu_item_id) ?? [];
+    list.push({ category_id: row.category_id, sort_order: cat.sort_order ?? 999 });
+    categoriesByItem.set(row.menu_item_id, list);
+  }
+  const itemSectionCategory: Record<string, { sectionName: string; categoryName: string }> = {};
+  for (const [menuItemId, list] of categoriesByItem) {
+    list.sort((a, b) => a.sort_order - b.sort_order);
+    const firstCatId = list[0]?.category_id;
+    const cat = firstCatId ? categoryById.get(firstCatId) : null;
+    const sec = cat?.section_id ? sectionById.get(cat.section_id) : null;
+    itemSectionCategory[menuItemId] = {
+      sectionName: sec?.name ?? "—",
+      categoryName: cat?.name ?? "—",
+    };
+  }
 
   return (
     <div>
@@ -57,46 +92,14 @@ export default async function SettingsItemsPage() {
       </section>
 
       <section>
-        <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
         <Card>
-          <TableContainer>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-slate-600">
-                  <th className="text-left py-2 px-3 text-slate-300">Nome</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Preço</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Tipo</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Promo</th>
-                  <th className="text-left py-2 px-3 text-slate-300">TA</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Ordem</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Visível</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Destaque</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(items ?? []).map((i) => {
-                  const at = i.article_type_id ? typeById.get(i.article_type_id) : null;
-                  return (
-                    <tr key={i.id} className="border-b border-slate-700">
-                      <td className="py-2 px-3 text-slate-200">{i.menu_name ?? "—"}</td>
-                      <td className="py-2 px-3 text-slate-200">{i.menu_price != null ? `${Number(i.menu_price).toFixed(2)} €` : "—"}</td>
-                      <td className="py-2 px-3">{at ? <span title={at.name}><MenuIcon code={at.icon_code} size={18} /></span> : "—"}</td>
-                      <td className="py-2 px-3 text-slate-200">{i.is_promotion ? (i.price_old != null ? `${i.price_old}→` : "Sim") : "—"}</td>
-                      <td className="py-2 px-3 text-slate-200">{i.take_away ? "Sim" : "—"}</td>
-                      <td className="py-2 px-3 text-slate-200">{i.sort_order}</td>
-                      <td className="py-2 px-3 text-slate-200">{i.is_visible ? "Sim" : "Não"}</td>
-                      <td className="py-2 px-3 text-slate-200">{i.is_featured ? "★" : "—"}</td>
-                      <td className="py-2 px-3">
-                        <ItemActions itemId={i.id} menuName={i.menu_name ?? ""} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </TableContainer>
-          {(!items || items.length === 0) && <p className="text-slate-500 py-4">Nenhum item.</p>}
+          <ItemsListClient
+            items={items ?? []}
+            sections={sections ?? []}
+            categories={categories ?? []}
+            articleTypes={articleTypes ?? []}
+            itemSectionCategory={itemSectionCategory}
+          />
         </Card>
       </section>
     </div>

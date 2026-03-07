@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-07 (menu público: sem borda na imagem, sem tag "em destaque", espaçamento compacto).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-07 (Gestão de Artigos: colunas Secção/Categoria, checkbox, alteração em lote, ordenação e filtros).
 
 ---
 
@@ -49,6 +49,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público: imagem sem borda, sem tag "em destaque", layout compacto:** Removido o focus ring à volta da imagem do artigo (botão sem moldura); removida a tag amarela "% em destaque" nos cards (filtro "Em destaque" mantém-se); reduzidos padding e margens entre zonas (p-4→p-3, mt-2→mt-1, etc.) para apresentação mais compacta em altura. Fix: borda preta à volta da imagem (browser aplica borda por defeito em `<button>`) removida com `border-0` no botão e na `<img>`.
 - **Bootstrap superadmin (fix deploy):** `renew_password` só definido como `true` quando o superadmin é criado na primeira execução; em deploys seguintes o upsert do profile não inclui `renew_password`, evitando forçar alteração de password após cada deploy.
 - **SMTP Supabase no deploy:** Script `deploy/supabase/apply_smtp.sh` aplica variáveis `GOTRUE_SMTP_*` do `.env` da app ao serviço auth da instância menu-online (secrets/smtp.env + env_file no compose); Step 3.8 em `remote-update.sh`; documentação [docs/SMTP_SUPABASE.md](docs/SMTP_SUPABASE.md) (paths, aplicar e testar, política de não commitar secrets).
+- **Gestão de Artigos: colunas, checkboxes, alteração em lote, ordenação e filtros:** Lista em `/portal-admin/settings/items` com colunas Secção e Categoria (mapa a partir de `menu_category_items`); checkbox por registo e "Selecionar todos"; botão "Alteração em Lote" (modal com dropdowns Secção e Categoria; action `batchUpdateItemsSectionCategory`); ordenação multinível por Nome, Preço, Tipo, Promo, TA; filtros acima da lista (Nome, Tipo, Promo, TA, Visível, Destaque). Componente cliente `ItemsListClient`.
 
 ---
 

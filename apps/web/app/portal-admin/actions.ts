@@ -335,6 +335,52 @@ export async function deleteMenuItem(_prev: { error?: string } | null, formData:
   return null;
 }
 
+export async function batchUpdateItemsSectionCategory(
+  _prev: { error?: string; success?: boolean } | null,
+  formData: FormData
+) {
+  const supabase = await createClient();
+  const itemIdsRaw = formData.get("item_ids") as string;
+  const itemIds = (itemIdsRaw ? JSON.parse(itemIdsRaw) : []) as string[];
+  const sectionId = (formData.get("section_id") as string)?.trim() || null;
+  const categoryId = (formData.get("category_id") as string)?.trim() || null;
+
+  if (!itemIds?.length) return { error: "Selecione pelo menos um artigo." };
+  if (!sectionId && !categoryId) return { error: "Escolha uma secção e/ou uma categoria." };
+
+  let targetCategoryId: string | null = categoryId;
+  if (!targetCategoryId && sectionId) {
+    const { data: firstCat } = await supabase
+      .from("menu_categories")
+      .select("id")
+      .eq("section_id", sectionId)
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    targetCategoryId = firstCat?.id ?? null;
+  }
+  if (!targetCategoryId) return { error: "Nenhuma categoria encontrada para a secção escolhida." };
+
+  const { data: catRow } = await supabase
+    .from("menu_categories")
+    .select("store_id")
+    .eq("id", targetCategoryId)
+    .single();
+  if (!catRow) return { error: "Categoria inválida." };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: catRow.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja." };
+
+  for (const menuItemId of itemIds) {
+    const { data: itemRow } = await supabase.from("menu_items").select("store_id").eq("id", menuItemId).single();
+    if (!itemRow || itemRow.store_id !== catRow.store_id) continue;
+    await supabase.from("menu_category_items").delete().eq("menu_item_id", menuItemId);
+    await supabase.from("menu_category_items").insert({ category_id: targetCategoryId, menu_item_id: menuItemId });
+  }
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/items");
+  return { success: true };
+}
+
 export async function updateStoreSettings(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";
