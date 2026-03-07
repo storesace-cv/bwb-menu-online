@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateStoreForm } from "./[tenantId]/stores/create-store-form";
 import { ClearStoreMenuButton } from "./clear-store-menu-button";
+import { StoreDomainsBlock } from "./store-domains-block";
 import { Card, TableContainer } from "@/components/admin";
 
 type StoreRow = { id: string; tenant_id: string; store_number: number; name: string | null; source_type: string; is_active?: boolean };
@@ -55,7 +56,7 @@ export default async function TenantsPage() {
 
             <div className="mb-6">
               <h3 className="text-sm font-medium text-slate-300 mb-3">Adicionar loja</h3>
-              <CreateStoreForm tenantId={t.id} />
+              <CreateStoreForm tenantId={t.id} tenantNif={t.nif} />
             </div>
 
             <h3 className="text-sm font-medium text-slate-300 mb-3">Lojas</h3>
@@ -64,8 +65,8 @@ export default async function TenantsPage() {
                 <thead>
                   <tr className="border-b-2 border-slate-600">
                     <th className="text-left py-2 px-3 text-slate-300">Nº</th>
-                    <th className="text-left py-2 px-3 text-slate-300">Nome</th>
-                    <th className="text-left py-2 px-3 text-slate-300">Source</th>
+                    <th className="text-left py-2 px-3 text-slate-300">Nome da Loja</th>
+                    <th className="text-left py-2 px-3 text-slate-300">Origem dos Dados</th>
                     <th className="text-left py-2 px-3 text-slate-300">Domínio(s)</th>
                     <th className="text-left py-2 px-3 text-slate-300">Ações</th>
                   </tr>
@@ -92,6 +93,9 @@ export default async function TenantsPage() {
               </table>
             </TableContainer>
             {storesWithDomains.length === 0 && <p className="text-slate-500 py-4">Nenhuma loja.</p>}
+            {storesWithDomains.map(({ store: s, domains }) => (
+              <StoreDomainsBlock key={s.id} storeId={s.id} storeName={s.name} domains={domains} />
+            ))}
           </Card>
         ))}
       </section>

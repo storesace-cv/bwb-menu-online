@@ -28,7 +28,8 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
   const tenantId = (formData.get("tenant_id") as string)?.trim() ?? "";
   const storeNumber = parseInt((formData.get("store_number") as string) ?? "0", 10);
   const name = (formData.get("name") as string)?.trim() ?? "";
-  const sourceType = (formData.get("source_type") as string)?.trim() ?? "netbo";
+  const sourceType = (formData.get("source_type") as string)?.trim() ?? "netbo_api";
+  const domainOrigin = (formData.get("domain_origin") as string)?.trim() ?? "shared";
   const domainHostname = (formData.get("domain_hostname") as string)?.trim() ?? "";
   if (!tenantId || !storeNumber) return { error: "Tenant e número da loja obrigatórios" };
   const { data: storeId, error } = await supabase.rpc("admin_create_store", {
@@ -38,10 +39,22 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
     p_source_type: sourceType,
   });
   if (error) return { error: error.message };
-  if (domainHostname && storeId) {
+  if (!storeId) return null;
+  if (domainOrigin === "private") {
+    await supabase.from("stores").update({ domain_origin: "private", custom_domain: domainHostname || null }).eq("id", storeId);
+  }
+  let hostnameToSet: string | null = null;
+  if (domainOrigin === "shared") {
+    const { data: tenantRow } = await supabase.from("tenants").select("nif").eq("id", tenantId).single();
+    const nif = (tenantRow?.nif ?? "").trim().toLowerCase();
+    if (nif) hostnameToSet = `${nif}${storeNumber}.menu.bwb.pt`;
+  } else if (domainHostname) {
+    hostnameToSet = domainHostname.toLowerCase();
+  }
+  if (hostnameToSet) {
     const { error: domainErr } = await supabase.rpc("admin_set_store_domain", {
       p_store_id: storeId,
-      p_hostname: domainHostname.toLowerCase(),
+      p_hostname: hostnameToSet,
       p_domain_type: "default",
       p_is_primary: true,
     });

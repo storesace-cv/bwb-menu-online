@@ -11,6 +11,8 @@ type DomainRow = { hostname: string; is_primary?: boolean };
 export default async function TenantStoresPage({ params }: Props) {
   const { tenantId } = await params;
   const supabase = await createClient();
+  const { data: tenantRow } = await supabase.from("tenants").select("nif").eq("id", tenantId).single();
+  const tenantNif = (tenantRow?.nif ?? "").trim();
   const { data: raw } = await supabase.rpc("admin_list_stores", { p_tenant_id: tenantId });
   const list: StoreRow[] = Array.isArray(raw) ? raw : [];
 
@@ -39,7 +41,7 @@ export default async function TenantStoresPage({ params }: Props) {
       <section className="mb-8">
         <Card>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Adicionar loja</h2>
-          <CreateStoreForm tenantId={tenantId} />
+          <CreateStoreForm tenantId={tenantId} tenantNif={tenantNif} />
         </Card>
       </section>
 
@@ -51,8 +53,8 @@ export default async function TenantStoresPage({ params }: Props) {
               <thead>
                 <tr className="border-b-2 border-slate-600">
                   <th className="text-left py-2 px-3 text-slate-300">Nº</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Nome</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Source</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Nome da Loja</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Origem dos Dados</th>
                   <th className="text-left py-2 px-3 text-slate-300">Domínio(s)</th>
                   <th className="text-left py-2 px-3 text-slate-300"></th>
                 </tr>
