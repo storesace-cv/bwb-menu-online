@@ -26,15 +26,11 @@ export default function LoginPage() {
       setError(err.message);
       return;
     }
-    try {
-      await fetch("/api/debug/portal-log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "LoginSuccess", url: "/portal-admin" }),
-      });
-    } catch {
-      // ignora falhas de rede
-    }
+    fetch("/api/debug/portal-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "LoginSuccess", url: "/portal-admin" }),
+    }).catch(() => {});
     router.push("/portal-admin");
     router.refresh();
   }

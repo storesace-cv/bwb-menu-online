@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (Não repovoar menu demo se apagado; contraste global portal-admin).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-04 (Error boundary e resiliência portal-admin; contraste global).
 
 ---
 
@@ -61,6 +61,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Email ao criar utilizador, menu Gerir, Re-enviar e Alterar perfil:** API store-users devolve `email_sent: false` quando o envio de email falha (utilizador criado na mesma); formulário "Criar Utilizador" mostra aviso e sugere Gerir → Re-enviar; doc SMTP refere uso das variáveis pela app Next.js. Coluna "Gerir" passa a um único botão com dropdown: Alterar password, Apagar, Recuperar, Reset password, Re-enviar e-mail password inicial, Alterar perfil (em modo tenant). Migration 026: RPC `store_assign_role`; API POST `users/[id]/assign-store-role`; modal "Alterar perfil" (Utilizador de Loja / Admin de Loja) na lista de utilizadores da loja; `storeId` passado de page → StoreUsersTable → UserManageActions.
 - **Contraste UI portal-admin, logotipo em emails e refresh não bloqueante:** No portal-admin: regras de contraste em `admin.css` (fallback #079669, table-container); componente `Button` com variante `outline` (fundo #079669, texto branco). Documentação em [docs/SMTP_SUPABASE.md](docs/SMTP_SUPABASE.md): secção "Logotipo nos emails" (ficheiro `bwb-white-compact.jpeg` em `public/email/`, uso de `NEXT_PUBLIC_APP_URL`). Em `refresh-store-users.tsx`, `router.refresh()` passou a ser chamado dentro de `setTimeout(..., 0)` para não bloquear o handler do clique.
 - **Não repovoar menu demo quando apagado e contraste global:** Migration 027: coluna `stores.menu_cleared_at`; RPC `admin_clear_store_menu` passa a definir `menu_cleared_at = now()` após apagar o menu. Bootstrap demo (`bootstrap-demo-from-json.ts`): se a loja tiver `menu_cleared_at` preenchido, mantém apenas o upsert de alergénios e não repovoa categorias/itens (log "Store menu was explicitly cleared; skipping menu repopulation."). Regra global em `admin.css` para contraste: botões sem classe `bg-*` e inputs/select/textarea sem `.input-legible` usam fundo escuro (slate-800) e texto claro no `.admin-theme`.
+- **Error boundary e resiliência portal-admin:** Componente `error.tsx` em `/portal-admin` (Client Component) para capturar erros de renderização e mostrar UI de fallback (Tentar de novo, links Portal Admin e Login). Layout do portal-admin com `try/catch` em volta da lógica assíncrona (createClient, getUser, etc.): em caso de exceção devolve fallback com mensagem e link para login em vez de 500. Na página de login, o `fetch` a `/api/debug/portal-log` passou a fire-and-forget com `.catch(() => {})` para não poluir a consola com erros de fetch quando o redirect ocorre imediatamente após login.
 
 ---
 

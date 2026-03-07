@@ -32,85 +32,83 @@ export default async function PortalAdminLayout({
     return <div className={THEME_WRAPPER_CLASS}>{children}</div>;
   }
 
-  let supabase;
   try {
-    supabase = await createClient();
-  } catch {
-    portalDebugLog("layout", { pathname, error: "createClient failed" });
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    let mustRenew = false;
+    if (user) {
+      const { data: profile } = await supabase.from("profiles").select("renew_password").eq("id", user.id).single();
+      mustRenew = profile?.renew_password === true;
+    }
+
+    portalDebugLog("layout", {
+      pathname,
+      userId: user?.id ?? "anonymous",
+      mustRenewPassword: mustRenew,
+    });
+
+    if (!user) {
+      portalDebugLog("layout", { pathname, decision: "redirect_login" });
+      if (isRsc) return <RedirectTo url={PORTAL_LOGIN} />;
+      redirect(PORTAL_LOGIN);
+    }
+
+    if (mustRenew && !pathname.includes("change-password")) {
+      portalDebugLog("layout", { pathname, decision: "redirect_change_password" });
+      if (isRsc) return <RedirectTo url={CHANGE_PASSWORD} />;
+      redirect(CHANGE_PASSWORD);
+    }
+
+    let canAccessSettings = true;
+    if (mode === "tenant") {
+      const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
+      if (storeId) {
+        const { data: can } = await supabase.rpc("current_user_can_access_settings", { p_store_id: storeId });
+        canAccessSettings = can === true;
+      } else {
+        canAccessSettings = false;
+      }
+      if (!canAccessSettings && pathname.startsWith("/portal-admin/settings")) {
+        portalDebugLog("layout", { pathname, decision: "redirect_no_settings_access" });
+        if (isRsc) return <RedirectTo url="/portal-admin/menu" />;
+        redirect("/portal-admin/menu");
+      }
+    }
+
+    portalDebugLog("layout", { pathname, decision: "full_layout" });
+    const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";
+    return (
+      <div className={THEME_WRAPPER_CLASS}>
+        <header className="bg-slate-800/80 border-b border-slate-700 backdrop-blur-sm shadow-md px-4 py-3 flex flex-wrap gap-4 items-center">
+          <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors">Portal Admin</Link>
+          <span className="text-slate-400 text-sm">{mode === "global" ? "Global" : "Loja"}</span>
+          {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass}>Tenants</Link>}
+          {(mode === "global" || (mode === "tenant" && canAccessSettings)) && (
+            <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>
+          )}
+          <Link href="/portal-admin/menu" className={linkClass}>Menu</Link>
+          {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass}>Sync</Link>}
+          <form action="/api/auth/signout" method="post" className="ml-auto">
+            <button
+              type="submit"
+              className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+            >
+              Sair
+            </button>
+          </form>
+        </header>
+        <main className="flex-1 p-6">{children}</main>
+      </div>
+    );
+  } catch (e) {
+    portalDebugLog("layout", { pathname, error: String(e) });
     return (
       <div className={THEME_WRAPPER_CLASS}>
         <div className="p-8 max-w-md mx-auto">
-          <p className="text-slate-300 mb-4">Configuração Supabase em falta.</p>
+          <p className="text-slate-300 mb-4">Erro ao carregar. Verifique a sessão.</p>
           <Link href={PORTAL_LOGIN} className="text-emerald-400 hover:text-emerald-300 underline">Login</Link>
         </div>
       </div>
     );
   }
-
-  const { data: { user } } = await supabase.auth.getUser();
-  let mustRenew = false;
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("renew_password").eq("id", user.id).single();
-    mustRenew = profile?.renew_password === true;
-  }
-
-  portalDebugLog("layout", {
-    pathname,
-    userId: user?.id ?? "anonymous",
-    mustRenewPassword: mustRenew,
-  });
-
-  if (!user) {
-    portalDebugLog("layout", { pathname, decision: "redirect_login" });
-    if (isRsc) return <RedirectTo url={PORTAL_LOGIN} />;
-    redirect(PORTAL_LOGIN);
-  }
-
-  if (mustRenew && !pathname.includes("change-password")) {
-    portalDebugLog("layout", { pathname, decision: "redirect_change_password" });
-    if (isRsc) return <RedirectTo url={CHANGE_PASSWORD} />;
-    redirect(CHANGE_PASSWORD);
-  }
-
-  let canAccessSettings = true;
-  if (mode === "tenant") {
-    const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
-    if (storeId) {
-      const { data: can } = await supabase.rpc("current_user_can_access_settings", { p_store_id: storeId });
-      canAccessSettings = can === true;
-    } else {
-      canAccessSettings = false;
-    }
-    if (!canAccessSettings && pathname.startsWith("/portal-admin/settings")) {
-      portalDebugLog("layout", { pathname, decision: "redirect_no_settings_access" });
-      if (isRsc) return <RedirectTo url="/portal-admin/menu" />;
-      redirect("/portal-admin/menu");
-    }
-  }
-
-  portalDebugLog("layout", { pathname, decision: "full_layout" });
-  const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";
-  return (
-    <div className={THEME_WRAPPER_CLASS}>
-      <header className="bg-slate-800/80 border-b border-slate-700 backdrop-blur-sm shadow-md px-4 py-3 flex flex-wrap gap-4 items-center">
-        <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors">Portal Admin</Link>
-        <span className="text-slate-400 text-sm">{mode === "global" ? "Global" : "Loja"}</span>
-        {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass}>Tenants</Link>}
-        {(mode === "global" || (mode === "tenant" && canAccessSettings)) && (
-          <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>
-        )}
-        <Link href="/portal-admin/menu" className={linkClass}>Menu</Link>
-        {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass}>Sync</Link>}
-        <form action="/api/auth/signout" method="post" className="ml-auto">
-          <button
-            type="submit"
-            className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900"
-          >
-            Sair
-          </button>
-        </form>
-      </header>
-      <main className="flex-1 p-6">{children}</main>
-    </div>
-  );
 }
