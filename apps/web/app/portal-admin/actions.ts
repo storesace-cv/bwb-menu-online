@@ -19,6 +19,7 @@ export async function createTenant(_prev: { error?: string } | null, formData: F
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/tenants");
+  revalidatePath("/portal-admin/settings");
   return null;
 }
 
@@ -28,15 +29,26 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
   const storeNumber = parseInt((formData.get("store_number") as string) ?? "0", 10);
   const name = (formData.get("name") as string)?.trim() ?? "";
   const sourceType = (formData.get("source_type") as string)?.trim() ?? "netbo";
+  const domainHostname = (formData.get("domain_hostname") as string)?.trim() ?? "";
   if (!tenantId || !storeNumber) return { error: "Tenant e número da loja obrigatórios" };
-  const { error } = await supabase.rpc("admin_create_store", {
+  const { data: storeId, error } = await supabase.rpc("admin_create_store", {
     p_tenant_id: tenantId,
     p_store_number: storeNumber,
     p_name: name || null,
     p_source_type: sourceType,
   });
   if (error) return { error: error.message };
+  if (domainHostname && storeId) {
+    const { error: domainErr } = await supabase.rpc("admin_set_store_domain", {
+      p_store_id: storeId,
+      p_hostname: domainHostname.toLowerCase(),
+      p_domain_type: "default",
+      p_is_primary: true,
+    });
+    if (domainErr) return { error: `Loja criada, mas falha ao associar domínio: ${domainErr.message}` };
+  }
   revalidatePath(`/portal-admin/tenants/${tenantId}/stores`);
+  revalidatePath("/portal-admin/tenants");
   return null;
 }
 

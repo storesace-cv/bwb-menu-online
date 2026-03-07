@@ -13,6 +13,7 @@ export function CreateStoreForm({ tenantId }: { tenantId: string }) {
       <Input id="store_number" name="store_number" label="Nº loja" type="number" required min={1} />
       <Input id="store_name" name="name" label="Nome" type="text" placeholder="Nome da loja" />
       <Input id="source_type" name="source_type" label="Source" type="text" defaultValue="netbo" />
+      <Input id="domain_hostname" name="domain_hostname" label="Domínio (hostname)" type="text" placeholder="ex.: 9999999991.menu.bwb.pt (opcional)" />
       <Button type="submit" variant="primary">Criar</Button>
       {state?.error && (
         <div className="w-full mt-2">

@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { Card } from "@/components/admin";
+import { CreateTenantForm } from "../tenants/create-tenant-form";
 
 export default async function SettingsPage() {
   const headersList = await headers();
@@ -17,7 +18,12 @@ export default async function SettingsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-slate-100 mb-2">Definições</h1>
         <p className="text-slate-400 mb-6">Escolha uma opção.</p>
-        <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+        <div className="grid gap-4 sm:grid-cols-2 max-w-3xl mb-6">
+          <Card className="p-5">
+            <h2 className="text-lg font-medium text-slate-100 mb-2">Criar tenant</h2>
+            <p className="text-sm text-slate-400 mb-4">Registar um novo tenant (NIF e nome).</p>
+            <CreateTenantForm />
+          </Card>
           {globalLinks.map(({ href, label, description }) => (
             <Link key={href} href={href}>
               <Card className="p-5 hover:border-emerald-500/50 transition-colors h-full block">
