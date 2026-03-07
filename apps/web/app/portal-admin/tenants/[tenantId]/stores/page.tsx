@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateStoreForm } from "./create-store-form";
-import { StoreSourceTypeCell } from "../store-source-type-cell";
+import { StoreSourceTypeCell } from "../../store-source-type-cell";
 import { Card, TableContainer } from "@/components/admin";
 
 type Props = { params: Promise<{ tenantId: string }> };
