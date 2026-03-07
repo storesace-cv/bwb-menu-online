@@ -8,14 +8,15 @@ export async function POST(request: Request) {
     return new NextResponse(null, { status: 204 });
   }
   try {
-    const body = (await request.json()) as Body;
+    const text = await request.text();
+    const body = (text ? JSON.parse(text) : {}) as Body;
     portalDebugLog("client", {
       event: body.event ?? "unknown",
       url: body.url ?? undefined,
       message: body.message ?? undefined,
     });
   } catch {
-    // ignore parse errors
+    // ignore parse errors (e.g. sendBeacon Blob, empty body)
   }
   return new NextResponse(null, { status: 204 });
 }

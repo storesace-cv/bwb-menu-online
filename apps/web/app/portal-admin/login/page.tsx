@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { Card, Input, Button, Alert } from "@/components/admin";
 
@@ -9,7 +8,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,13 +24,12 @@ export default function LoginPage() {
       setError(err.message);
       return;
     }
-    fetch("/api/debug/portal-log", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "LoginSuccess", url: "/portal-admin" }),
-    }).catch(() => {});
-    router.push("/portal-admin");
-    router.refresh();
+    const payload = { event: "LoginSuccess", url: "/portal-admin" };
+    navigator.sendBeacon(
+      "/api/debug/portal-log",
+      new Blob([JSON.stringify(payload)], { type: "application/json" }),
+    );
+    window.location.href = "/portal-admin";
   }
 
   return (

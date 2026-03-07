@@ -101,6 +101,9 @@ export default async function PortalAdminLayout({
       </div>
     );
   } catch (e) {
+    const err = e as Error & { digest?: string };
+    if (err?.digest?.startsWith?.("NEXT_REDIRECT") || err?.message === "NEXT_REDIRECT") throw e;
+    if (err?.digest?.startsWith?.("NEXT_NOT_FOUND")) throw e;
     portalDebugLog("layout", { pathname, error: String(e) });
     return (
       <div className={THEME_WRAPPER_CLASS}>
