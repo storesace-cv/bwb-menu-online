@@ -30,7 +30,7 @@ export APP_DIR
 NGINX_SITES_SRC="${APP_DIR}/deploy/nginx/sites-available"
 APP_HEALTH_URL="${APP_HEALTH_URL:-http://127.0.0.1:8103/api/health}"
 
-echo "=== Step 1: Git pull ==="
+echo "=== Step 1: Git update (fetch + reset) ==="
 cd "$APP_DIR"
 if [[ -f .env ]]; then
   ENV_BACKUP=$(mktemp)
@@ -40,7 +40,10 @@ if [[ -f docker-compose.override.yml ]]; then
   OVERRIDE_BACKUP=$(mktemp)
   cp -a docker-compose.override.yml "$OVERRIDE_BACKUP"
 fi
-git pull
+# Use fetch + reset so local changes on the server never block deploy or migrations
+BRANCH="${DEPLOY_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
+git fetch origin
+git reset --hard "origin/$BRANCH"
 if [[ -n "${ENV_BACKUP:-}" && -f "$ENV_BACKUP" ]]; then
   mv "$ENV_BACKUP" .env
 fi
