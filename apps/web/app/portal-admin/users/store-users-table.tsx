@@ -12,7 +12,7 @@ type StoreUserRow = {
   store_name: string | null;
 };
 
-export function StoreUsersTable({ list }: { list: StoreUserRow[] }) {
+export function StoreUsersTable({ list, storeId }: { list: StoreUserRow[]; storeId?: string }) {
   function onSuccess() {
     window.dispatchEvent(new CustomEvent("store-users-refresh"));
   }
@@ -52,6 +52,8 @@ export function StoreUsersTable({ list }: { list: StoreUserRow[] }) {
                     userId={u.id}
                     deletedAt={u.deleted_at}
                     onSuccess={onSuccess}
+                    storeId={storeId}
+                    context={storeId ? "store_users" : undefined}
                   />
                 </td>
               </tr>

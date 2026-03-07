@@ -12,6 +12,8 @@ O envio de emails (reset password, magic link, confirmação, convites) **não �
 
 O script `deploy/supabase/apply_smtp.sh` lê as variáveis do `.env` da app e aplica-as ao serviço **auth** da instância Supabase (ficheiro de secrets + `env_file` no docker-compose).
 
+**Nota:** A app Next.js também envia emails (boas-vindas ao criar utilizador, reset de password) através de `lib/mailer.ts`, usando as mesmas variáveis `GOTRUE_SMTP_*` do `.env`. O container **web** da app usa `env_file: .env`, pelo que deve ter essas variáveis definidas para que os emails de criação de utilizadores e de reset sejam enviados correctamente.
+
 ## Paths no servidor
 
 | O quê | Path |

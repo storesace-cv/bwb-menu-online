@@ -82,7 +82,7 @@ export default async function UsersPage() {
 
         <section>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
-          <StoreUsersTable list={storeUsers} />
+          <StoreUsersTable list={storeUsers} storeId={storeId} />
         </section>
       </div>
     );

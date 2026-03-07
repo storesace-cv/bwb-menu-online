@@ -7,6 +7,7 @@ export function StoreUsersForm() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [emailSent, setEmailSent] = useState(true);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -23,6 +24,7 @@ export function StoreUsersForm() {
       return;
     }
     setSuccess(true);
+    setEmailSent(data.email_sent !== false);
     setEmail("");
     window.dispatchEvent(new CustomEvent("store-users-refresh"));
   }
@@ -44,7 +46,13 @@ export function StoreUsersForm() {
         <Button type="submit">Criar</Button>
       </form>
       {error && <Alert variant="error" className="mt-4">{error}</Alert>}
-      {success && <Alert variant="success" className="mt-4">Utilizador criado. Foi enviado um email com os dados de acesso.</Alert>}
+      {success && (
+        <Alert variant={emailSent ? "success" : "error"} className="mt-4">
+          {emailSent
+            ? "Utilizador criado. Foi enviado um email com os dados de acesso."
+            : "Utilizador criado. O email não foi enviado; use Gerir → Re-enviar e-mail password inicial."}
+        </Alert>
+      )}
     </Card>
   );
 }

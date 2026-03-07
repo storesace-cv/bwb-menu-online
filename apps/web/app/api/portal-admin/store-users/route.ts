@@ -109,11 +109,17 @@ export async function POST(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? (host ? `${scheme}://${host}` : "https://menu.bwb.pt");
   const portalUrl = baseUrl.replace(/\/$/, "") + "/portal-admin/login";
 
+  let emailSent = true;
   try {
     await sendWelcomeOrResetEmail({ to: email, portalUrl, isReset: !!existing, passwordDefault: DEFAULT_PASSWORD });
   } catch (e) {
     console.error("Store user email send failed:", (e as Error).message);
+    emailSent = false;
   }
 
-  return NextResponse.json({ id: userId });
+  return NextResponse.json({
+    id: userId,
+    email_sent: emailSent,
+    ...(emailSent ? {} : { message: "Utilizador criado; não foi possível enviar o email. Use 'Re-enviar e-mail password inicial' em Gerir." }),
+  });
 }
