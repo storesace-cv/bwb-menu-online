@@ -83,15 +83,14 @@ export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currenc
   const imageSrc =
     item.image_path != null && item.image_path !== ""
       ? process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") + "/storage/v1/object/public/" + item.image_path
-      : item.image_url ?? null;
+      : (item.image_url && item.image_url !== "") ? item.image_url : "/images/no_image_product.jpg";
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
 
   return (
-    <li className="list-none">
-      <article className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden">
+    <li className="list-none h-full flex">
+      <article className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col w-full h-full">
         {/* Zona 1 – Imagem do Artigo (clicável → modal com imagem + ingredientes) */}
-        {imageSrc && (
-          <button
+        <button
             type="button"
             onClick={() => setImageModalOpen(true)}
             className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400"
@@ -103,8 +102,7 @@ export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currenc
               className="h-full w-full object-cover"
             />
           </button>
-        )}
-        <div className="p-4">
+        <div className="p-4 flex flex-col flex-1 min-h-0">
           {/* Zona A – Ícones informativos, alinhados à direita */}
           <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px]">
             {item.is_featured && (
@@ -369,7 +367,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
           >
             Escolhas do Chefe
           </h2>
-          <ul className="p-0 m-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <ul className="p-0 m-0 list-none grid grid-cols-1 sm:grid-cols-2 gap-6">
             {featuredItems.map((item) => (
               <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
             ))}
@@ -492,7 +490,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
                 {cat.description && (
                   <p className="text-gray-600 text-sm mb-4">{cat.description}</p>
                 )}
-                <ul className="p-0 m-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <ul className="p-0 m-0 list-none grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {cat.items?.map((item) => (
                     <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
                   ))}

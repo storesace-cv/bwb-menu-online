@@ -96,11 +96,11 @@ export default async function PortalAdminLayout({
         <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors">Portal Admin</Link>
         <span className="text-slate-400 text-sm">{mode === "global" ? "Global" : "Loja"}</span>
         {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass}>Tenants</Link>}
-        {mode === "global" && <Link href="/portal-admin/users" className={linkClass}>Utilizadores</Link>}
+        {(mode === "global" || (mode === "tenant" && canAccessSettings)) && (
+          <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>
+        )}
         <Link href="/portal-admin/menu" className={linkClass}>Menu</Link>
         {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass}>Sync</Link>}
-        {mode === "tenant" && canAccessSettings && <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>}
-        {mode === "tenant" && canAccessSettings && <Link href="/portal-admin/users" className={linkClass}>Utilizadores</Link>}
         <form action="/api/auth/signout" method="post" className="ml-auto">
           <button
             type="submit"
