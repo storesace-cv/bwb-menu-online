@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateStoreForm } from "./[tenantId]/stores/create-store-form";
+import { ClearStoreMenuButton } from "./clear-store-menu-button";
 import { Card, TableContainer } from "@/components/admin";
 
 type StoreRow = { id: string; tenant_id: string; store_number: number; name: string | null; source_type: string; is_active?: boolean };
@@ -66,7 +67,7 @@ export default async function TenantsPage() {
                     <th className="text-left py-2 px-3 text-slate-300">Nome</th>
                     <th className="text-left py-2 px-3 text-slate-300">Source</th>
                     <th className="text-left py-2 px-3 text-slate-300">Domínio(s)</th>
-                    <th className="text-left py-2 px-3 text-slate-300"></th>
+                    <th className="text-left py-2 px-3 text-slate-300">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -76,13 +77,14 @@ export default async function TenantsPage() {
                       <td className="py-2 px-3 text-slate-200">{s.name ?? "—"}</td>
                       <td className="py-2 px-3 text-slate-200">{s.source_type}</td>
                       <td className="py-2 px-3 text-slate-200">{formatDomains(domains)}</td>
-                      <td className="py-2 px-3">
+                      <td className="py-2 px-3 space-x-2">
                         <Link
                           href={`/portal-admin/tenants/${t.id}/stores/${s.id}/domains`}
                           className="text-emerald-400 hover:text-emerald-300"
                         >
                           Domínios
                         </Link>
+                        <ClearStoreMenuButton storeId={s.id} storeName={s.name} />
                       </td>
                     </tr>
                   ))}

@@ -71,6 +71,21 @@ export async function setStoreDomain(_prev: { error?: string } | null, formData:
   return null;
 }
 
+export async function clearStoreMenu(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  if (!storeId) return { error: "Store obrigatório" };
+  const { error } = await supabase.rpc("admin_clear_store_menu", { p_store_id: storeId });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/tenants");
+  revalidatePath("/portal-admin/tenants/*/stores");
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/items");
+  revalidatePath("/portal-admin/settings/sections");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
+
 export async function createSection(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";

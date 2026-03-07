@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-07 (Tenants + Definições UX; domínio ao criar loja).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-07 (Botão "Apagar menu da loja" em Tenants).
 
 ---
 
@@ -54,6 +54,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Lista de artigos: categoria real em vez de "Geral":** Em `/portal-admin/settings/items` a categoria exibida por artigo passou a deprioritizar a categoria "Geral" na ordenação (Geral vai para o fim); assim itens com Couvert, Entradas, etc. e também Geral mostram a categoria real (ex.: Couvert) em vez de sempre "Geral".
 - **Reorganização Tenants e Criar tenant em Definições:** Em `/portal-admin/tenants` por baixo de cada tenant aparece a lista de lojas (Nº, Nome, Source, Domínios, link Domínios) e o formulário "Adicionar loja"; removido o bloco "Criar tenant" e o link "Lojas". "Criar tenant" passou para Definições (modo global), num cartão próprio com `CreateTenantForm`. Rota `.../tenants/[tenantId]/stores` mantida para deep-links.
 - **Domínio ao criar loja:** A associação de domínio à loja faz-se na criação da loja, não do tenant. Formulário "Adicionar loja" inclui campo opcional "Domínio (hostname)"; ao criar a loja, se preenchido, é chamado `admin_set_store_domain` para associar o hostname à nova loja. Continua possível definir/alterar domínios em Tenants → [tenant] → [loja] → Domínios.
+- **Apagar menu da loja:** Em `/portal-admin/tenants`, na informação de cada loja, botão com fundo vermelho e texto branco em bold "Apagar menu da loja"; confirmação antes de executar; action `clearStoreMenu` e RPC `admin_clear_store_menu` (migration 021) apagam secções, categorias, artigos, tipos de artigo e associações da loja (apenas superadmin). Coluna "Ações" na tabela de lojas com link Domínios e este botão.
 
 ---
 
