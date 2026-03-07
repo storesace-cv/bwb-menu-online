@@ -359,7 +359,7 @@ export async function batchUpdateItemsSectionCategory(
       .maybeSingle();
     targetCategoryId = firstCat?.id ?? null;
   }
-  if (!targetCategoryId) return { error: "Nenhuma categoria encontrada para a secção escolhida." };
+  if (!targetCategoryId) return { error: "A secção escolhida não tem categorias. Crie uma categoria nesta secção (Menu → categorias) ou seleccione uma categoria no segundo campo." };
 
   const { data: catRow } = await supabase
     .from("menu_categories")
