@@ -31,12 +31,23 @@ O script **deploy/scripts/nginx-reconfig-agent.sh** implementa o agente no host:
 3. Para cada job: extrai `hostnames` (JSON array), invoca `reconfigure-nginx.sh` com esses hostnames como argumentos.
 4. Atualiza o job via PATCH na mesma API REST: `status = 'done'` e `done_at` em caso de sucesso; `status = 'failed'` e `error_message` em caso de falha.
 
-Requisitos no host: `bash`, `curl`, `jq`. Executar periodicamente (cron ou systemd timer), por exemplo a cada 1–5 minutos:
+Requisitos no host: `bash`, `curl`, `jq`. No servidor, o `.env` em `/opt/bwb-menu-online` deve ter `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (o deploy já usa estes valores para bootstraps).
 
-```bash
-# Exemplo cron (a cada 2 minutos)
-*/2 * * * * APP_DIR=/opt/bwb-menu-online /opt/bwb-menu-online/deploy/scripts/nginx-reconfig-agent.sh
-```
+**Instalar o agente no host (após deploy):**
+
+1. Tornar os scripts executáveis (se ainda não estiverem):
+   ```bash
+   chmod +x /opt/bwb-menu-online/deploy/scripts/reconfigure-nginx.sh
+   chmod +x /opt/bwb-menu-online/deploy/scripts/nginx-reconfig-agent.sh
+   ```
+2. Garantir que `jq` está instalado: `apt install jq` (Debian/Ubuntu) ou equivalente.
+3. Configurar execução periódica, por exemplo com cron (a cada 2 minutos):
+   ```bash
+   sudo crontab -e
+   # adicionar linha:
+   */2 * * * * APP_DIR=/opt/bwb-menu-online /opt/bwb-menu-online/deploy/scripts/nginx-reconfig-agent.sh
+   ```
+   Ou com systemd timer: criar unit de serviço e timer que invoque o script (intervalo recomendado 1–5 minutos).
 
 ## Notas
 
