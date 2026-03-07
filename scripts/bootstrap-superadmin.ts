@@ -29,6 +29,7 @@ async function main() {
   const users = listData?.users ?? [];
   const user = users.find((u) => u.email?.toLowerCase() === EMAIL.toLowerCase());
 
+  let superadminJustCreated = false;
   if (user) {
     await supabase.auth.admin.updateUserById(user.id, {
       user_metadata: { ...user.user_metadata, must_change_password: true, bootstrap: true },
@@ -46,15 +47,18 @@ async function main() {
       process.exit(1);
     }
     console.log("Superadmin created:", created.user?.id);
+    superadminJustCreated = true;
   }
 
   const { data: listData2 } = await supabase.auth.admin.listUsers({ perPage: 100 });
   const superadminUser = listData2?.users?.find((u) => u.email?.toLowerCase() === EMAIL.toLowerCase());
   if (superadminUser?.id) {
-    await supabase.from("profiles").upsert(
-      { id: superadminUser.id, email: EMAIL, renew_password: true },
-      { onConflict: "id" }
-    );
+    const profilePayload = {
+      id: superadminUser.id,
+      email: EMAIL,
+      ...(superadminJustCreated ? { renew_password: true } : {}),
+    };
+    await supabase.from("profiles").upsert(profilePayload, { onConflict: "id" });
     const { error: bindErr } = await supabase.from("user_role_bindings").insert({
       user_id: superadminUser.id,
       role_code: "superadmin",
