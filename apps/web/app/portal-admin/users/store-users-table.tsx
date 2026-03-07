@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, TableContainer } from "@/components/admin";
-import { UserManageActions } from "../user-manage-actions";
+import { UserManageActions } from "./user-manage-actions";
 
 type StoreUserRow = {
   id: string;
