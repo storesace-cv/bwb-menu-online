@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CreateStoreForm } from "./[tenantId]/stores/create-store-form";
 import { ClearStoreMenuButton } from "./clear-store-menu-button";
 import { StoreDomainsBlock } from "./store-domains-block";
+import { StoreSourceTypeCell } from "./store-source-type-cell";
 import { Card, TableContainer } from "@/components/admin";
 
 type StoreRow = { id: string; tenant_id: string; store_number: number; name: string | null; source_type: string; is_active?: boolean };
@@ -76,7 +77,9 @@ export default async function TenantsPage() {
                     <tr key={s.id} className="border-b border-slate-700">
                       <td className="py-2 px-3 text-slate-200">{s.store_number}</td>
                       <td className="py-2 px-3 text-slate-200">{s.name ?? "—"}</td>
-                      <td className="py-2 px-3 text-slate-200">{s.source_type}</td>
+                      <td className="py-2 px-3 text-slate-200">
+                        <StoreSourceTypeCell storeId={s.id} sourceType={s.source_type} />
+                      </td>
                       <td className="py-2 px-3 text-slate-200">{formatDomains(domains)}</td>
                       <td className="py-2 px-3 space-x-2">
                         <Link

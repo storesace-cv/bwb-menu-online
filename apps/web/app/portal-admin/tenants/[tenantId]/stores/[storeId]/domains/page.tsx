@@ -37,7 +37,7 @@ export default async function StoreDomainsPage({ params }: Props) {
               <thead>
                 <tr className="border-b-2 border-slate-600">
                   <th className="text-left py-2 px-3 text-slate-300">Hostname</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Tipo</th>
+                  <th className="text-left py-2 px-3 text-slate-300">Origem do Domínio</th>
                   <th className="text-left py-2 px-3 text-slate-300">Primário</th>
                 </tr>
               </thead>
@@ -45,7 +45,7 @@ export default async function StoreDomainsPage({ params }: Props) {
                 {list.map((d) => (
                   <tr key={d.id} className="border-b border-slate-700">
                     <td className="py-2 px-3 text-slate-200">{d.hostname}</td>
-                    <td className="py-2 px-3 text-slate-200">{d.domain_type}</td>
+                    <td className="py-2 px-3 text-slate-200">{d.domain_type === "default" ? "Partilhado" : d.domain_type === "custom" ? "Privado" : d.domain_type}</td>
                     <td className="py-2 px-3 text-slate-200">{d.is_primary ? "Sim" : "Não"}</td>
                   </tr>
                 ))}

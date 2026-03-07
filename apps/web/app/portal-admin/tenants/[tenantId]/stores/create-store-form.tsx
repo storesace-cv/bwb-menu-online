@@ -4,15 +4,7 @@ import { useState } from "react";
 import { useFormState } from "react-dom";
 import { createStore } from "../../../actions";
 import { Input, Button, Alert } from "@/components/admin";
-
-const ORIGIN_OPTIONS: { value: string; label: string; disabled: boolean }[] = [
-  { value: "manual", label: "Manual (a implementar)", disabled: true },
-  { value: "excel_zsbms", label: "Excel - ZSbms (a implementar)", disabled: true },
-  { value: "excel_netbo", label: "Excel - NET-bo (a implementar)", disabled: true },
-  { value: "excel_storesace", label: "Excel - Storesace (a implementar)", disabled: true },
-  { value: "netbo_api", label: "Net-bo API", disabled: false },
-  { value: "storesace_api", label: "Storesace API (a implementar)", disabled: true },
-];
+import { SOURCE_TYPE_OPTIONS } from "../../source-type-options";
 
 export function CreateStoreForm({ tenantId, tenantNif }: { tenantId: string; tenantNif: string }) {
   const [state, formAction] = useFormState(createStore, null);
@@ -46,7 +38,7 @@ export function CreateStoreForm({ tenantId, tenantNif }: { tenantId: string; ten
           defaultValue="netbo_api"
           className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white"
         >
-          {ORIGIN_OPTIONS.map((opt) => (
+          {SOURCE_TYPE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value} disabled={opt.disabled}>
               {opt.label}
             </option>

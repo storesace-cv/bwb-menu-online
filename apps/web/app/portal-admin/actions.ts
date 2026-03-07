@@ -84,6 +84,21 @@ export async function setStoreDomain(_prev: { error?: string } | null, formData:
   return null;
 }
 
+export async function updateStoreSourceType(storeId: string, sourceType: string) {
+  const supabase = await createClient();
+  const st = (sourceType ?? "").trim();
+  if (!storeId || !st) return { error: "Store e origem obrigatórios" };
+  const { error } = await supabase.rpc("admin_update_store", {
+    p_store_id: storeId,
+    p_source_type: st,
+    p_name: null,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/tenants");
+  revalidatePath("/portal-admin/tenants/*/stores");
+  return null;
+}
+
 export async function clearStoreMenu(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";

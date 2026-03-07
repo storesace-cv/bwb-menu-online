@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateStoreForm } from "./create-store-form";
+import { StoreSourceTypeCell } from "../store-source-type-cell";
 import { Card, TableContainer } from "@/components/admin";
 
 type Props = { params: Promise<{ tenantId: string }> };
@@ -64,7 +65,9 @@ export default async function TenantStoresPage({ params }: Props) {
                   <tr key={s.id} className="border-b border-slate-700">
                     <td className="py-2 px-3 text-slate-200">{s.store_number}</td>
                     <td className="py-2 px-3 text-slate-200">{s.name ?? "—"}</td>
-                    <td className="py-2 px-3 text-slate-200">{s.source_type}</td>
+                    <td className="py-2 px-3 text-slate-200">
+                      <StoreSourceTypeCell storeId={s.id} sourceType={s.source_type} />
+                    </td>
                     <td className="py-2 px-3 text-slate-200">{formatDomains(domains)}</td>
                     <td className="py-2 px-3">
                       <Link href={`/portal-admin/tenants/${tenantId}/stores/${s.id}/domains`} className="text-emerald-400 hover:text-emerald-300">Domínios</Link>
