@@ -385,7 +385,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
                     <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
                       {cat.items?.map((item) =>
                         useLayout ? (
-                          <ItemCardFromLayout key={item.id} item={item} layoutDefinition={layoutDef} currencyCode={currencyCode} />
+                          <ItemCardFromLayout key={item.id} item={item} layoutDefinition={layoutDef as LayoutDefinition} currencyCode={currencyCode} />
                         ) : (
                           <CardComponent key={item.id} item={item} currencyCode={currencyCode} />
                         )
@@ -396,7 +396,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
                     <ul className="p-0 m-0 list-none flex flex-col gap-6">
                       {cat.items && pairs(cat.items).map((pair) => (
                         <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
-                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} layoutDefinition={layoutDef} />
+                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} layoutDefinition={layoutDef as LayoutDefinition} />
                         </li>
                       ))}
                     </ul>

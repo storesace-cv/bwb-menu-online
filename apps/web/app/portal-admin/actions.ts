@@ -512,7 +512,12 @@ const ZONE_WIDTH_VALUES = new Set(["full", "half", "quarter"]);
 /** Actualizar layout de um modelo de apresentação (superadmin). */
 export async function updatePresentationTemplateLayout(
   templateId: string,
-  layoutDefinition: { canvasHeight?: number; zoneOrder: string[]; zoneWidths?: Record<string, string> }
+  layoutDefinition: {
+    canvasHeight?: number;
+    zoneOrder: string[];
+    zoneWidths?: Record<string, string>;
+    rowSpacingPx?: number;
+  }
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
@@ -536,10 +541,16 @@ export async function updatePresentationTemplateLayout(
     }
     if (Object.keys(zoneWidths).length === 0) zoneWidths = undefined;
   }
+  let rowSpacingPx: number | null = null;
+  if (layoutDefinition.rowSpacingPx != null && Number.isFinite(Number(layoutDefinition.rowSpacingPx))) {
+    const n = Math.round(Number(layoutDefinition.rowSpacingPx));
+    if (n >= 0 && n <= 48) rowSpacingPx = n;
+  }
   const payload = {
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
     ...(zoneWidths ? { zoneWidths } : {}),
+    ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
   };
   const { error } = await supabase
     .from("menu_presentation_templates")

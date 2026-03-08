@@ -27,7 +27,12 @@ export type PublicMenuCategory = {
   section_name: string | null;
   presentation_component_key?: string;
   /** When set, the menu uses ItemCardFromLayout with this definition instead of component_key. */
-  presentation_layout_definition?: { canvasHeight?: number; zoneOrder: string[] } | null;
+  presentation_layout_definition?: {
+    canvasHeight?: number;
+    zoneOrder: string[];
+    zoneWidths?: Record<string, string>;
+    rowSpacingPx?: number;
+  } | null;
   items: PublicMenuItem[];
 };
 

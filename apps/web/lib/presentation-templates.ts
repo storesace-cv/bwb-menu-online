@@ -27,6 +27,8 @@ export interface LayoutDefinition {
   zoneOrder: string[];
   /** Opcional: largura por tipo de zona. Omitido = "full". Consecutivos "half" formam uma linha de 2; "quarter" até 4. */
   zoneWidths?: Record<string, ZoneWidth>;
+  /** Espaçamento em px entre linhas de conteúdo do card; default 8. */
+  rowSpacingPx?: number;
 }
 
 export const DEFAULT_CANVAS_HEIGHT = 560;

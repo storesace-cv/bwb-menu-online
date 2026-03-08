@@ -46,6 +46,15 @@ const ZONE_WIDTH_LABELS: Record<ZoneWidth, string> = {
   quarter: "Um quarto (25%)",
 };
 
+/** Presets para espaçamento entre linhas (px). */
+const ROW_SPACING_PRESETS = [
+  { label: "Compacto (2)", value: 2 },
+  { label: "Reduzido (4)", value: 4 },
+  { label: "Normal (8)", value: 8 },
+  { label: "Amplo (16)", value: 16 },
+] as const;
+const DEFAULT_ROW_SPACING_PX = 8;
+
 /** Alturas aproximadas por zona (px) para o cálculo sugerido. Largura do card ~320px => imagem 4:3 ≈ 240. */
 const ZONE_HEIGHT_PX: Record<string, number> = {
   image: 240,
@@ -136,6 +145,9 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     }
     return getDefaultZoneWidths(order);
   });
+  const [rowSpacingPx, setRowSpacingPx] = useState<number>(
+    initialLayout?.rowSpacingPx ?? DEFAULT_ROW_SPACING_PX
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -196,9 +208,15 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     setSaving(true);
     setSaved(false);
     try {
-      const payload: { canvasHeight?: number; zoneOrder: string[]; zoneWidths?: Record<string, ZoneWidth> } = {
+      const payload: {
+        canvasHeight?: number;
+        zoneOrder: string[];
+        zoneWidths?: Record<string, ZoneWidth>;
+        rowSpacingPx?: number;
+      } = {
         canvasHeight: canvasHeight > 0 ? canvasHeight : undefined,
         zoneOrder,
+        rowSpacingPx: rowSpacingPx >= 0 && rowSpacingPx <= 48 ? rowSpacingPx : DEFAULT_ROW_SPACING_PX,
       };
       const widthsToSave: Record<string, ZoneWidth> = {};
       zoneOrder.forEach((z) => {
@@ -216,7 +234,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     } finally {
       setSaving(false);
     }
-  }, [templateId, canvasHeight, zoneOrder, zoneWidths]);
+  }, [templateId, canvasHeight, zoneOrder, zoneWidths, rowSpacingPx]);
 
   const renderPreviewBlock = (type: string, inRow: boolean) => {
     const label = PREVIEW_ZONE_LABELS[type as LayoutZoneType] ?? LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type;
@@ -260,6 +278,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
             <div
               key={rowIdx}
               className={`flex items-stretch gap-0 ${row.length > 1 ? "flex flex-row border-t-2 border-dashed border-slate-400" : ""}`}
+              style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : undefined}
             >
               {row.map((type) => renderPreviewBlock(type, row.length > 1))}
             </div>
@@ -285,6 +304,39 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
           {suggestedHeightMessage && (
             <span className="text-slate-400 text-sm">{suggestedHeightMessage}</span>
           )}
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="row-spacing" className="block text-slate-200 font-medium mb-1">
+          Espaçamento entre linhas (px)
+        </label>
+        <p className="text-slate-400 text-sm mb-2">
+          Margem vertical entre cada linha de campos do card (ex.: entre nome e preço). Valores mais baixos reduzem o espaço vazio.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            id="row-spacing"
+            type="number"
+            min={0}
+            max={48}
+            step={1}
+            value={rowSpacingPx}
+            onChange={(e) => setRowSpacingPx(Math.max(0, Math.min(48, Number(e.target.value) || 0)))}
+            className="w-24"
+          />
+          <span className="text-slate-400 text-sm">ou</span>
+          <select
+            className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+            value={rowSpacingPx}
+            onChange={(e) => setRowSpacingPx(Number(e.target.value))}
+          >
+            {ROW_SPACING_PRESETS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

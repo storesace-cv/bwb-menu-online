@@ -155,6 +155,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
   const minHeight = layoutDefinition.canvasHeight != null && layoutDefinition.canvasHeight > 0
     ? layoutDefinition.canvasHeight
     : undefined;
+  const rowSpacingPx = layoutDefinition.rowSpacingPx != null && layoutDefinition.rowSpacingPx >= 0 && layoutDefinition.rowSpacingPx <= 48
+    ? layoutDefinition.rowSpacingPx
+    : 8;
 
   const renderZone = (type: string) => {
     switch (type) {
@@ -262,14 +265,20 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
         {hasImage && imageRowIndex >= 0 && renderZone("image")}
         <div className="p-3 flex flex-col flex-1 min-h-0">
           {contentRows.map((row, rowIdx) => {
+            const rowStyle = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : undefined;
             if (row.length === 1) {
               const el = renderZone(row[0]);
-              return el != null ? <div key={`r-${rowIdx}`} className="mt-0.5 first:mt-0">{el}</div> : null;
+              return el != null ? (
+                <div key={`r-${rowIdx}`} style={rowStyle}>
+                  {el}
+                </div>
+              ) : null;
             }
             return (
               <div
                 key={`r-${rowIdx}`}
-                className={`mt-2 flex items-center gap-4 ${row.length === 2 ? "" : "flex-wrap"}`}
+                className={`flex items-center gap-4 ${row.length === 2 ? "" : "flex-wrap"}`}
+                style={rowStyle}
               >
                 {row.map((type) => {
                   const el = renderZone(type);
