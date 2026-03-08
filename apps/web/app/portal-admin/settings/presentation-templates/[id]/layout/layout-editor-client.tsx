@@ -129,8 +129,11 @@ function getEffectiveZoneHeight(
   type: string,
   zoneHeights: Record<string, number> | undefined
 ): number {
-  if (zoneHeights?.[type] != null && Number.isFinite(zoneHeights[type]))
-    return Math.max(ZONE_HEIGHT_MIN, Math.min(ZONE_HEIGHT_MAX, Math.round(zoneHeights[type])));
+  if (zoneHeights?.[type] != null && Number.isFinite(zoneHeights[type])) {
+    const n = Math.round(zoneHeights[type]);
+    if (n === 0) return 0;
+    return Math.max(ZONE_HEIGHT_MIN, Math.min(ZONE_HEIGHT_MAX, n));
+  }
   return DEFAULT_ZONE_HEIGHTS[type as LayoutZoneType] ?? 32;
 }
 
@@ -172,7 +175,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
       for (const [k, v] of Object.entries(initialLayout.zoneHeights)) {
         if (LAYOUT_ZONE_TYPES.includes(k as LayoutZoneType) && typeof v === "number" && Number.isFinite(v)) {
           const n = Math.round(Number(v));
-          if (n >= ZONE_HEIGHT_MIN && n <= ZONE_HEIGHT_MAX) base[k] = n;
+          if (n >= 0 && n <= ZONE_HEIGHT_MAX) base[k] = n;
         }
       }
     }
@@ -234,8 +237,9 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
   }, []);
 
   const setZoneHeight = useCallback((type: string, value: number) => {
-    const n = Math.max(ZONE_HEIGHT_MIN, Math.min(ZONE_HEIGHT_MAX, Math.round(value)));
-    setZoneHeights((prev) => ({ ...prev, [type]: n }));
+    const n = Math.round(value);
+    const clamped = n === 0 ? 0 : Math.max(ZONE_HEIGHT_MIN, Math.min(ZONE_HEIGHT_MAX, n));
+    setZoneHeights((prev) => ({ ...prev, [type]: clamped }));
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -288,12 +292,13 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     const style = PREVIEW_ZONE_STYLES[type as LayoutZoneType] ?? "bg-slate-200/80 border-slate-400 border-dashed";
     const baseClass = inRow ? "flex-1 min-w-0 border-2 flex items-center justify-center px-2 py-1.5" : "w-full border-2 flex items-center justify-center px-2 py-1.5";
     const heightPx = getEffectiveZoneHeight(type, zoneHeights);
+    const zoneStyle: React.CSSProperties = heightPx > 0 ? (type === "image" ? { height: `${heightPx}px`, minHeight: `${heightPx}px` } : { minHeight: `${heightPx}px` }) : (type === "image" ? { minHeight: "24px" } : {});
     if (type === "image") {
       return (
         <div
           key={type}
           className={`${inRow ? "flex-1 min-w-0" : "w-full"} flex items-center justify-center border-2 ${style}`}
-          style={{ height: `${heightPx}px`, minHeight: `${heightPx}px` }}
+          style={zoneStyle}
         >
           <span className="text-sm font-medium text-slate-600">{label}</span>
         </div>
@@ -301,7 +306,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     }
     if (type === "allergens") {
       return (
-        <div key={type} className={`${baseClass} gap-1.5 flex-wrap ${style}`} style={{ minHeight: `${heightPx}px` }}>
+        <div key={type} className={`${baseClass} gap-1.5 flex-wrap ${style}`} style={zoneStyle}>
           <span className="text-sm font-medium text-slate-600">{label}</span>
           <span className="text-xs px-1.5 py-0.5 rounded bg-orange-200/60 text-orange-800 border border-orange-400/50">…</span>
           <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-200/60 text-emerald-800 border border-emerald-400/50">…</span>
@@ -309,7 +314,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
       );
     }
     return (
-      <div key={type} className={`${baseClass} ${style}`} style={{ minHeight: `${heightPx}px` }}>
+      <div key={type} className={`${baseClass} ${style}`} style={zoneStyle}>
         <span className="text-sm font-medium text-slate-600 text-center">{label}</span>
       </div>
     );
@@ -452,16 +457,40 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
                     <option key={w} value={w}>{ZONE_WIDTH_LABELS[w]}</option>
                   ))}
                 </select>
-                <label className="text-slate-400 text-xs">Altura (px)</label>
-                <input
-                  type="number"
-                  min={ZONE_HEIGHT_MIN}
-                  max={ZONE_HEIGHT_MAX}
-                  step={4}
-                  className="w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-xs"
-                  value={getEffectiveZoneHeight(type, zoneHeights)}
-                  onChange={(e) => setZoneHeight(type, Number(e.target.value) || ZONE_HEIGHT_MIN)}
-                />
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-slate-400 text-xs">Altura</span>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`zone-height-${type}-${index}`}
+                      checked={zoneHeights[type] === 0}
+                      onChange={() => setZoneHeight(type, 0)}
+                      className="rounded border-slate-500"
+                    />
+                    <span className="text-slate-300 text-xs">Auto</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`zone-height-${type}-${index}`}
+                      checked={zoneHeights[type] !== 0}
+                      onChange={() => setZoneHeight(type, DEFAULT_ZONE_HEIGHTS[type as LayoutZoneType] ?? 32)}
+                      className="rounded border-slate-500"
+                    />
+                    <span className="text-slate-300 text-xs">Fixo (px)</span>
+                  </label>
+                  {zoneHeights[type] !== 0 && (
+                    <input
+                      type="number"
+                      min={ZONE_HEIGHT_MIN}
+                      max={ZONE_HEIGHT_MAX}
+                      step={4}
+                      className="w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-xs"
+                      value={getEffectiveZoneHeight(type, zoneHeights)}
+                      onChange={(e) => setZoneHeight(type, Number(e.target.value) || ZONE_HEIGHT_MIN)}
+                    />
+                  )}
+                </div>
                 <div className="flex gap-1">
                   <Button
                     type="button"

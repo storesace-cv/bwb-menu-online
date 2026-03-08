@@ -30,7 +30,7 @@ export interface LayoutDefinition {
   zoneWidths?: Record<string, ZoneWidth>;
   /** Espaçamento em px entre linhas de conteúdo do card; default 8. */
   rowSpacingPx?: number;
-  /** Opcional: altura em px por tipo de zona. Omitido = DEFAULT_ZONE_HEIGHTS[type]. */
+  /** Opcional: altura mínima por tipo de zona. 0 = automática (conteúdo); > 0 = altura mínima em px. Omitido = DEFAULT_ZONE_HEIGHTS[type]. */
   zoneHeights?: Record<string, number>;
 }
 

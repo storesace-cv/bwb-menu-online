@@ -14,6 +14,7 @@ const ZONE_HEIGHT_MAX = 600;
 function getEffectiveZoneHeight(type: string, zoneHeights: Record<string, number> | undefined): number {
   if (zoneHeights?.[type] != null && Number.isFinite(zoneHeights[type])) {
     const n = Math.round(Number(zoneHeights[type]));
+    if (n === 0) return 0;
     if (n >= ZONE_HEIGHT_MIN && n <= ZONE_HEIGHT_MAX) return n;
   }
   const d = DEFAULT_ZONE_HEIGHTS[type as LayoutZoneType];
@@ -174,7 +175,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
     : 8;
   const zoneHeights = layoutDefinition.zoneHeights;
   const imageHeightPx =
-    zoneHeights?.image != null
+    zoneHeights?.image != null && zoneHeights.image !== 0
       ? getEffectiveZoneHeight("image", zoneHeights)
       : null;
 
@@ -290,8 +291,10 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
               const type = row[0];
               const el = renderZone(type);
               const minH = getEffectiveZoneHeight(type, zoneHeights);
+              const wrapperStyle: React.CSSProperties = { ...rowStyle };
+              if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
               return el != null ? (
-                <div key={`r-${rowIdx}`} style={{ ...rowStyle, minHeight: `${minH}px` }}>
+                <div key={`r-${rowIdx}`} style={wrapperStyle}>
                   {el}
                 </div>
               ) : null;
@@ -305,8 +308,10 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
                 {row.map((type) => {
                   const el = renderZone(type);
                   const minH = getEffectiveZoneHeight(type, zoneHeights);
+                  const wrapperStyle: React.CSSProperties = {};
+                  if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
                   return el != null ? (
-                    <div key={type} className="flex-1 min-w-0" style={{ minHeight: `${minH}px` }}>
+                    <div key={type} className="flex-1 min-w-0" style={wrapperStyle}>
                       {el}
                     </div>
                   ) : null;

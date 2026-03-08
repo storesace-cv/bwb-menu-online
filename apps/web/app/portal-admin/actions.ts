@@ -555,7 +555,7 @@ export async function updatePresentationTemplateLayout(
     for (const [key, val] of Object.entries(layoutDefinition.zoneHeights)) {
       if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "number" || !Number.isFinite(val)) continue;
       const n = Math.round(Number(val));
-      if (n >= ZONE_HEIGHT_MIN && n <= ZONE_HEIGHT_MAX) zoneHeights[key] = n;
+      if (n >= 0 && n <= ZONE_HEIGHT_MAX) zoneHeights[key] = n;
     }
     if (Object.keys(zoneHeights).length === 0) zoneHeights = undefined;
   }
