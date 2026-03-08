@@ -79,6 +79,17 @@ export type PublicMenuStoreSettings = {
   contact_url?: string;
   privacy_url?: string;
   reservation_url?: string;
+  /** Section title appearance (applies to all sections). */
+  section_title_align?: string;
+  section_title_margin_bottom?: string;
+  section_title_padding_top?: string;
+  section_title_color?: string;
+  /** Category title appearance (applies to all categories). */
+  category_title_align?: string;
+  category_title_margin_bottom?: string;
+  category_title_padding_top?: string;
+  category_title_indent_px?: string;
+  category_title_color?: string;
 };
 
 export type PublicMenuPayload = {

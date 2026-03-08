@@ -4,6 +4,7 @@ import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
 import { CreateSectionForm } from "../../menu/create-section-form";
 import { SectionRow } from "./section-row";
+import { SectionTitleAppearanceForm } from "./section-title-appearance-form";
 import { Card } from "@/components/admin";
 
 export default async function SectionsPage() {
@@ -33,6 +34,13 @@ export default async function SectionsPage() {
     .select("id, name")
     .order("name");
 
+  const { data: settingsRow } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const settings = (settingsRow?.settings as Record<string, string> | null) ?? {};
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Secções</h1>
@@ -40,6 +48,24 @@ export default async function SectionsPage() {
       <p className="mb-6">
         <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
       </p>
+
+      <section className="mb-8">
+        <Card>
+          <h2 className="text-lg font-medium text-slate-200 mb-4">Aparência dos títulos de secção no menu</h2>
+          <p className="text-slate-400 text-sm mb-4">
+            As opções abaixo aplicam-se a todos os títulos de secção do seu menu público (ex.: Snack-Bar, Restaurante).
+          </p>
+          <SectionTitleAppearanceForm
+            storeId={storeId}
+            initial={{
+              section_title_align: settings.section_title_align,
+              section_title_margin_bottom: settings.section_title_margin_bottom,
+              section_title_padding_top: settings.section_title_padding_top,
+              section_title_color: settings.section_title_color,
+            }}
+          />
+        </Card>
+      </section>
 
       <section className="mb-8">
         <Card>

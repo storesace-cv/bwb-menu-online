@@ -80,6 +80,17 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
   const privacyUrl = menu.store_settings?.privacy_url;
   const primaryColor = (menu.store_settings?.primary_color?.trim() || FALLBACK_PRIMARY) as string;
 
+  const sectionTitleAlign = menu.store_settings?.section_title_align?.trim() || "center";
+  const sectionTitleMarginBottom = menu.store_settings?.section_title_margin_bottom?.trim() || "20";
+  const sectionTitlePaddingTop = menu.store_settings?.section_title_padding_top?.trim() || "20";
+  const sectionTitleColor = menu.store_settings?.section_title_color?.trim() || "";
+
+  const categoryTitleAlign = menu.store_settings?.category_title_align?.trim() || "left";
+  const categoryTitleMarginBottom = menu.store_settings?.category_title_margin_bottom?.trim() || "15";
+  const categoryTitlePaddingTop = menu.store_settings?.category_title_padding_top?.trim() || "16";
+  const categoryTitleIndentPx = menu.store_settings?.category_title_indent_px?.trim() || "10";
+  const categoryTitleColor = menu.store_settings?.category_title_color?.trim() || "rgb(167, 143, 57)";
+
   const featuredItems = useMemo(() => collectFeaturedItems(menu), [menu]);
 
   const categoryOptions = useMemo(() => {
@@ -365,19 +376,30 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
       ) : (
         categoriesBySection.map((group) => (
           <div key={group.sectionId ?? "_none"} className="mb-10">
-            <h2
-              className="text-xl font-semibold mb-4 pb-2 border-b-2 text-gray-900"
-              style={{ borderColor: "var(--menu-primary)" }}
+            <h1
+              className={`mt-0 title ${sectionTitleAlign === "left" ? "text-left" : sectionTitleAlign === "right" ? "text-right" : "text-center"}`}
+              style={{
+                marginBottom: `${sectionTitleMarginBottom}px`,
+                paddingTop: `${sectionTitlePaddingTop}px`,
+                ...(sectionTitleColor ? { color: sectionTitleColor } : {}),
+              }}
             >
               {group.sectionName}
-            </h2>
+            </h1>
             {group.categories.map((cat) => {
               const layoutDef = cat.presentation_layout_definition;
               const useLayout = layoutDef != null && Array.isArray(layoutDef.zoneOrder) && layoutDef.zoneOrder.length > 0;
               const CardComponent = getPresentationCardComponent(cat.presentation_component_key);
               return (
-                <section key={cat.id} className="mb-8">
-                  <h3 className="text-lg font-semibold mb-2 text-gray-800" style={{ color: "var(--menu-primary)" }}>
+                <section key={cat.id} className="mb-8" style={{ marginLeft: `${categoryTitleIndentPx}px` }}>
+                  <h3
+                    className={`mt-0 title ${categoryTitleAlign === "left" ? "text-left" : categoryTitleAlign === "right" ? "text-right" : "text-center"}`}
+                    style={{
+                      marginBottom: `${categoryTitleMarginBottom}px`,
+                      paddingTop: `${categoryTitlePaddingTop}px`,
+                      color: categoryTitleColor,
+                    }}
+                  >
                     {cat.name}
                   </h3>
                   {cat.description && (

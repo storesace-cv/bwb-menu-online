@@ -1019,3 +1019,73 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   revalidatePath("/portal-admin/settings/app");
   return null;
 }
+
+export async function updateSectionTitleAppearance(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  if (!storeId) return { error: "Loja obrigatória" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+
+  const { data: existing } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
+
+  const align = (formData.get("section_title_align") as string)?.trim() ?? "center";
+  const marginBottom = (formData.get("section_title_margin_bottom") as string)?.trim() ?? "20";
+  const paddingTop = (formData.get("section_title_padding_top") as string)?.trim() ?? "20";
+  const color = (formData.get("section_title_color") as string)?.trim() ?? "";
+
+  const merged: Record<string, string> = { ...currentSettings };
+  merged.section_title_align = align;
+  merged.section_title_margin_bottom = marginBottom;
+  merged.section_title_padding_top = paddingTop;
+  merged.section_title_color = color;
+
+  const { error } = await supabase.from("store_settings").upsert(
+    { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
+    { onConflict: "store_id" }
+  );
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/sections");
+  return null;
+}
+
+export async function updateCategoryTitleAppearance(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  if (!storeId) return { error: "Loja obrigatória" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+
+  const { data: existing } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
+
+  const align = (formData.get("category_title_align") as string)?.trim() ?? "left";
+  const marginBottom = (formData.get("category_title_margin_bottom") as string)?.trim() ?? "15";
+  const paddingTop = (formData.get("category_title_padding_top") as string)?.trim() ?? "16";
+  const indentPx = (formData.get("category_title_indent_px") as string)?.trim() ?? "10";
+  const color = (formData.get("category_title_color") as string)?.trim() ?? "rgb(167, 143, 57)";
+
+  const merged: Record<string, string> = { ...currentSettings };
+  merged.category_title_align = align;
+  merged.category_title_margin_bottom = marginBottom;
+  merged.category_title_padding_top = paddingTop;
+  merged.category_title_indent_px = indentPx;
+  merged.category_title_color = color;
+
+  const { error } = await supabase.from("store_settings").upsert(
+    { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
+    { onConflict: "store_id" }
+  );
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
