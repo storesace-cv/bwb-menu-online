@@ -13,6 +13,20 @@ export const maxDuration = 120;
 
 const BUCKET = "menu-images";
 
+type SupabaseAdmin = ReturnType<typeof createServiceClient>;
+
+/** Garante que o bucket menu-images existe; cria-o com public: true se faltar (service role). */
+async function ensureMenuImagesBucket(admin: SupabaseAdmin): Promise<void> {
+  const { data: buckets } = await admin.storage.listBuckets();
+  const exists = buckets?.some((b) => b.id === BUCKET || b.name === BUCKET);
+  if (exists) return;
+  const { error } = await admin.storage.createBucket(BUCKET, { public: true });
+  if (error) {
+    if (error.message?.toLowerCase().includes("already exists") || error.message?.toLowerCase().includes("duplicate")) return;
+    throw new Error(`Failed to create bucket ${BUCKET}: ${error.message}`);
+  }
+}
+
 type FileResult = {
   filename: string;
   code: string;
@@ -110,6 +124,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
   }
   const tenantNif = (tenantRow.nif ?? "").trim();
+
+  try {
+    await ensureMenuImagesBucket(admin);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      { error: msg, results: [] },
+      { status: 500 }
+    );
+  }
 
   const results: FileResult[] = [];
 

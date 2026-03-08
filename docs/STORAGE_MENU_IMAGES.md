@@ -2,9 +2,13 @@
 
 A importação de imagens da loja (Definições → Importação de Imagens) guarda ficheiros no bucket **menu-images**.
 
-## Criar o bucket
+## Criação automática
 
-Se o bucket ainda não existir, crie-o no Dashboard do Supabase ou via SQL/API:
+O bucket **é criado automaticamente** na primeira utilização da importação de imagens (ou no primeiro pedido à API de upload) se não existir. A API usa a service role e chama `createBucket('menu-images', { public: true })` quando o bucket não está presente. Não é necessário criar o bucket manualmente para a importação funcionar.
+
+## Criação manual (opcional)
+
+Se quiser criar o bucket antecipadamente (por exemplo em ambientes onde a API não use service role), pode fazê-lo no Dashboard do Supabase ou via SQL:
 
 **Dashboard:** Storage → New bucket → nome `menu-images`, opção **Public** ativada (leitura pública para o menu).
 
