@@ -84,6 +84,7 @@ export default async function PortalAdminLayout({
           <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors">Portal Admin</Link>
           <span className="text-slate-400 text-sm">{mode === "global" ? "Global" : "Loja"}</span>
           {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass}>Tenants</Link>}
+          {mode === "global" && <Link href="/portal-admin/import/mappings" className={linkClass}>Mapeamentos</Link>}
           {(mode === "global" || (mode === "tenant" && canAccessSettings)) && (
             <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>
           )}

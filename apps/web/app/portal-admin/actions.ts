@@ -333,6 +333,25 @@ export async function clearStoreMenu(_prev: { error?: string } | null, formData:
   return null;
 }
 
+export async function updateImportFieldMapping(
+  id: string,
+  targetField: string,
+  transform: { type: string },
+  isActive: boolean
+): Promise<{ error?: string } | null> {
+  const supabase = await createClient();
+  if (!id?.trim()) return { error: "ID obrigatório" };
+  const { error } = await supabase.rpc("admin_update_import_field_mapping", {
+    p_id: id,
+    p_target_field: (targetField ?? "").trim(),
+    p_transform: transform ?? { type: "copy" },
+    p_is_active: isActive,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/import/mappings");
+  return null;
+}
+
 export async function createSection(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";

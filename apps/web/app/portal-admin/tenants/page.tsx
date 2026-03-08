@@ -75,6 +75,18 @@ export default async function TenantsPage() {
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Tenants</h1>
       <p className="text-slate-400 mb-6">Listar tenants e respetivas lojas (Global Admin).</p>
 
+      <div className="mb-6 p-4 rounded-lg bg-slate-800/50 border border-slate-700">
+        <Link
+          href="/portal-admin/import/mappings"
+          className="text-emerald-400 hover:text-emerald-300 font-medium"
+        >
+          Mapeamentos de importação (Excel → catálogo/menu)
+        </Link>
+        <p className="text-slate-500 text-sm mt-1">
+          Configurar correspondência entre colunas dos ficheiros Excel e os campos do catálogo/menu.
+        </p>
+      </div>
+
       <section className="space-y-8">
         {tenantsWithStores.map(({ tenant: t, storesWithDomains }) => (
           <Card key={t.id} className="p-5">

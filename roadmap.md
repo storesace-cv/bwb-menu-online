@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (importação Excel excel_netbo/excel_zsbms; tabelas raw, upsert, descontinuação, UI e roadmap).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (importação Excel; UI mapeamentos migration 033; roadmap).
 
 ---
 
@@ -72,6 +72,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Logo nos emails (CID inline):** O logotipo nos emails de boas-vindas/reset passou a ser embedado como anexo MIME (Content-ID `logoBwb`) em vez de URL externa. Asset em `local/imagem/bwb-white-compact.png`; mailer com `getLogoBuffer()` (tenta cwd e cwd/..), anexo PNG em `sendWelcomeOrResetEmail` e `sendFirstStoreWelcomeEmail`; template com parâmetro opcional `logoCid` e `src="cid:logoBwb"` ou fallback `logoUrl`. Sem ficheiro no path, mantém-se o URL; no deploy garantir que `local/imagem/` existe (ex.: na imagem Docker ou volume).
 - **Importação Excel (excel_netbo, excel_zsbms):** Tabelas raw imutáveis `excel_netbo_imports` e `excel_zsbms_imports` (migrations 030–032) com chave `tenant_nif + store_id + codigo`; política de upsert por reimport e descontinuação (artigos ausentes no ficheiro ficam `is_discontinued=true`). Deteção de template por headers (NET-bo: Produto, Teclado, IVA1; ZSbms: Loja, Descrição, Sub Família). API POST `/api/portal-admin/import/excel` (multipart), GET `/api/portal-admin/import/stores`, GET `/api/portal-admin/import/runs` e GET `/api/portal-admin/import/runs/[runId]`; tabela `import_runs` para auditoria (counts: read_rows, upserted, updated, unchanged, discontinued). UI: cartão "Importar dados via Excel" na página Menu (portal global, quando sem store no host) com select de loja, upload .xlsx e resumo; compatibilidade com origem da loja (excel_netbo, excel_zsbms, manual). Páginas `/portal-admin/import/runs` e `/portal-admin/import/runs/[runId]`. Origens excel_netbo e excel_zsbms ativas em "Origem dos Dados". Infraestrutura de mapeamentos `import_field_mappings` (migration 031) para uso futuro; aplicação ao catálogo/menu não implementada nesta fase.
 - **Normalização PVP (excel_zsbms):** Nos campos PVP1–PVP5 da importação ZSbms: remoção de espaços, aceitar vírgula ou ponto como separador decimal (gravar com ponto; formato europeu 1.234,56 → 1234.56), remoção de letras à direita (código de moeda); função `normalizePvpValueForZsbm` em `lib/excel-import.ts`, aplicada em `readExcel()` antes de gravar.
+- **UI de edição de mapeamentos de importação:** Página `/portal-admin/import/mappings` para listar e editar mapeamentos (campo origem → campo destino, transformação copy/number/boolean, ativo) por tipo de origem (excel_netbo, excel_zsbms). RPCs `admin_list_import_field_mappings` e `admin_update_import_field_mapping` (migration 033); entrada em Tenants (card/link) e link "Mapeamentos" no header em modo global. A aplicação dos mapeamentos ao catálogo/menu na importação permanece planeada.
 
 ---
 
@@ -95,7 +96,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - Campos para zonas C, D, E do card: **Ingredientes** (zona C), **Tempo de Preparação** (zona D) e **Alergénicos** (zona E). Na BD já existem `menu_items.menu_ingredients`, `menu_items.prep_minutes` e `menu_item_allergens`; garantir que a UI do portal-admin permite editar ingredientes e tempo de preparação em todos os fluxos (criação/edição de itens) e que o payload do menu público inclui estes campos.
 - Ordenação UX: drag & drop para categorias e itens (persistindo sort_order).
 - Página global /portal-admin/domains com vista agregada de domínios.
-- **Aplicação do mapeamento raw → catálogo/menu:** A partir de `excel_*_imports` e `import_field_mappings`, aplicar mapeamentos (superadmin) para popular/atualizar `catalog_items` e eventualmente `menu_items`. UI de edição de mapeamentos (P1/P2). — A DESENVOLVER.
+- **Aplicação do mapeamento raw → catálogo/menu:** A partir de `excel_*_imports` e `import_field_mappings`, aplicar mapeamentos (superadmin) para popular/atualizar `catalog_items` e eventualmente `menu_items`. (A UI de edição de mapeamentos já existe em `/portal-admin/import/mappings`.) — A DESENVOLVER.
 
 **(P2) Robustez, qualidade e operação**
 - Audit log de alterações (domínios, itens, preços, visibilidade) com actor e timestamp.
