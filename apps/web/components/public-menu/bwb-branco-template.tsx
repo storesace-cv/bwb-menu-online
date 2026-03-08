@@ -159,6 +159,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
     setToggleFeatured(false);
   };
 
+  // suppressHydrationWarning: tolera alterações ao DOM por extensões do browser (ex.: token-signing) que provocam mismatch de hidratação (#418/#423); conteúdo final é equivalente.
   return (
     <div
       className="menu-public-contents"
@@ -168,6 +169,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
           "--menu-primary-foreground": "#fff",
         } as React.CSSProperties
       }
+      suppressHydrationWarning
     >
       {/* Header */}
       <header className="flex flex-wrap justify-between items-center gap-4 mb-8">
