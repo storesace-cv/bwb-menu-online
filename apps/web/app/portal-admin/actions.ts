@@ -133,22 +133,27 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
 }
 
 export async function updateTenantContactEmail(tenantId: string, contactEmail: string) {
-  const supabase = await createClient();
-  const tid = (tenantId ?? "").trim();
-  const email = (contactEmail ?? "").trim().toLowerCase();
-  if (!tid) return { error: "Tenant obrigatório" };
-  if (!email) return { error: "Email obrigatório" };
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) return { error: "Email inválido" };
-  const { error } = await supabase.rpc("admin_update_tenant", {
-    p_tenant_id: tid,
-    p_name: null,
-    p_contact_email: email,
-  });
-  if (error) return { error: error.message };
-  revalidatePath("/portal-admin/tenants");
-  revalidatePath("/portal-admin/settings");
-  return null;
+  try {
+    const supabase = await createClient();
+    const tid = (tenantId ?? "").trim();
+    const email = (contactEmail ?? "").trim().toLowerCase();
+    if (!tid) return { error: "Tenant obrigatório" };
+    if (!email) return { error: "Email obrigatório" };
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return { error: "Email inválido" };
+    const { error } = await supabase.rpc("admin_update_tenant", {
+      p_tenant_id: tid,
+      p_name: null,
+      p_contact_email: email,
+    });
+    if (error) return { error: error.message };
+    revalidatePath("/portal-admin/tenants");
+    revalidatePath("/portal-admin/settings");
+    return null;
+  } catch (err) {
+    console.error(err);
+    return { error: err instanceof Error ? err.message : "Erro ao guardar email." };
+  }
 }
 
 export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ error?: string } | null> {

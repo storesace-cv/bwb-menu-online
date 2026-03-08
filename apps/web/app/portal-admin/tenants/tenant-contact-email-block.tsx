@@ -24,12 +24,17 @@ export function TenantContactEmailBlock({
   async function handleSave() {
     setSaveResult(null);
     setSaving(true);
-    const result = await updateTenantContactEmail(tenantId, email);
-    setSaving(false);
-    setSaveResult(result ?? null);
-    if (!result?.error) {
-      setLastSavedEmail(email);
-      setEditing(false);
+    try {
+      const result = await updateTenantContactEmail(tenantId, email);
+      setSaveResult(result ?? null);
+      if (!result?.error) {
+        setLastSavedEmail(email);
+        setEditing(false);
+      }
+    } catch {
+      setSaveResult({ error: "Erro ao guardar. Tente novamente." });
+    } finally {
+      setSaving(false);
     }
   }
 
