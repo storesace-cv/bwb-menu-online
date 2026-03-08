@@ -12,9 +12,17 @@ export default async function SettingsPage() {
   const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
 
   if (!storeId) {
+    const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
     const globalLinks = [
       { href: "/portal-admin/users", label: "Utilizadores", description: "Gerir utilizadores do portal (global)." },
     ];
+    if (isSuper) {
+      globalLinks.push({
+        href: "/portal-admin/settings/presentation-templates",
+        label: "Modelos de apresentação",
+        description: "Gerir modelos de apresentação de artigos no menu (copiar). Apenas superadmin.",
+      });
+    }
     return (
       <div>
         <h1 className="text-2xl font-semibold text-slate-100 mb-2">Definições</h1>

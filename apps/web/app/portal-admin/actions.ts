@@ -370,11 +370,13 @@ export async function createSection(_prev: { error?: string } | null, formData: 
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";
   const name = (formData.get("name") as string)?.trim() ?? "";
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
   if (!storeId || !name) return { error: "Loja e nome obrigatórios" };
   const { error } = await supabase.from("menu_sections").insert({
     store_id: storeId,
     name,
     sort_order: sortOrder,
+    presentation_template_id: presentationTemplateId || null,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
@@ -388,12 +390,14 @@ export async function createCategory(_prev: { error?: string } | null, formData:
   const name = (formData.get("name") as string)?.trim() ?? "";
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
+  const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
   if (!storeId || !name) return { error: "Loja e nome obrigatórios" };
   const { error } = await supabase.from("menu_categories").insert({
     store_id: storeId,
     name,
     sort_order: sortOrder,
     section_id: sectionId || null,
+    presentation_template_id: presentationTemplateId || null,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
@@ -407,6 +411,7 @@ export async function updateSection(_prev: { error?: string } | null, formData: 
   const id = (formData.get("id") as string)?.trim() ?? "";
   const name = (formData.get("name") as string)?.trim() ?? "";
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+  const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
   if (!id || !name) return { error: "ID e nome obrigatórios" };
   const { data: row } = await supabase.from("menu_sections").select("store_id").eq("id", id).single();
   if (!row) return { error: "Secção não encontrada" };
@@ -414,7 +419,7 @@ export async function updateSection(_prev: { error?: string } | null, formData: 
   if (!hasAccess) return { error: "Sem acesso a esta loja" };
   const { error } = await supabase
     .from("menu_sections")
-    .update({ name, sort_order: sortOrder })
+    .update({ name, sort_order: sortOrder, presentation_template_id: presentationTemplateId || null })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
@@ -445,6 +450,7 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
   const name = (formData.get("name") as string)?.trim() ?? "";
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
+  const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
   if (!id || !name) return { error: "ID e nome obrigatórios" };
   const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
   if (!row) return { error: "Categoria não encontrada" };
@@ -452,7 +458,7 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
   if (!hasAccess) return { error: "Sem acesso a esta loja" };
   const { error } = await supabase
     .from("menu_categories")
-    .update({ name, sort_order: sortOrder, section_id: sectionId || null })
+    .update({ name, sort_order: sortOrder, section_id: sectionId || null, presentation_template_id: presentationTemplateId || null })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
@@ -474,6 +480,29 @@ export async function deleteCategory(_prev: { error?: string } | null, formData:
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/categories");
   return null;
+}
+
+/** Copiar modelo de apresentação (superadmin). Cria novo registo com o mesmo component_key e nome indicado. */
+export async function copyPresentationTemplate(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) return { error: "Acesso reservado a superadmin." };
+  const sourceId = (formData.get("source_id") as string)?.trim() ?? "";
+  const newName = (formData.get("new_name") as string)?.trim() ?? "";
+  if (!sourceId || !newName) return { error: "Template de origem e nome da cópia obrigatórios." };
+  const { data: source } = await supabase
+    .from("menu_presentation_templates")
+    .select("id, component_key")
+    .eq("id", sourceId)
+    .single();
+  if (!source) return { error: "Template de origem não encontrado." };
+  const { error } = await supabase.from("menu_presentation_templates").insert({
+    name: newName,
+    component_key: source.component_key,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/presentation-templates");
+  return { success: true };
 }
 
 export async function assignRole(_prev: { error?: string } | null, formData: FormData) {
@@ -553,20 +582,31 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
   const priceOld = parseFloat((formData.get("price_old") as string) ?? "0");
   const takeAway = formData.get("take_away") === "1";
   const menuIngredients = (formData.get("menu_ingredients") as string)?.trim() || null;
+  const allergenIds = (formData.getAll("allergen_ids") as string[]).filter((x) => x && x.trim());
   if (!storeId || !menuName) return { error: "Loja e nome do item obrigatórios" };
-  const { error } = await supabase.from("menu_items").insert({
-    store_id: storeId,
-    menu_name: menuName,
-    menu_description: menuDescription,
-    menu_price: isNaN(menuPrice) ? null : menuPrice,
-    sort_order: sortOrder,
-    article_type_id: articleTypeId,
-    is_promotion: isPromotion,
-    price_old: isPromotion && !isNaN(priceOld) ? priceOld : null,
-    take_away: takeAway,
-    menu_ingredients: menuIngredients,
-  });
+  const { data: inserted, error } = await supabase
+    .from("menu_items")
+    .insert({
+      store_id: storeId,
+      menu_name: menuName,
+      menu_description: menuDescription,
+      menu_price: isNaN(menuPrice) ? null : menuPrice,
+      sort_order: sortOrder,
+      article_type_id: articleTypeId,
+      is_promotion: isPromotion,
+      price_old: isPromotion && !isNaN(priceOld) ? priceOld : null,
+      take_away: takeAway,
+      menu_ingredients: menuIngredients,
+    })
+    .select("id")
+    .single();
   if (error) return { error: error.message };
+  if (inserted?.id && allergenIds.length > 0) {
+    const { error: insErr } = await supabase.from("menu_item_allergens").insert(
+      allergenIds.map((allergen_id) => ({ menu_item_id: inserted.id, allergen_id }))
+    );
+    if (insErr) return { error: "Item criado mas falha ao guardar alergénios: " + insErr.message };
+  }
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/items");
   return null;
@@ -603,6 +643,7 @@ export async function updateMenuItem(
   const imageUrl = (formData.get("image_url") as string)?.trim() || null;
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
   const categoryId = (formData.get("category_id") as string)?.trim() || null;
+  const allergenIds = (formData.getAll("allergen_ids") as string[]).filter((x) => x && x.trim());
 
   if (!id || !menuName) return { error: "ID e nome do item obrigatórios" };
   if (imageUrl !== null && !isValidUrl(imageUrl)) return { error: "URL da imagem inválida." };
@@ -682,6 +723,14 @@ export async function updateMenuItem(
       await supabase.from("menu_category_items").delete().eq("menu_item_id", id);
       await supabase.from("menu_category_items").insert({ category_id: targetCategoryId, menu_item_id: id });
     }
+  }
+
+  await supabase.from("menu_item_allergens").delete().eq("menu_item_id", id);
+  if (allergenIds.length > 0) {
+    const { error: insErr } = await supabase.from("menu_item_allergens").insert(
+      allergenIds.map((allergen_id) => ({ menu_item_id: id, allergen_id }))
+    );
+    if (insErr) return { error: "Erro ao guardar alergénios: " + insErr.message };
   }
 
   revalidatePath("/portal-admin/menu");

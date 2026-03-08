@@ -5,8 +5,9 @@ import { createCategory } from "../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
 
 type Section = { id: string; name: string; sort_order: number };
+type PresentationTemplate = { id: string; name: string };
 
-export function CreateCategoryForm({ storeId, sections }: { storeId: string; sections: Section[] }) {
+export function CreateCategoryForm({ storeId, sections, presentationTemplates }: { storeId: string; sections: Section[]; presentationTemplates: PresentationTemplate[] }) {
   const [state, formAction] = useFormState(createCategory, null);
 
   return (
@@ -17,6 +18,12 @@ export function CreateCategoryForm({ storeId, sections }: { storeId: string; sec
         <option value="">Nenhuma</option>
         {sections.map((s) => (
           <option key={s.id} value={s.id}>{s.name}</option>
+        ))}
+      </Select>
+      <Select id="cat-template" name="presentation_template_id" label="Modelo de apresentação">
+        <option value="">Nenhum</option>
+        {presentationTemplates.map((t) => (
+          <option key={t.id} value={t.id}>{t.name}</option>
         ))}
       </Select>
       <Input id="cat-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} />

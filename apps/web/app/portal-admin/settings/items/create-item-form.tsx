@@ -4,6 +4,7 @@ import { useFormState } from "react-dom";
 import { createMenuItem } from "../../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
 import { GenerateDescriptionBlock } from "./generate-description-block";
+import { AllergenChecklist, type AllergenOption } from "./allergen-checklist";
 
 const inputClass =
   "w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500";
@@ -14,10 +15,12 @@ export function CreateItemForm({
   storeId,
   articleTypes,
   aiEnabled = false,
+  allergens = [],
 }: {
   storeId: string;
   articleTypes: ArticleType[];
   aiEnabled?: boolean;
+  allergens?: AllergenOption[];
 }) {
   const [state, formAction] = useFormState(createMenuItem, null);
 
@@ -84,6 +87,7 @@ export function CreateItemForm({
           className={inputClass}
         />
       </div>
+      <AllergenChecklist allergens={allergens} selectedIds={[]} />
       <Button type="submit" variant="primary">Criar item</Button>
       {state?.error && <Alert variant="error">{state.error}</Alert>}
     </form>

@@ -15,6 +15,7 @@ export type PublicMenuSection = {
   id: string;
   name: string;
   sort_order: number;
+  presentation_component_key?: string;
 };
 
 export type PublicMenuCategory = {
@@ -24,6 +25,7 @@ export type PublicMenuCategory = {
   sort_order: number;
   section_id: string | null;
   section_name: string | null;
+  presentation_component_key?: string;
   items: PublicMenuItem[];
 };
 
@@ -49,7 +51,7 @@ export type PublicMenuItem = {
   take_away: boolean;
   menu_ingredients: string | null;
   article_type: PublicArticleType | null;
-  allergens: { code: string; name: string }[];
+  allergens: { code: string; name?: string; severity?: number; name_i18n?: Record<string, string> }[];
 };
 
 export type PublicMenuStoreSettings = {

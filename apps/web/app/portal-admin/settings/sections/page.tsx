@@ -24,9 +24,14 @@ export default async function SectionsPage() {
 
   const { data: sections } = await supabase
     .from("menu_sections")
-    .select("id, name, sort_order")
+    .select("id, name, sort_order, presentation_template_id")
     .eq("store_id", storeId)
     .order("sort_order");
+
+  const { data: presentationTemplates } = await supabase
+    .from("menu_presentation_templates")
+    .select("id, name")
+    .order("name");
 
   return (
     <div>
@@ -39,7 +44,7 @@ export default async function SectionsPage() {
       <section className="mb-8">
         <Card>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Nova secção</h2>
-          <CreateSectionForm storeId={storeId} />
+          <CreateSectionForm storeId={storeId} presentationTemplates={presentationTemplates ?? []} />
         </Card>
       </section>
 
@@ -49,7 +54,7 @@ export default async function SectionsPage() {
           {sections && sections.length > 0 ? (
             <ul className="list-none pl-0">
               {sections.map((s) => (
-                <SectionRow key={s.id} section={s} />
+                <SectionRow key={s.id} section={s} presentationTemplates={presentationTemplates ?? []} />
               ))}
             </ul>
           ) : (

@@ -89,6 +89,17 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
   const settings = (settingsRow?.settings as Record<string, unknown>) ?? {};
   const aiEnabled = !!settings.ai_enabled;
 
+  const { data: allergens } = await supabase
+    .from("allergens")
+    .select("id, code, name_i18n, severity, sort_order")
+    .eq("is_active", true)
+    .order("sort_order");
+  const { data: miaRows } = await supabase
+    .from("menu_item_allergens")
+    .select("allergen_id")
+    .eq("menu_item_id", id);
+  const selectedAllergenIds = (miaRows ?? []).map((r) => r.allergen_id);
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Editar item</h1>
@@ -103,6 +114,8 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
           currentCategoryId={currentCategoryId}
           storeId={storeId}
           aiEnabled={aiEnabled}
+          allergens={allergens ?? []}
+          selectedAllergenIds={selectedAllergenIds}
         />
       </Card>
     </div>

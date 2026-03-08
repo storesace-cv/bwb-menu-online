@@ -108,26 +108,26 @@ async function main() {
   const skipMenuRepopulation = storeRow?.menu_cleared_at != null;
 
   let allergensCreated = 0;
-  let allergensUpdated = 0;
   const allergenIdByCode: Record<string, string> = {};
   for (const a of data.allergens || []) {
-    const code = a.code.trim().toLowerCase();
-    const { data: existing } = await supabase.from("allergens").select("id, name").eq("code", code).maybeSingle();
+    const code = a.code.trim().toUpperCase();
+    const { data: existing } = await supabase.from("allergens").select("id").eq("code", code).maybeSingle();
     if (existing) {
-      if (existing.name !== a.name) {
-        await supabase.from("allergens").update({ name: a.name }).eq("id", existing.id);
-        allergensUpdated++;
-      }
       allergenIdByCode[code] = existing.id;
     } else {
-      const { data: inserted } = await supabase.from("allergens").insert({ code, name: a.name }).select("id").single();
+      const name_i18n = { pt: a.name || a.code, en: a.name || a.code };
+      const { data: inserted } = await supabase
+        .from("allergens")
+        .insert({ code, name_i18n, severity: 2, sort_order: 0 })
+        .select("id")
+        .single();
       if (inserted) {
         allergenIdByCode[code] = inserted.id;
         allergensCreated++;
       }
     }
   }
-  console.log("Allergens: created", allergensCreated, "updated", allergensUpdated);
+  console.log("Allergens: created", allergensCreated, "existing/by code:", Object.keys(allergenIdByCode).length);
 
   if (skipMenuRepopulation) {
     console.log("Store menu was explicitly cleared; skipping menu repopulation.");
@@ -227,7 +227,7 @@ async function main() {
     const itemId = itemIdByMenuName[menuName];
     if (!itemId) continue;
     for (const code of it.allergens || []) {
-      const allergenId = allergenIdByCode[code.trim().toLowerCase()];
+      const allergenId = allergenIdByCode[code.trim().toUpperCase()];
       if (!allergenId) continue;
       await supabase.from("menu_item_allergens").upsert(
         { menu_item_id: itemId, allergen_id: allergenId },

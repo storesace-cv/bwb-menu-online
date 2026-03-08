@@ -1,352 +1,32 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import type { ComponentType } from "react";
+import { useState, useMemo } from "react";
 import type { PublicMenuPayload, PublicMenuItem } from "@/lib/supabase";
-import { MenuIcon } from "../menu-icons";
+import { getPresentationCardComponent, DEFAULT_PRESENTATION_KEY } from "@/lib/presentation-templates";
 
 const FALLBACK_PRIMARY = "#8b6914";
 
-function formatPrice(value: number, currencyCode?: string): string {
-  const formatted = value.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const code = (currencyCode || "€").trim();
-  return code === "€" || code === "EUR" ? `${formatted} €` : `${formatted} ${code}`;
-}
-
-/** Modal: Zona 1 — imagem do artigo + ingredientes por baixo. */
-function ImageIngredientsModal({
-  open,
-  onClose,
-  imageSrc,
-  imageAlt,
-  ingredientsText,
+/** Uma linha de 2 cards usando o componente de apresentação escolhido. */
+function RowCards({
+  items,
+  currencyCode,
+  CardComponent,
 }: {
-  open: boolean;
-  onClose: () => void;
-  imageSrc: string | null;
-  imageAlt: string;
-  ingredientsText: string | null;
+  items: [PublicMenuItem, PublicMenuItem | null];
+  currencyCode?: string;
+  CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string }>;
 }) {
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
-
-  if (!open) return null;
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Imagem e ingredientes do artigo"
-    >
-      <div
-        className="bg-white rounded-xl shadow-xl max-h-[90vh] w-full max-w-lg overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {imageSrc && (
-          <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100 shrink-0">
-            <img src={imageSrc} alt={imageAlt} className="h-full w-full object-cover" />
-          </div>
-        )}
-        <div className="p-4 overflow-y-auto shrink-0">
-          {ingredientsText && ingredientsText.trim() !== "" ? (
-            <>
-              <h4 className="font-semibold text-gray-900 mb-2">Ingredientes</h4>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap">{ingredientsText}</p>
-            </>
-          ) : (
-            <p className="text-sm text-gray-500">Sem lista de ingredientes.</p>
-          )}
-        </div>
-        <div className="p-4 border-t border-gray-200 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full py-2 px-4 rounded-lg bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
-          >
-            Fechar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const STORAGE_BASE = (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "") + "/storage/v1/object/public/";
-
-function getImageSrc(item: PublicMenuItem): string {
-  if (item.image_base_path != null && item.image_base_path !== "") {
-    return STORAGE_BASE + item.image_base_path + "640.webp";
-  }
-  if (item.image_path != null && item.image_path !== "") {
-    return STORAGE_BASE + item.image_path;
-  }
-  return (item.image_url && item.image_url !== "") ? item.image_url : "/images/no_image_product.jpg";
-}
-
-function getImageSrcThumb(item: PublicMenuItem): string {
-  if (item.image_base_path != null && item.image_base_path !== "") {
-    return STORAGE_BASE + item.image_base_path + "320.webp";
-  }
-  return getImageSrc(item);
-}
-
-/** Uma linha de 2 cards com zonas alinhadas por CSS Grid (altura de cada zona = máximo dos dois). */
-function RowCards({ items, currencyCode }: { items: [PublicMenuItem, PublicMenuItem | null]; currencyCode?: string }) {
   const [left, right] = items;
-  const [ingredientsOpen, setIngredientsOpen] = useState<[boolean, boolean]>([false, false]);
-  const [imageModalOpen, setImageModalOpen] = useState<[boolean, boolean]>([false, false]);
-
-  const imageSrcLeft = getImageSrc(left);
-  const imageSrcRight = right ? getImageSrc(right) : null;
-  const hasIngLeft = left.menu_ingredients != null && left.menu_ingredients.trim() !== "";
-  const hasIngRight = right && right.menu_ingredients != null && right.menu_ingredients.trim() !== "";
-
   return (
-    <div
-      className="grid grid-cols-2 gap-6 gap-y-0"
-      style={{ gridTemplateRows: "auto auto auto auto auto auto auto auto" }}
-    >
-      {/* Coluna esquerda: card com subgrid para partilhar alturas da linha */}
-      <div
-        className="grid row-span-8 rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden min-h-0"
-        style={{ gridTemplateRows: "subgrid" }}
-      >
-        <button
-          type="button"
-          onClick={() => setImageModalOpen((o) => [true, o[1]])}
-          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
-          aria-label={`Ver imagem e ingredientes de ${left.menu_name ?? "artigo"}`}
-        >
-          <img src={imageSrcLeft} alt={left.menu_name ?? ""} className="h-full w-full object-cover border-0" />
-        </button>
-        <div className="px-3 pt-2 pb-0 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
-          {left.article_type && <MenuIcon code={left.article_type.icon_code} size={22} className="shrink-0" />}
-          {left.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
-          {left.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
-        </div>
-        <div className="px-3 pb-0 min-h-0">
-          <h3 className="font-bold text-lg text-gray-900 text-left">{left.menu_name}</h3>
-        </div>
-        <div className="px-3 min-h-0">
-          {left.menu_description ? (
-            <p className="text-gray-600 text-sm leading-relaxed text-left">{left.menu_description}</p>
-          ) : null}
-        </div>
-        <div className="px-3 py-0.5 min-h-0">
-          <button
-            type="button"
-            onClick={() => setIngredientsOpen((o) => [!o[0], o[1]])}
-            className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
-            aria-expanded={ingredientsOpen[0]}
-          >
-            <span>Ingredientes</span>
-            <span className="font-bold shrink-0 ml-2">{ingredientsOpen[0] ? "−" : "+"}</span>
-          </button>
-          {ingredientsOpen[0] && (
-            <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngLeft ? left.menu_ingredients : "—"}</div>
-          )}
-        </div>
-        <div className="px-3 min-h-0 flex items-center">
-          {left.prep_minutes != null && (
-            <span className="flex items-center gap-1.5 text-sm text-gray-500">
-              <MenuIcon code="prep-time" size={18} /> {left.prep_minutes}&apos;
-            </span>
-          )}
-        </div>
-        <div className="px-3 min-h-0">
-          {left.allergens && left.allergens.length > 0 && (
-            <p className="text-xs text-gray-500 text-left">Alergénios: {left.allergens.map((a) => a.code).join(", ")}</p>
-          )}
-        </div>
-        <div className={`px-3 pt-1 flex items-center gap-4 min-h-0 ${left.is_promotion && left.price_old != null ? "" : "justify-end"}`}>
-          {left.is_promotion && left.price_old != null && (
-            <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
-              {formatPrice(left.price_old, currencyCode)}
-            </div>
-          )}
-          {left.menu_price != null && (
-            <div className={`font-bold text-right shrink-0 ${left.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}>
-              {formatPrice(left.menu_price, currencyCode)}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Coluna direita: mesmo layout; célula vazia se só houver 1 item */}
-      <div
-        className="grid row-span-8 rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden min-h-0"
-        style={{ gridTemplateRows: "subgrid" }}
-      >
-        {right ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setImageModalOpen((o) => [o[0], true])}
-              className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
-              aria-label={`Ver imagem e ingredientes de ${right.menu_name ?? "artigo"}`}
-            >
-              <img src={imageSrcRight!} alt={right.menu_name ?? ""} className="h-full w-full object-cover border-0" />
-            </button>
-            <div className="px-3 pt-2 pb-0 flex justify-end items-center gap-1.5 flex-wrap min-h-0">
-              {right.article_type && <MenuIcon code={right.article_type.icon_code} size={22} className="shrink-0" />}
-              {right.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
-              {right.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
-            </div>
-            <div className="px-3 pb-0 min-h-0">
-              <h3 className="font-bold text-lg text-gray-900 text-left">{right.menu_name}</h3>
-            </div>
-            <div className="px-3 min-h-0">
-              {right.menu_description ? (
-                <p className="text-gray-600 text-sm leading-relaxed text-left">{right.menu_description}</p>
-              ) : null}
-            </div>
-            <div className="px-3 py-0.5 min-h-0">
-              <button
-                type="button"
-                onClick={() => setIngredientsOpen((o) => [o[0], !o[1]])}
-                className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
-                aria-expanded={ingredientsOpen[1]}
-              >
-                <span>Ingredientes</span>
-                <span className="font-bold shrink-0 ml-2">{ingredientsOpen[1] ? "−" : "+"}</span>
-              </button>
-              {ingredientsOpen[1] && (
-                <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngRight ? right.menu_ingredients : "—"}</div>
-              )}
-            </div>
-            <div className="px-3 min-h-0 flex items-center">
-              {right.prep_minutes != null && (
-                <span className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <MenuIcon code="prep-time" size={18} /> {right.prep_minutes}&apos;
-                </span>
-              )}
-            </div>
-            <div className="px-3 min-h-0">
-              {right.allergens && right.allergens.length > 0 && (
-                <p className="text-xs text-gray-500 text-left">Alergénios: {right.allergens.map((a) => a.code).join(", ")}</p>
-              )}
-            </div>
-            <div className={`px-3 pt-1 flex items-center gap-4 min-h-0 ${right.is_promotion && right.price_old != null ? "" : "justify-end"}`}>
-              {right.is_promotion && right.price_old != null && (
-                <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
-                  {formatPrice(right.price_old, currencyCode)}
-                </div>
-              )}
-              {right.menu_price != null && (
-                <div className={`font-bold text-right shrink-0 ${right.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}>
-                  {formatPrice(right.menu_price, currencyCode)}
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="aspect-[4/3] bg-gray-50" />
-            {Array.from({ length: 7 }, (_, i) => (
-              <div key={i} className="min-h-0" />
-            ))}
-          </>
-        )}
-      </div>
-
-      <ImageIngredientsModal
-        open={imageModalOpen[0]}
-        onClose={() => setImageModalOpen((o) => [false, o[1]])}
-        imageSrc={imageSrcLeft}
-        imageAlt={left.menu_name ?? ""}
-        ingredientsText={left.menu_ingredients}
-      />
-      {right && (
-        <ImageIngredientsModal
-          open={imageModalOpen[1]}
-          onClose={() => setImageModalOpen((o) => [o[0], false])}
-          imageSrc={imageSrcRight}
-          imageAlt={right.menu_name ?? ""}
-          ingredientsText={right.menu_ingredients}
-        />
+    <div className="grid grid-cols-2 gap-6">
+      <CardComponent item={left} currencyCode={currencyCode} />
+      {right ? (
+        <CardComponent item={right} currencyCode={currencyCode} />
+      ) : (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 min-h-[200px]" aria-hidden />
       )}
     </div>
-  );
-}
-
-export function ItemCard({ item, currencyCode }: { item: PublicMenuItem; currencyCode?: string }) {
-  const [ingredientsOpen, setIngredientsOpen] = useState(false);
-  const [imageModalOpen, setImageModalOpen] = useState(false);
-  const imageSrc = getImageSrc(item);
-  const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
-
-  return (
-    <li className="list-none h-full flex">
-      <article className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col w-full h-full">
-        <button
-          type="button"
-          onClick={() => setImageModalOpen(true)}
-          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
-          aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
-        >
-          <img src={imageSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" />
-        </button>
-        <div className="p-3 flex flex-col flex-1 min-h-0">
-          <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">
-            {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
-            {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
-            {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
-          </div>
-          <h3 className="font-bold text-lg text-gray-900 text-left mt-0.5">{item.menu_name}</h3>
-          {item.menu_description && (
-            <p className="mt-0.5 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>
-          )}
-          <div className="mt-1">
-            <button
-              type="button"
-              onClick={() => setIngredientsOpen((o) => !o)}
-              className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
-              aria-expanded={ingredientsOpen}
-            >
-              <span>Ingredientes</span>
-              <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
-            </button>
-            {ingredientsOpen && (
-              <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
-            )}
-          </div>
-          {item.prep_minutes != null && (
-            <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
-              <MenuIcon code="prep-time" size={18} />
-              <span>{item.prep_minutes}&apos;</span>
-            </div>
-          )}
-          {item.allergens && item.allergens.length > 0 && (
-            <p className="mt-1 text-xs text-gray-500 text-left">Alergénios: {item.allergens.map((a) => a.code).join(", ")}</p>
-          )}
-          <div className={`mt-2 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
-            {item.is_promotion && item.price_old != null && (
-              <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
-                {formatPrice(item.price_old, currencyCode)}
-              </div>
-            )}
-            {item.menu_price != null && (
-              <div className={`font-bold text-right shrink-0 ${item.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}>
-                {formatPrice(item.menu_price, currencyCode)}
-              </div>
-            )}
-          </div>
-        </div>
-      </article>
-      <ImageIngredientsModal
-        open={imageModalOpen}
-        onClose={() => setImageModalOpen(false)}
-        imageSrc={imageSrc}
-        imageAlt={item.menu_name ?? ""}
-        ingredientsText={item.menu_ingredients}
-      />
-    </li>
   );
 }
 
@@ -539,33 +219,35 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
       )}
 
       {/* Escolhas do Chefe */}
-      {featuredItems.length > 0 && (
-        <section className="mb-8">
-          <h2
-            className="text-xl font-semibold mb-4 pb-2 border-b-2"
-            style={{ borderColor: "var(--menu-primary)", color: "var(--menu-primary)" }}
-          >
-            Escolhas do Chefe
-          </h2>
-          {/* Mobile: 1 coluna, cards independentes. sm+: 2 colunas com zonas alinhadas por linha (RowCards). */}
-          <div className="block sm:hidden">
-            <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
-              {featuredItems.map((item) => (
-                <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
-              ))}
-            </ul>
-          </div>
-          <div className="hidden sm:block">
-            <ul className="p-0 m-0 list-none flex flex-col gap-6">
-              {pairs(featuredItems).map((pair) => (
-                <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
-                  <RowCards items={pair} currencyCode={currencyCode} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
+      {featuredItems.length > 0 && (() => {
+        const FeaturedCard = getPresentationCardComponent(DEFAULT_PRESENTATION_KEY);
+        return (
+          <section className="mb-8">
+            <h2
+              className="text-xl font-semibold mb-4 pb-2 border-b-2"
+              style={{ borderColor: "var(--menu-primary)", color: "var(--menu-primary)" }}
+            >
+              Escolhas do Chefe
+            </h2>
+            <div className="block sm:hidden">
+              <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
+                {featuredItems.map((item) => (
+                  <FeaturedCard key={item.id} item={item} currencyCode={currencyCode} />
+                ))}
+              </ul>
+            </div>
+            <div className="hidden sm:block">
+              <ul className="p-0 m-0 list-none flex flex-col gap-6">
+                {pairs(featuredItems).map((pair) => (
+                  <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
+                    <RowCards items={pair} currencyCode={currencyCode} CardComponent={FeaturedCard} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Filters: category tabs + chips */}
       <section className="mb-6">
@@ -674,33 +356,35 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
             >
               {group.sectionName}
             </h2>
-            {group.categories.map((cat) => (
-              <section key={cat.id} className="mb-8">
-                <h3 className="text-lg font-semibold mb-2 text-gray-800" style={{ color: "var(--menu-primary)" }}>
-                  {cat.name}
-                </h3>
-                {cat.description && (
-                  <p className="text-gray-600 text-sm mb-4">{cat.description}</p>
-                )}
-                {/* Mobile: 1 coluna. sm+: 2 colunas com zonas alinhadas (RowCards). */}
-                <div className="block sm:hidden">
-                  <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
-                    {cat.items?.map((item) => (
-                      <ItemCard key={item.id} item={item} currencyCode={currencyCode} />
-                    ))}
-                  </ul>
-                </div>
-                <div className="hidden sm:block">
-                  <ul className="p-0 m-0 list-none flex flex-col gap-6">
-                    {cat.items && pairs(cat.items).map((pair) => (
-                      <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
-                        <RowCards items={pair} currencyCode={currencyCode} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </section>
-            ))}
+            {group.categories.map((cat) => {
+              const CardComponent = getPresentationCardComponent(cat.presentation_component_key);
+              return (
+                <section key={cat.id} className="mb-8">
+                  <h3 className="text-lg font-semibold mb-2 text-gray-800" style={{ color: "var(--menu-primary)" }}>
+                    {cat.name}
+                  </h3>
+                  {cat.description && (
+                    <p className="text-gray-600 text-sm mb-4">{cat.description}</p>
+                  )}
+                  <div className="block sm:hidden">
+                    <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
+                      {cat.items?.map((item) => (
+                        <CardComponent key={item.id} item={item} currencyCode={currencyCode} />
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="hidden sm:block">
+                    <ul className="p-0 m-0 list-none flex flex-col gap-6">
+                      {cat.items && pairs(cat.items).map((pair) => (
+                        <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
+                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ))
       )}

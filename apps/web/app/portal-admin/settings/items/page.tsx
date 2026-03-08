@@ -127,6 +127,12 @@ export default async function SettingsItemsPage() {
   const settings = (settingsRow?.settings as Record<string, unknown>) ?? {};
   const aiEnabled = !!settings.ai_enabled;
 
+  const { data: allergens } = await supabase
+    .from("allergens")
+    .select("id, code, name_i18n, severity, sort_order")
+    .eq("is_active", true)
+    .order("sort_order");
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Artigos</h1>
@@ -141,7 +147,7 @@ export default async function SettingsItemsPage() {
       <section className="mb-8">
         <Card>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Novo item</h2>
-          <CreateItemForm storeId={storeId} articleTypes={articleTypes ?? []} aiEnabled={aiEnabled} />
+          <CreateItemForm storeId={storeId} articleTypes={articleTypes ?? []} aiEnabled={aiEnabled} allergens={allergens ?? []} />
         </Card>
       </section>
 

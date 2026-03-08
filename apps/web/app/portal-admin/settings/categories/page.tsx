@@ -29,9 +29,14 @@ export default async function CategoriesPage() {
     .order("sort_order");
   const { data: categories } = await supabase
     .from("menu_categories")
-    .select("id, name, sort_order, section_id")
+    .select("id, name, sort_order, section_id, presentation_template_id")
     .eq("store_id", storeId)
     .order("sort_order");
+
+  const { data: presentationTemplates } = await supabase
+    .from("menu_presentation_templates")
+    .select("id, name")
+    .order("name");
 
   return (
     <div>
@@ -44,7 +49,7 @@ export default async function CategoriesPage() {
       <section className="mb-8">
         <Card>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Nova categoria</h2>
-          <CreateCategoryForm storeId={storeId} sections={sections ?? []} />
+          <CreateCategoryForm storeId={storeId} sections={sections ?? []} presentationTemplates={presentationTemplates ?? []} />
         </Card>
       </section>
 
@@ -54,7 +59,7 @@ export default async function CategoriesPage() {
           {categories && categories.length > 0 ? (
             <ul className="list-none pl-0">
               {categories.map((c) => (
-                <CategoryRow key={c.id} category={c} sections={sections ?? []} />
+                <CategoryRow key={c.id} category={c} sections={sections ?? []} presentationTemplates={presentationTemplates ?? []} />
               ))}
             </ul>
           ) : (

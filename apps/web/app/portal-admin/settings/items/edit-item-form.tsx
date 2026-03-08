@@ -6,6 +6,7 @@ import Link from "next/link";
 import { updateMenuItem } from "../../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
 import { GenerateDescriptionBlock } from "./generate-description-block";
+import { AllergenChecklist, type AllergenOption } from "./allergen-checklist";
 
 const inputClass =
   "w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500";
@@ -56,6 +57,8 @@ export function EditItemForm({
   currentCategoryId,
   storeId,
   aiEnabled,
+  allergens,
+  selectedAllergenIds,
 }: {
   item: MenuItem;
   articleTypes: ArticleType[];
@@ -65,6 +68,8 @@ export function EditItemForm({
   currentCategoryId: string | null;
   storeId: string;
   aiEnabled: boolean;
+  allergens: AllergenOption[];
+  selectedAllergenIds: string[];
 }) {
   const [state, formAction] = useFormState(updateMenuItem, null);
   const [isPromotion, setIsPromotion] = useState(item.is_promotion);
@@ -161,6 +166,9 @@ export function EditItemForm({
           className={inputClass}
         />
       </div>
+
+      {/* 4a. Alergénios */}
+      <AllergenChecklist allergens={allergens} selectedIds={selectedAllergenIds} />
 
       {/* 4b. Secção + Categoria (mesma linha) */}
       <div className="flex flex-wrap gap-4 items-end">
