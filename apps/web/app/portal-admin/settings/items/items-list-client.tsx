@@ -52,6 +52,8 @@ export function ItemsListClient({
 
   const [filterName, setFilterName] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [filterFamilia, setFilterFamilia] = useState("");
+  const [filterSubFamilia, setFilterSubFamilia] = useState("");
   const [filterPromo, setFilterPromo] = useState("");
   const [filterTA, setFilterTA] = useState("");
   const [filterVisible, setFilterVisible] = useState("");
@@ -69,6 +71,14 @@ export function ItemsListClient({
         if (!name.includes(filterName.trim().toLowerCase())) return false;
       }
       if (filterType && i.article_type_id !== filterType) return false;
+      if (filterFamilia.trim()) {
+        const familia = (itemFamilia[i.id]?.familia ?? "").toLowerCase();
+        if (!familia.includes(filterFamilia.trim().toLowerCase())) return false;
+      }
+      if (filterSubFamilia.trim()) {
+        const subFamilia = (itemFamilia[i.id]?.sub_familia ?? "").toLowerCase();
+        if (!subFamilia.includes(filterSubFamilia.trim().toLowerCase())) return false;
+      }
       if (filterPromo === "sim" && !i.is_promotion) return false;
       if (filterPromo === "nao" && i.is_promotion) return false;
       if (filterTA === "sim" && !i.take_away) return false;
@@ -79,7 +89,7 @@ export function ItemsListClient({
       if (filterFeatured === "nao" && i.is_featured) return false;
       return true;
     });
-  }, [items, filterName, filterType, filterPromo, filterTA, filterVisible, filterFeatured]);
+  }, [items, filterName, filterType, filterFamilia, filterSubFamilia, filterPromo, filterTA, filterVisible, filterFeatured, itemFamilia]);
 
   const sortedItems = useMemo(() => {
     const arr = [...filteredItems];
@@ -196,6 +206,26 @@ export function ItemsListClient({
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          Familia
+          <input
+            type="text"
+            value={filterFamilia}
+            onChange={(e) => setFilterFamilia(e.target.value)}
+            placeholder="Filtrar por família"
+            className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200 w-40"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          Sub Familia
+          <input
+            type="text"
+            value={filterSubFamilia}
+            onChange={(e) => setFilterSubFamilia(e.target.value)}
+            placeholder="Filtrar por sub família"
+            className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200 w-40"
+          />
         </label>
         <label className="flex items-center gap-2 text-sm text-slate-300">
           Promo

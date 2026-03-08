@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (colunas Familia e Sub Familia na gestão de artigos, migration 044).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (filtros Familia e Sub Familia em settings/items).
 
 ---
 
@@ -79,7 +79,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu vazio e link Definições no portal tenant (migration 042):** Função `getPortalHost(headers)` em `lib/portal-mode.ts` para obter o host sem porta (x-portal-host → host → x-forwarded-host). Layout e todas as páginas/APIs do portal-admin tenant usam `getPortalHost` para resolver a loja; migration 042 altera `get_store_id_by_hostname` para comparar host sem porta (ex.: 9999999991.menu.bwb.pt:443 coincide com 9999999991.menu.bwb.pt). Corrige menu vazio e ausência do link Definições quando o host chega com porta.
 - **Itens sem secção/categoria na página Menu (portal tenant):** Na página `/portal-admin/menu`, os artigos que ainda não têm secção ou categoria associada aparecem numa secção virtual "Por configurar" → "Artigos sem secção/categoria", permitindo configurá-los após importação; o filtro de secções inclui a opção "Por configurar".
 - **Tenant Admin pode aceder a Definições (migration 043):** A RPC `current_user_can_access_settings` foi alargada para considerar também o role `tenant_admin` do tenant dono da loja, permitindo que utilizadores com este perfil acedam à secção "Definições" e configurem os artigos (secções, categorias, gestão de artigos).
-- **Colunas Familia e Sub Familia na Gestão de Artigos (migration 044):** Na página `/portal-admin/settings/items`, a lista de artigos mostra as colunas Familia e Sub Familia (obtidas da tabela de importação Excel da loja — excel_netbo_imports ou excel_zsbms_imports — conforme a origem da loja) e permite ordenar por estas, bem como por Secção e Categoria. A lógica de leitura é centralizada na RPC `get_import_familia_for_store`.
+- **Colunas Familia e Sub Familia na Gestão de Artigos (migration 044):** Na página `/portal-admin/settings/items`, a lista de artigos mostra as colunas Familia e Sub Familia (obtidas da tabela de importação Excel da loja — excel_netbo_imports ou excel_zsbms_imports — conforme a origem da loja) e permite ordenar por estas, bem como por Secção e Categoria. Inclui filtros por Familia e Sub Familia (texto, contém, insensível a maiúsculas). A lógica de leitura é centralizada na RPC `get_import_familia_for_store`.
 
 ---
 
