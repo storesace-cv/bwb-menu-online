@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { MenuTreeClient, type SectionNode } from "./menu-tree-client";
+import { ExcelImportCard } from "./excel-import-card";
 import { Card, MultiSelectDropdown } from "@/components/admin";
 
 function normalizeForSearch(s: string): string {
@@ -37,10 +38,20 @@ export default async function MenuPage({
   if (!storeId) {
     return (
       <div>
+        <nav className="mb-2 text-sm" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-slate-400">
+            <li>
+              <Link href="/portal-admin" className="hover:text-slate-200 transition-colors">Portal Admin</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li className="text-slate-100" aria-current="page">Menu</li>
+          </ol>
+        </nav>
         <h1 className="text-2xl font-semibold text-slate-100 mb-2">Menu</h1>
         <p className="text-slate-400">
           Para gerir o menu, aceda através do subdomínio da loja (ex.: 9999999991.menu.bwb.pt/portal-admin/menu). Em Global Admin pode ver a associação em Tenants → Lojas → coluna Domínios.
         </p>
+        <ExcelImportCard />
       </div>
     );
   }

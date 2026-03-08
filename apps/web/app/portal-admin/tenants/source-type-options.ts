@@ -2,8 +2,8 @@
 
 export const SOURCE_TYPE_OPTIONS: { value: string; label: string; disabled: boolean }[] = [
   { value: "manual", label: "Manual (a implementar)", disabled: true },
-  { value: "excel_zsbms", label: "Excel - ZSbms (a implementar)", disabled: true },
-  { value: "excel_netbo", label: "Excel - NET-bo (a implementar)", disabled: true },
+  { value: "excel_zsbms", label: "Excel - ZSbms", disabled: false },
+  { value: "excel_netbo", label: "Excel - NET-bo", disabled: false },
   { value: "excel_storesace", label: "Excel - Storesace (a implementar)", disabled: true },
   { value: "netbo_api", label: "Net-bo API", disabled: false },
   { value: "storesace_api", label: "Storesace API (a implementar)", disabled: true },
@@ -29,8 +29,8 @@ export const SOURCE_TYPE_EDIT_OPTIONS: { value: string; label: string }[] = [
   { value: "netbo", label: LEGACY_LABELS.netbo },
   { value: "storesace", label: LEGACY_LABELS.storesace },
   { value: "manual", label: "Manual (a implementar)" },
-  { value: "excel_zsbms", label: "Excel - ZSbms (a implementar)" },
-  { value: "excel_netbo", label: "Excel - NET-bo (a implementar)" },
+  { value: "excel_zsbms", label: "Excel - ZSbms" },
+  { value: "excel_netbo", label: "Excel - NET-bo" },
   { value: "excel_storesace", label: "Excel - Storesace (a implementar)" },
   { value: "storesace_api", label: "Storesace API (a implementar)" },
 ];

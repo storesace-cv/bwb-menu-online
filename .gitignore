@@ -7,9 +7,10 @@ apps/web/node_modules/
 .env.local
 .env.*.local
 
-# Next
+# Next / TypeScript
 apps/web/.next/
 apps/web/out/
+*.tsbuildinfo
 
 # Docker
 .docker/

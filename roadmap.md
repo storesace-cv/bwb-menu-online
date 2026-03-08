@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (logo em emails CID; roadmap, commit, deploy, verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (importação Excel excel_netbo/excel_zsbms; tabelas raw, upsert, descontinuação, UI e roadmap).
 
 ---
 
@@ -70,6 +70,8 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Debug Server Actions (tenants):** Logging estruturado `tenants_action` em `updateTenantContactEmail` e `resendTenantWelcomeEmail` (fases e erros); buffer em memória e endpoint GET `/api/debug/tenants-actions` (quando `PORTAL_DEBUG=1`) para inspeção dos últimos logs; doc em [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md). No deploy, o script `remote-update.sh` adiciona ou define `PORTAL_DEBUG=1` no `.env` do servidor para activar estes logs e o endpoint.
 - **Resiliência Tenants (consola, email, logs):** Em `createStore`, leitura de `contact_email` e contagem de lojas passou a usar cliente service role (contornar RLS em `tenants`). Página Tenants com `normalizeTenantRow` e try/catch em `admin_list_tenants` para parsing defensivo e fallback em falha. Layout portal-admin com try/catch alargado a `headers()` e pathname. `resendTenantWelcomeEmail` com try/catch externo e retorno serializável em erro. Reduz erros na consola e garante que o email do tenant aparece quando a migração 028 está aplicada.
 - **Logo nos emails (CID inline):** O logotipo nos emails de boas-vindas/reset passou a ser embedado como anexo MIME (Content-ID `logoBwb`) em vez de URL externa. Asset em `local/imagem/bwb-white-compact.png`; mailer com `getLogoBuffer()` (tenta cwd e cwd/..), anexo PNG em `sendWelcomeOrResetEmail` e `sendFirstStoreWelcomeEmail`; template com parâmetro opcional `logoCid` e `src="cid:logoBwb"` ou fallback `logoUrl`. Sem ficheiro no path, mantém-se o URL; no deploy garantir que `local/imagem/` existe (ex.: na imagem Docker ou volume).
+- **Importação Excel (excel_netbo, excel_zsbms):** Tabelas raw imutáveis `excel_netbo_imports` e `excel_zsbms_imports` (migrations 030–032) com chave `tenant_nif + store_id + codigo`; política de upsert por reimport e descontinuação (artigos ausentes no ficheiro ficam `is_discontinued=true`). Deteção de template por headers (NET-bo: Produto, Teclado, IVA1; ZSbms: Loja, Descrição, Sub Família). API POST `/api/portal-admin/import/excel` (multipart), GET `/api/portal-admin/import/stores`, GET `/api/portal-admin/import/runs` e GET `/api/portal-admin/import/runs/[runId]`; tabela `import_runs` para auditoria (counts: read_rows, upserted, updated, unchanged, discontinued). UI: cartão "Importar dados via Excel" na página Menu (portal global, quando sem store no host) com select de loja, upload .xlsx e resumo; compatibilidade com origem da loja (excel_netbo, excel_zsbms, manual). Páginas `/portal-admin/import/runs` e `/portal-admin/import/runs/[runId]`. Origens excel_netbo e excel_zsbms ativas em "Origem dos Dados". Infraestrutura de mapeamentos `import_field_mappings` (migration 031) para uso futuro; aplicação ao catálogo/menu não implementada nesta fase.
+- **Normalização PVP (excel_zsbms):** Nos campos PVP1–PVP5 da importação ZSbms: remoção de espaços, aceitar vírgula ou ponto como separador decimal (gravar com ponto; formato europeu 1.234,56 → 1234.56), remoção de letras à direita (código de moeda); função `normalizePvpValueForZsbm` em `lib/excel-import.ts`, aplicada em `readExcel()` antes de gravar.
 
 ---
 
@@ -93,6 +95,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - Campos para zonas C, D, E do card: **Ingredientes** (zona C), **Tempo de Preparação** (zona D) e **Alergénicos** (zona E). Na BD já existem `menu_items.menu_ingredients`, `menu_items.prep_minutes` e `menu_item_allergens`; garantir que a UI do portal-admin permite editar ingredientes e tempo de preparação em todos os fluxos (criação/edição de itens) e que o payload do menu público inclui estes campos.
 - Ordenação UX: drag & drop para categorias e itens (persistindo sort_order).
 - Página global /portal-admin/domains com vista agregada de domínios.
+- **Aplicação do mapeamento raw → catálogo/menu:** A partir de `excel_*_imports` e `import_field_mappings`, aplicar mapeamentos (superadmin) para popular/atualizar `catalog_items` e eventualmente `menu_items`. UI de edição de mapeamentos (P1/P2). — A DESENVOLVER.
 
 **(P2) Robustez, qualidade e operação**
 - Audit log de alterações (domínios, itens, preços, visibilidade) com actor e timestamp.
