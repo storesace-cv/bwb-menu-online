@@ -71,7 +71,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
   const [toggleFeatured, setToggleFeatured] = useState(false);
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
 
-  const currencyCode = menu.store_settings?.currency_code;
+  const currencyCode = menu.store_settings?.currency_code ?? "€";
   const storeName = menu.store_settings?.store_display_name || menu.store_name || "Menu";
   const heroText = menu.store_settings?.hero_text;
   const reservationUrl = menu.store_settings?.reservation_url;
