@@ -3,26 +3,39 @@
 import type { ComponentType } from "react";
 import { useState, useMemo } from "react";
 import type { PublicMenuPayload, PublicMenuItem } from "@/lib/supabase";
+import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getPresentationCardComponent, DEFAULT_PRESENTATION_KEY } from "@/lib/presentation-templates";
+import { ItemCardFromLayout } from "./item-card-from-layout";
 
 const FALLBACK_PRIMARY = "#8b6914";
 
-/** Uma linha de 2 cards usando o componente de apresentação escolhido. */
+/** Uma linha de 2 cards usando o componente de apresentação escolhido ou layout. */
 function RowCards({
   items,
   currencyCode,
   CardComponent,
+  layoutDefinition,
 }: {
   items: [PublicMenuItem, PublicMenuItem | null];
   currencyCode?: string;
   CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string }>;
+  layoutDefinition?: LayoutDefinition | null;
 }) {
   const [left, right] = items;
+  const useLayout = layoutDefinition != null && Array.isArray(layoutDefinition.zoneOrder) && layoutDefinition.zoneOrder.length > 0;
   return (
     <div className="grid grid-cols-2 gap-6">
-      <CardComponent item={left} currencyCode={currencyCode} />
+      {useLayout ? (
+        <ItemCardFromLayout item={left} layoutDefinition={layoutDefinition} currencyCode={currencyCode} />
+      ) : (
+        <CardComponent item={left} currencyCode={currencyCode} />
+      )}
       {right ? (
-        <CardComponent item={right} currencyCode={currencyCode} />
+        useLayout ? (
+          <ItemCardFromLayout item={right} layoutDefinition={layoutDefinition} currencyCode={currencyCode} />
+        ) : (
+          <CardComponent item={right} currencyCode={currencyCode} />
+        )
       ) : (
         <div className="rounded-xl border border-gray-200 bg-gray-50 min-h-[200px]" aria-hidden />
       )}
@@ -357,6 +370,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
               {group.sectionName}
             </h2>
             {group.categories.map((cat) => {
+              const layoutDef = cat.presentation_layout_definition;
+              const useLayout = layoutDef != null && Array.isArray(layoutDef.zoneOrder) && layoutDef.zoneOrder.length > 0;
               const CardComponent = getPresentationCardComponent(cat.presentation_component_key);
               return (
                 <section key={cat.id} className="mb-8">
@@ -368,16 +383,20 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
                   )}
                   <div className="block sm:hidden">
                     <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
-                      {cat.items?.map((item) => (
-                        <CardComponent key={item.id} item={item} currencyCode={currencyCode} />
-                      ))}
+                      {cat.items?.map((item) =>
+                        useLayout ? (
+                          <ItemCardFromLayout key={item.id} item={item} layoutDefinition={layoutDef} currencyCode={currencyCode} />
+                        ) : (
+                          <CardComponent key={item.id} item={item} currencyCode={currencyCode} />
+                        )
+                      )}
                     </ul>
                   </div>
                   <div className="hidden sm:block">
                     <ul className="p-0 m-0 list-none flex flex-col gap-6">
                       {cat.items && pairs(cat.items).map((pair) => (
                         <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
-                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} />
+                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} layoutDefinition={layoutDef} />
                         </li>
                       ))}
                     </ul>

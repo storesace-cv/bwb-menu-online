@@ -492,17 +492,49 @@ export async function copyPresentationTemplate(_prev: { error?: string } | null,
   if (!sourceId || !newName) return { error: "Template de origem e nome da cópia obrigatórios." };
   const { data: source } = await supabase
     .from("menu_presentation_templates")
-    .select("id, component_key")
+    .select("id, component_key, layout_definition")
     .eq("id", sourceId)
     .single();
   if (!source) return { error: "Template de origem não encontrado." };
   const { error } = await supabase.from("menu_presentation_templates").insert({
     name: newName,
     component_key: source.component_key,
+    layout_definition: source.layout_definition ?? undefined,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/settings/presentation-templates");
   return { success: true };
+}
+
+const LAYOUT_ZONE_TYPES = new Set(["image", "icons", "name", "description", "ingredients", "prep_time", "allergens", "price_old", "price"]);
+
+/** Actualizar layout de um modelo de apresentação (superadmin). */
+export async function updatePresentationTemplateLayout(
+  templateId: string,
+  layoutDefinition: { canvasHeight?: number; zoneOrder: string[] }
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) return { error: "Acesso reservado a superadmin." };
+  const id = (templateId ?? "").trim();
+  if (!id) return { error: "ID do template obrigatório." };
+  const zones = Array.isArray(layoutDefinition?.zoneOrder) ? layoutDefinition.zoneOrder : [];
+  if (zones.length === 0) return { error: "Indique pelo menos um campo na ordem." };
+  const invalid = zones.find((z) => typeof z !== "string" || !LAYOUT_ZONE_TYPES.has(z));
+  if (invalid !== undefined) return { error: `Tipo de zona inválido: ${invalid}` };
+  const canvasHeight =
+    layoutDefinition.canvasHeight != null && Number.isFinite(Number(layoutDefinition.canvasHeight))
+      ? Number(layoutDefinition.canvasHeight)
+      : null;
+  const payload = { zoneOrder: zones, ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}) };
+  const { error } = await supabase
+    .from("menu_presentation_templates")
+    .update({ layout_definition: payload })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/presentation-templates");
+  revalidatePath(`/portal-admin/settings/presentation-templates/${id}/layout`);
+  return {};
 }
 
 export async function assignRole(_prev: { error?: string } | null, formData: FormData) {

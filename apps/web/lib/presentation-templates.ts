@@ -4,6 +4,60 @@ import { ItemCardRestaurante1 } from "@/components/public-menu/item-card-restaur
 
 export const DEFAULT_PRESENTATION_KEY = "modelo-restaurante-1";
 
+/** Zone types for layout-defined cards (order + visibility only). */
+export const LAYOUT_ZONE_TYPES = [
+  "image",
+  "icons",
+  "name",
+  "description",
+  "ingredients",
+  "prep_time",
+  "allergens",
+  "price_old",
+  "price",
+] as const;
+
+export type LayoutZoneType = (typeof LAYOUT_ZONE_TYPES)[number];
+
+export interface LayoutDefinition {
+  canvasHeight?: number;
+  zoneOrder: string[];
+}
+
+export const DEFAULT_CANVAS_HEIGHT = 560;
+
+/** Default zone order matching Modelo Restaurante 1. */
+export const DEFAULT_LAYOUT_ZONE_ORDER: LayoutZoneType[] = [
+  "image",
+  "icons",
+  "name",
+  "description",
+  "ingredients",
+  "prep_time",
+  "allergens",
+  "price_old",
+  "price",
+];
+
+export const LAYOUT_ZONE_LABELS: Record<LayoutZoneType, string> = {
+  image: "Imagem",
+  icons: "Ícones",
+  name: "Nome",
+  description: "Descrição",
+  ingredients: "Ingredientes",
+  prep_time: "Tempo de preparação",
+  allergens: "Alergénios",
+  price_old: "Preço antigo",
+  price: "Preço",
+};
+
+export function getDefaultLayoutDefinition(): LayoutDefinition {
+  return {
+    canvasHeight: DEFAULT_CANVAS_HEIGHT,
+    zoneOrder: [...DEFAULT_LAYOUT_ZONE_ORDER],
+  };
+}
+
 export type PresentationCardProps = {
   item: PublicMenuItem;
   currencyCode?: string;
