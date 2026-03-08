@@ -29,12 +29,19 @@ type MenuItem = {
   is_featured: boolean;
   image_url?: string | null;
   image_path?: string | null;
+  image_base_path?: string | null;
+  has_image?: boolean;
 };
 
 function imagePreviewUrl(item: MenuItem): string | null {
+  const base = typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string"
+    ? process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/, "")
+    : "";
+  if (item.has_image && item.image_base_path && base) {
+    return `${base}/storage/v1/object/public/${item.image_base_path}640.webp`;
+  }
   if (item.image_url) return item.image_url;
-  if (item.image_path && typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string") {
-    const base = process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/, "");
+  if (item.image_path && base) {
     return `${base}/storage/v1/object/public/${item.image_path}`;
   }
   return null;

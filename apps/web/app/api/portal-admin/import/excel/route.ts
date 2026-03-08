@@ -229,6 +229,17 @@ export async function POST(request: NextRequest) {
       .eq("store_id", storeId)
       .eq("is_discontinued", true);
 
+    if (storeRow.source_type !== "demo") {
+      const { error: propErr } = await admin.rpc("propagate_import_to_catalog_and_menu", {
+        p_store_id: storeId,
+        p_tenant_nif: requestedNif,
+        p_source_type: detectedType,
+      });
+      if (propErr) {
+        throw new Error(`Propagation failed: ${propErr.message}`);
+      }
+    }
+
     const counts = {
       read_rows: rows.length,
       upserted,

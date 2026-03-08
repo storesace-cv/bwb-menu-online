@@ -14,11 +14,11 @@ function normalizeForSearch(s: string): string {
 
 function matchesText(
   q: string,
-  item: { menu_name: string | null; menu_description?: string | null; menu_ingredients?: string | null }
+  item: { menu_name: string | null; name_original?: string | null; menu_description?: string | null; menu_ingredients?: string | null }
 ): boolean {
   const norm = normalizeForSearch(q);
   if (!norm) return true;
-  const name = normalizeForSearch(item.menu_name ?? "");
+  const name = normalizeForSearch(item.menu_name ?? item.name_original ?? "");
   const desc = normalizeForSearch(item.menu_description ?? "");
   const ing = normalizeForSearch(item.menu_ingredients ?? "");
   return name.includes(norm) || desc.includes(norm) || ing.includes(norm);
@@ -81,14 +81,34 @@ export default async function MenuPage({
   const { data: categoryItems } = await supabase
     .from("menu_category_items")
     .select("category_id, menu_item_id, sort_order");
-  const { data: items } = await supabase
+  const { data: itemsRaw } = await supabase
     .from("menu_items")
-    .select("id, menu_name, menu_price, is_featured, sort_order, menu_description, menu_ingredients")
+    .select("id, menu_name, menu_price, is_featured, sort_order, menu_description, menu_ingredients, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order");
+  const items = (itemsRaw ?? []).map((i) => {
+    const { catalog_items: catalog, ...rest } = i as typeof i & { catalog_items?: { name_original: string | null } | null };
+    return {
+      ...rest,
+      name_original: catalog?.name_original ?? null,
+      menu_name_display: (rest.menu_name ?? catalog?.name_original ?? "") as string,
+    };
+  });
+
+  const { data: resolvedPricesRows } = await supabase.rpc("get_resolved_prices_for_store", { p_store_id: storeId });
+  const resolvedPriceByItemId = new Map<string, number>();
+  for (const row of resolvedPricesRows ?? []) {
+    if (row.menu_item_id && row.resolved_price != null) {
+      resolvedPriceByItemId.set(row.menu_item_id, Number(row.resolved_price));
+    }
+  }
 
   const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
-  const itemsById = new Map((items ?? []).map((i) => [i.id, i]));
+  const itemsWithResolvedPrice = items.map((i) => ({
+    ...i,
+    menu_price_display: i.menu_price ?? resolvedPriceByItemId.get(i.id) ?? null,
+  }));
+  const itemsById = new Map(itemsWithResolvedPrice.map((i) => [i.id, i]));
   const byCategory = new Map<string, { menu_item_id: string; sort_order: number }[]>();
   for (const ci of categoryItems ?? []) {
     const list = byCategory.get(ci.category_id) ?? [];
@@ -115,13 +135,13 @@ export default async function MenuPage({
       .map((cat) => {
         const entries = (byCategory.get(cat.id) ?? [])
           .map(({ menu_item_id }) => itemsById.get(menu_item_id))
-          .filter(Boolean) as { id: string; menu_name: string | null; menu_price: number | null; is_featured: boolean; menu_description?: string | null; menu_ingredients?: string | null }[];
+          .filter(Boolean) as { id: string; menu_name: string | null; name_original?: string | null; menu_name_display: string; menu_price: number | null; menu_price_display: number | null; is_featured: boolean; menu_description?: string | null; menu_ingredients?: string | null }[];
         const filtered = q ? entries.filter((i) => matchesText(q, i)) : entries;
-        const sorted = filtered.sort((a, b) => (a.menu_name ?? "").localeCompare(b.menu_name ?? "", "pt"));
+        const sorted = filtered.sort((a, b) => (a.menu_name_display ?? "").localeCompare(b.menu_name_display ?? "", "pt"));
         return {
           categoryId: cat.id,
           categoryName: cat.name ?? "",
-          items: sorted.map((i) => ({ id: i.id, menu_name: i.menu_name ?? "", menu_price: i.menu_price, is_featured: i.is_featured })),
+          items: sorted.map((i) => ({ id: i.id, menu_name: i.menu_name_display ?? "", menu_price: i.menu_price_display ?? i.menu_price, is_featured: i.is_featured })),
         };
       })
       .filter((n) => n.items.length > 0 || !q);
@@ -138,13 +158,13 @@ export default async function MenuPage({
       .map((cat) => {
         const entries = (byCategory.get(cat.id) ?? [])
           .map(({ menu_item_id }) => itemsById.get(menu_item_id))
-          .filter(Boolean) as { id: string; menu_name: string | null; menu_price: number | null; is_featured: boolean; menu_description?: string | null; menu_ingredients?: string | null }[];
+          .filter(Boolean) as { id: string; menu_name: string | null; name_original?: string | null; menu_name_display: string; menu_price: number | null; menu_price_display: number | null; is_featured: boolean; menu_description?: string | null; menu_ingredients?: string | null }[];
         const filtered = q ? entries.filter((i) => matchesText(q, i)) : entries;
-        const sorted = filtered.sort((a, b) => (a.menu_name ?? "").localeCompare(b.menu_name ?? "", "pt"));
+        const sorted = filtered.sort((a, b) => (a.menu_name_display ?? "").localeCompare(b.menu_name_display ?? "", "pt"));
         return {
           categoryId: cat.id,
           categoryName: cat.name ?? "",
-          items: sorted.map((i) => ({ id: i.id, menu_name: i.menu_name ?? "", menu_price: i.menu_price, is_featured: i.is_featured })),
+          items: sorted.map((i) => ({ id: i.id, menu_name: i.menu_name_display ?? "", menu_price: i.menu_price_display ?? i.menu_price, is_featured: i.is_featured })),
         };
       })
       .filter((n) => n.items.length > 0 || !q);

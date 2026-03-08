@@ -15,6 +15,8 @@ type Item = {
   menu_name: string | null;
   menu_description: string | null;
   menu_price: number | null;
+  name_original?: string | null;
+  resolved_price?: number | null;
   is_visible: boolean;
   is_featured: boolean;
   sort_order: number | null;
@@ -55,10 +57,13 @@ export function ItemsListClient({
 
   const typeById = useMemo(() => new Map(articleTypes.map((t) => [t.id, t])), [articleTypes]);
 
+  const displayName = (i: Item) => i.menu_name ?? i.name_original ?? "";
+  const displayPrice = (i: Item) => i.menu_price ?? i.resolved_price ?? null;
+
   const filteredItems = useMemo(() => {
     return items.filter((i) => {
       if (filterName.trim()) {
-        const name = (i.menu_name ?? "").toLowerCase();
+        const name = displayName(i).toLowerCase();
         if (!name.includes(filterName.trim().toLowerCase())) return false;
       }
       if (filterType && i.article_type_id !== filterType) return false;
@@ -82,10 +87,10 @@ export function ItemsListClient({
       const atB = b.article_type_id ? typeById.get(b.article_type_id)?.name ?? "" : "";
       switch (sortBy) {
         case "name":
-          cmp = (a.menu_name ?? "").localeCompare(b.menu_name ?? "");
+          cmp = displayName(a).localeCompare(displayName(b));
           break;
         case "price":
-          cmp = (a.menu_price ?? 0) - (b.menu_price ?? 0);
+          cmp = (displayPrice(a) ?? 0) - (displayPrice(b) ?? 0);
           break;
         case "type":
           cmp = atA.localeCompare(atB);
@@ -284,11 +289,11 @@ export function ItemsListClient({
                       type="checkbox"
                       checked={selectedIds.has(i.id)}
                       onChange={() => toggleSelect(i.id)}
-                      aria-label={`Selecionar ${i.menu_name ?? i.id}`}
+                      aria-label={`Selecionar ${displayName(i) || i.id}`}
                     />
                   </td>
-                  <td className="py-2 px-3 text-slate-200">{i.menu_name ?? "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{i.menu_price != null ? `${Number(i.menu_price).toFixed(2)} €` : "—"}</td>
+                  <td className="py-2 px-3 text-slate-200">{displayName(i) || "—"}</td>
+                  <td className="py-2 px-3 text-slate-200">{displayPrice(i) != null ? `${Number(displayPrice(i)).toFixed(2)} €` : "—"}</td>
                   <td className="py-2 px-3">{at ? <span title={at.name}><MenuIcon code={at.icon_code} size={18} /></span> : "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.is_promotion ? (i.price_old != null ? `${i.price_old}→` : "Sim") : "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.take_away ? "Sim" : "—"}</td>
@@ -298,7 +303,7 @@ export function ItemsListClient({
                   <td className="py-2 px-3 text-slate-200">{sc?.sectionName ?? "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{sc?.categoryName ?? "—"}</td>
                   <td className="py-2 px-3">
-                    <ItemActions itemId={i.id} menuName={i.menu_name ?? ""} />
+                    <ItemActions itemId={i.id} menuName={displayName(i)} />
                   </td>
                 </tr>
               );

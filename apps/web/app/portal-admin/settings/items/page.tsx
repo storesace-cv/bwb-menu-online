@@ -26,11 +26,27 @@ export default async function SettingsItemsPage() {
     .select("id, name, icon_code")
     .eq("store_id", storeId)
     .order("sort_order");
-  const { data: items } = await supabase
+  const { data: itemsRaw } = await supabase
     .from("menu_items")
-    .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id")
+    .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order");
+  const { data: resolvedPricesRows } = await supabase.rpc("get_resolved_prices_for_store", { p_store_id: storeId });
+  const resolvedPriceByItemId = new Map<string, number>();
+  for (const row of resolvedPricesRows ?? []) {
+    if (row.menu_item_id && row.resolved_price != null) {
+      resolvedPriceByItemId.set(row.menu_item_id, Number(row.resolved_price));
+    }
+  }
+
+  const items = (itemsRaw ?? []).map((i) => {
+    const { catalog_items: catalog, ...rest } = i as typeof i & { catalog_items?: { name_original: string | null } | null };
+    return {
+      ...rest,
+      name_original: catalog?.name_original ?? null,
+      resolved_price: resolvedPriceByItemId.get(i.id) ?? null,
+    };
+  });
 
   const { data: sections } = await supabase
     .from("menu_sections")

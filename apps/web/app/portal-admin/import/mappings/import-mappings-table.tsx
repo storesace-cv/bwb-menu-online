@@ -60,7 +60,12 @@ export function ImportMappingsTable({ rows }: { rows: MappingRow[] }) {
   );
 }
 
+const PVP_OPTIONS = ["PVP1", "PVP2", "PVP3", "PVP4", "PVP5"] as const;
+const PRICE_ORIGINAL_TARGET = "catalog_items.price_original";
+
 function MappingRowEdit({ row }: { row: MappingRow }) {
+  const isPriceMapping = row.target_field === PRICE_ORIGINAL_TARGET;
+  const [sourceField, setSourceField] = useState(row.source_field);
   const [targetField, setTargetField] = useState(row.target_field);
   const [transformType, setTransformType] = useState(getTransformType(row.transform));
   const [isActive, setIsActive] = useState(row.is_active);
@@ -68,6 +73,7 @@ function MappingRowEdit({ row }: { row: MappingRow }) {
   const [result, setResult] = useState<{ error?: string } | null>(null);
 
   const dirty =
+    (isPriceMapping && sourceField !== row.source_field) ||
     targetField !== row.target_field ||
     transformType !== getTransformType(row.transform) ||
     isActive !== row.is_active;
@@ -76,7 +82,13 @@ function MappingRowEdit({ row }: { row: MappingRow }) {
     setResult(null);
     setSaving(true);
     try {
-      const res = await updateImportFieldMapping(row.id, targetField, { type: transformType }, isActive);
+      const res = await updateImportFieldMapping(
+        row.id,
+        targetField,
+        { type: transformType },
+        isActive,
+        isPriceMapping ? sourceField : undefined
+      );
       setResult(res ?? null);
     } catch {
       setResult({ error: "Erro ao guardar. Tente novamente." });
@@ -87,7 +99,21 @@ function MappingRowEdit({ row }: { row: MappingRow }) {
 
   return (
     <tr className="border-b border-slate-700/50">
-      <td className="py-2 px-3 text-slate-200">{row.source_field}</td>
+      <td className="py-2 px-3 text-slate-200">
+        {isPriceMapping ? (
+          <select
+            value={PVP_OPTIONS.includes(sourceField as (typeof PVP_OPTIONS)[number]) ? sourceField : "PVP1"}
+            onChange={(e) => setSourceField(e.target.value)}
+            className="rounded bg-slate-800 border border-slate-600 px-2 py-1 text-slate-200 text-sm focus:ring-2 focus:ring-emerald-500"
+          >
+            {PVP_OPTIONS.map((pvp) => (
+              <option key={pvp} value={pvp}>{pvp}</option>
+            ))}
+          </select>
+        ) : (
+          row.source_field
+        )}
+      </td>
       <td className="py-2 px-3">
         <input
           type="text"

@@ -77,11 +77,23 @@ function ImageIngredientsModal({
   );
 }
 
+const STORAGE_BASE = (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "") + "/storage/v1/object/public/";
+
 function getImageSrc(item: PublicMenuItem): string {
+  if (item.image_base_path != null && item.image_base_path !== "") {
+    return STORAGE_BASE + item.image_base_path + "640.webp";
+  }
   if (item.image_path != null && item.image_path !== "") {
-    return (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "") + "/storage/v1/object/public/" + item.image_path;
+    return STORAGE_BASE + item.image_path;
   }
   return (item.image_url && item.image_url !== "") ? item.image_url : "/images/no_image_product.jpg";
+}
+
+function getImageSrcThumb(item: PublicMenuItem): string {
+  if (item.image_base_path != null && item.image_base_path !== "") {
+    return STORAGE_BASE + item.image_base_path + "320.webp";
+  }
+  return getImageSrc(item);
 }
 
 /** Uma linha de 2 cards com zonas alinhadas por CSS Grid (altura de cada zona = máximo dos dois). */

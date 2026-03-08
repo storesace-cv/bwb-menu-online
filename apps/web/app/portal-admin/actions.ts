@@ -333,20 +333,33 @@ export async function clearStoreMenu(_prev: { error?: string } | null, formData:
   return null;
 }
 
+const PVP_SOURCE_FIELDS = ["PVP1", "PVP2", "PVP3", "PVP4", "PVP5"] as const;
+
 export async function updateImportFieldMapping(
   id: string,
   targetField: string,
   transform: { type: string },
-  isActive: boolean
+  isActive: boolean,
+  sourceField?: string | null
 ): Promise<{ error?: string } | null> {
   const supabase = await createClient();
   if (!id?.trim()) return { error: "ID obrigatório" };
-  const { error } = await supabase.rpc("admin_update_import_field_mapping", {
+  const payload: {
+    p_id: string;
+    p_target_field: string;
+    p_transform: { type: string };
+    p_is_active: boolean;
+    p_source_field?: string;
+  } = {
     p_id: id,
     p_target_field: (targetField ?? "").trim(),
     p_transform: transform ?? { type: "copy" },
     p_is_active: isActive,
-  });
+  };
+  if (sourceField != null && sourceField.trim() !== "" && PVP_SOURCE_FIELDS.includes(sourceField.trim() as (typeof PVP_SOURCE_FIELDS)[number])) {
+    payload.p_source_field = sourceField.trim();
+  }
+  const { error } = await supabase.rpc("admin_update_import_field_mapping", payload);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/import/mappings");
   return null;

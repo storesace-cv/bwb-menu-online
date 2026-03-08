@@ -40,6 +40,7 @@ export type PublicMenuItem = {
   menu_price: number | null;
   image_path: string | null;
   image_url: string | null;
+  image_base_path: string | null;
   is_featured: boolean;
   prep_minutes: number | null;
   sort_order: number;
