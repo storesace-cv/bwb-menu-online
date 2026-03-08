@@ -26,7 +26,7 @@ type Item = {
   article_type_id: string | null;
 };
 
-type SortKey = "name" | "price" | "type" | "promo" | "ta";
+type SortKey = "name" | "price" | "type" | "promo" | "ta" | "section" | "category" | "familia" | "sub_familia";
 
 export function ItemsListClient({
   items,
@@ -34,12 +34,14 @@ export function ItemsListClient({
   categories,
   articleTypes,
   itemSectionCategory,
+  itemFamilia,
 }: {
   items: Item[];
   sections: Section[];
   categories: Category[];
   articleTypes: ArticleType[];
   itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>;
+  itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }>;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<SortKey>("name");
@@ -101,6 +103,18 @@ export function ItemsListClient({
         case "ta":
           cmp = (a.take_away ? 1 : 0) - (b.take_away ? 1 : 0);
           break;
+        case "section":
+          cmp = (itemSectionCategory[a.id]?.sectionName ?? "").localeCompare(itemSectionCategory[b.id]?.sectionName ?? "");
+          break;
+        case "category":
+          cmp = (itemSectionCategory[a.id]?.categoryName ?? "").localeCompare(itemSectionCategory[b.id]?.categoryName ?? "");
+          break;
+        case "familia":
+          cmp = (itemFamilia[a.id]?.familia ?? "").localeCompare(itemFamilia[b.id]?.familia ?? "");
+          break;
+        case "sub_familia":
+          cmp = (itemFamilia[a.id]?.sub_familia ?? "").localeCompare(itemFamilia[b.id]?.sub_familia ?? "");
+          break;
         default:
           break;
       }
@@ -109,7 +123,7 @@ export function ItemsListClient({
       return sortDir === "asc" ? cmp : -cmp;
     });
     return arr;
-  }, [filteredItems, sortBy, sortDir, typeById]);
+  }, [filteredItems, sortBy, sortDir, typeById, itemSectionCategory, itemFamilia]);
 
   const toggleSort = (key: SortKey) => {
     if (sortBy === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -261,6 +275,16 @@ export function ItemsListClient({
                 </button>
               </th>
               <th className="text-left py-2 px-3 text-slate-300">
+                <button type="button" onClick={() => toggleSort("familia")} className="text-left font-medium text-slate-300 hover:text-slate-100">
+                  Familia {sortBy === "familia" && (sortDir === "asc" ? "↑" : "↓")}
+                </button>
+              </th>
+              <th className="text-left py-2 px-3 text-slate-300">
+                <button type="button" onClick={() => toggleSort("sub_familia")} className="text-left font-medium text-slate-300 hover:text-slate-100">
+                  Sub Familia {sortBy === "sub_familia" && (sortDir === "asc" ? "↑" : "↓")}
+                </button>
+              </th>
+              <th className="text-left py-2 px-3 text-slate-300">
                 <button type="button" onClick={() => toggleSort("promo")} className="text-left font-medium text-slate-300 hover:text-slate-100">
                   Promo {sortBy === "promo" && (sortDir === "asc" ? "↑" : "↓")}
                 </button>
@@ -273,8 +297,16 @@ export function ItemsListClient({
               <th className="text-left py-2 px-3 text-slate-300">Ordem</th>
               <th className="text-left py-2 px-3 text-slate-300">Visível</th>
               <th className="text-left py-2 px-3 text-slate-300">Destaque</th>
-              <th className="text-left py-2 px-3 text-slate-300">Secção</th>
-              <th className="text-left py-2 px-3 text-slate-300">Categoria</th>
+              <th className="text-left py-2 px-3 text-slate-300">
+                <button type="button" onClick={() => toggleSort("section")} className="text-left font-medium text-slate-300 hover:text-slate-100">
+                  Secção {sortBy === "section" && (sortDir === "asc" ? "↑" : "↓")}
+                </button>
+              </th>
+              <th className="text-left py-2 px-3 text-slate-300">
+                <button type="button" onClick={() => toggleSort("category")} className="text-left font-medium text-slate-300 hover:text-slate-100">
+                  Categoria {sortBy === "category" && (sortDir === "asc" ? "↑" : "↓")}
+                </button>
+              </th>
               <th className="text-left py-2 px-3 text-slate-300">Ações</th>
             </tr>
           </thead>
@@ -295,6 +327,8 @@ export function ItemsListClient({
                   <td className="py-2 px-3 text-slate-200">{displayName(i) || "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{displayPrice(i) != null ? `${Number(displayPrice(i)).toFixed(2)} €` : "—"}</td>
                   <td className="py-2 px-3">{at ? <span title={at.name}><MenuIcon code={at.icon_code} size={18} /></span> : "—"}</td>
+                  <td className="py-2 px-3 text-slate-200">{itemFamilia[i.id]?.familia ?? "—"}</td>
+                  <td className="py-2 px-3 text-slate-200">{itemFamilia[i.id]?.sub_familia ?? "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.is_promotion ? (i.price_old != null ? `${i.price_old}→` : "Sim") : "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.take_away ? "Sim" : "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.sort_order}</td>

@@ -40,6 +40,20 @@ export default async function SettingsItemsPage() {
     }
   }
 
+  const { data: familiaRows } = await supabase.rpc("get_import_familia_for_store", { p_store_id: storeId });
+  const itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> = {};
+  for (const i of itemsRaw ?? []) {
+    itemFamilia[i.id] = { familia: null, sub_familia: null };
+  }
+  for (const row of familiaRows ?? []) {
+    if (row.menu_item_id) {
+      itemFamilia[row.menu_item_id] = {
+        familia: row.familia ?? null,
+        sub_familia: row.sub_familia ?? null,
+      };
+    }
+  }
+
   const items = (itemsRaw ?? []).map((i) => {
     const { catalog_items: catalog, ...rest } = i as typeof i & { catalog_items?: { name_original: string | null } | null };
     return {
@@ -139,6 +153,7 @@ export default async function SettingsItemsPage() {
             categories={categories ?? []}
             articleTypes={articleTypes ?? []}
             itemSectionCategory={itemSectionCategory}
+            itemFamilia={itemFamilia}
           />
         </Card>
       </section>
