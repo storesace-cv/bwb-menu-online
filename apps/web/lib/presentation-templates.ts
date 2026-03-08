@@ -1,8 +1,10 @@
 import type { ComponentType } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
 import { ItemCardRestaurante1 } from "@/components/public-menu/item-card-restaurante-1";
+import { ItemCardDestaque1 } from "@/components/public-menu/item-card-destaque-1";
 
 export const DEFAULT_PRESENTATION_KEY = "modelo-restaurante-1";
+export const DEFAULT_FEATURED_PRESENTATION_KEY = "modelo-destaque-1";
 
 /** Zone types for layout-defined cards (order + visibility only). */
 export const LAYOUT_ZONE_TYPES = [
@@ -126,10 +128,21 @@ export type PresentationCardProps = {
   currencyCode?: string;
 };
 
+export type FeaturedCardProps = {
+  item: PublicMenuItem;
+  currencyCode?: string;
+  categoryName?: string;
+};
+
 type PresentationCardComponent = ComponentType<PresentationCardProps>;
+type FeaturedCardComponent = ComponentType<FeaturedCardProps>;
 
 const registry: Record<string, PresentationCardComponent> = {
   [DEFAULT_PRESENTATION_KEY]: ItemCardRestaurante1,
+};
+
+const featuredRegistry: Record<string, FeaturedCardComponent> = {
+  [DEFAULT_FEATURED_PRESENTATION_KEY]: ItemCardDestaque1,
 };
 
 /**
@@ -141,6 +154,19 @@ export function getPresentationCardComponent(key?: string | null): PresentationC
   return registry[k] ?? ItemCardRestaurante1;
 }
 
+/**
+ * Returns the featured carousel card component for the given key.
+ * Fallback: modelo-destaque-1 if key is missing or not in registry.
+ */
+export function getFeaturedPresentationCardComponent(key?: string | null): FeaturedCardComponent {
+  const k = (key?.trim() || DEFAULT_FEATURED_PRESENTATION_KEY).toLowerCase();
+  return featuredRegistry[k] ?? ItemCardDestaque1;
+}
+
 export function getPresentationComponentKeys(): string[] {
   return Object.keys(registry);
+}
+
+export function getFeaturedPresentationComponentKeys(): string[] {
+  return Object.keys(featuredRegistry);
 }

@@ -90,12 +90,33 @@ export type PublicMenuStoreSettings = {
   category_title_padding_top?: string;
   category_title_indent_px?: string;
   category_title_color?: string;
+  /** Label do bloco de destaques no topo do menu (ex.: Escolhas do Chef). */
+  featured_section_label?: string;
+  /** Chave do modelo de apresentação de destaques (ex.: modelo-destaque-1). */
+  featured_template_key?: string;
 };
+
+/** Layout definition for featured carousel cards (same shape as presentation-templates LayoutDefinition). */
+export type PublicMenuFeaturedLayoutDefinition = {
+  canvasHeight?: number;
+  zoneOrder: string[];
+  zoneWidths?: Record<string, string>;
+  zoneHeights?: Record<string, number>;
+  rowSpacingPx?: number;
+  contentPaddingPx?: number;
+  contentRowGapPx?: number;
+  nameFontSize?: string;
+  nameFontWeight?: string;
+  priceFontSize?: string;
+  priceLineHeight?: string;
+} | null;
 
 export type PublicMenuPayload = {
   store_id: string | null;
   store_name: string | null;
   store_settings?: PublicMenuStoreSettings;
+  /** Layout do template de destaques selecionado pela loja (para o carrossel). */
+  featured_layout_definition?: PublicMenuFeaturedLayoutDefinition;
   sections: PublicMenuSection[];
   categories: PublicMenuCategory[];
   error?: string;

@@ -11,9 +11,11 @@ const MENU_TEMPLATE_OPTIONS: { value: string; label: string }[] = [
 
 export function SettingsForm({
   storeId,
+  featuredTemplates,
   initial,
 }: {
   storeId: string;
+  featuredTemplates: { id: string; name: string; component_key: string }[];
   initial: {
     store_display_name?: string;
     primary_color?: string;
@@ -25,6 +27,8 @@ export function SettingsForm({
     contact_url?: string;
     privacy_url?: string;
     reservation_url?: string;
+    featured_section_label?: string;
+    featured_template_key?: string;
   };
 }) {
   const [state, formAction] = useFormState(updateStoreSettings, null);
@@ -42,6 +46,29 @@ export function SettingsForm({
             {opt.label}
           </option>
         ))}
+      </Select>
+      <Input
+        id="featured_section_label"
+        name="featured_section_label"
+        label="Nome que aparece no Menu (bloco de destaques)"
+        type="text"
+        defaultValue={initial.featured_section_label ?? ""}
+        placeholder="ex: Escolhas do Chef, Destaques"
+      />
+      <Select
+        id="featured_template_key"
+        name="featured_template_key"
+        label="Modelo de apresentação de Destaques"
+        defaultValue={initial.featured_template_key ?? "modelo-destaque-1"}
+      >
+        {featuredTemplates.map((t) => (
+          <option key={t.id} value={t.component_key}>
+            {t.name}
+          </option>
+        ))}
+        {featuredTemplates.length === 0 && (
+          <option value="modelo-destaque-1">Modelo Destaque 1</option>
+        )}
       </Select>
       <Input
         id="store_display_name"

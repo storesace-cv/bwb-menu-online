@@ -6,6 +6,7 @@ import type { PublicMenuPayload, PublicMenuItem } from "@/lib/supabase";
 import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getPresentationCardComponent, DEFAULT_PRESENTATION_KEY } from "@/lib/presentation-templates";
 import { ItemCardFromLayout } from "./item-card-from-layout";
+import { FeaturedCarouselSection } from "./featured-carousel-section";
 
 const FALLBACK_PRIMARY = "#8b6914";
 
@@ -63,6 +64,17 @@ function collectFeaturedItems(menu: PublicMenuPayload): PublicMenuItem[] {
   return out;
 }
 
+/** Featured items with category name for the carousel (order preserved from menu). */
+function collectFeaturedItemsWithCategory(menu: PublicMenuPayload): { item: PublicMenuItem; categoryName: string }[] {
+  const out: { item: PublicMenuItem; categoryName: string }[] = [];
+  (menu.categories ?? []).forEach((cat) => {
+    cat.items?.forEach((item) => {
+      if (item.is_featured) out.push({ item, categoryName: cat.name });
+    });
+  });
+  return out;
+}
+
 export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("");
@@ -92,6 +104,10 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
   const categoryTitleColor = menu.store_settings?.category_title_color?.trim() || "rgb(167, 143, 57)";
 
   const featuredItems = useMemo(() => collectFeaturedItems(menu), [menu]);
+  const featuredItemsWithCategory = useMemo(() => collectFeaturedItemsWithCategory(menu), [menu]);
+  const featuredSectionLabel = menu.store_settings?.featured_section_label?.trim() || "Escolhas do Chefe";
+  const featuredTemplateKey = menu.store_settings?.featured_template_key?.trim() || "modelo-destaque-1";
+  const featuredLayoutDefinition = menu.featured_layout_definition ?? null;
 
   const categoryOptions = useMemo(() => {
     const cats = menu.categories ?? [];
@@ -244,36 +260,14 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
         </section>
       )}
 
-      {/* Escolhas do Chefe */}
-      {featuredItems.length > 0 && (() => {
-        const FeaturedCard = getPresentationCardComponent(DEFAULT_PRESENTATION_KEY);
-        return (
-          <section className="mb-8">
-            <h2
-              className="text-xl font-semibold mb-4 pb-2 border-b-2"
-              style={{ borderColor: "var(--menu-primary)", color: "var(--menu-primary)" }}
-            >
-              Escolhas do Chefe
-            </h2>
-            <div className="block sm:hidden">
-              <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
-                {featuredItems.map((item) => (
-                  <FeaturedCard key={item.id} item={item} currencyCode={currencyCode} />
-                ))}
-              </ul>
-            </div>
-            <div className="hidden sm:block">
-              <ul className="p-0 m-0 list-none flex flex-col gap-6">
-                {pairs(featuredItems).map((pair) => (
-                  <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
-                    <RowCards items={pair} currencyCode={currencyCode} CardComponent={FeaturedCard} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        );
-      })()}
+      {/* Carrossel de destaques */}
+      <FeaturedCarouselSection
+        featuredItems={featuredItemsWithCategory}
+        featuredSectionLabel={featuredSectionLabel}
+        featuredTemplateKey={featuredTemplateKey}
+        featuredLayoutDefinition={featuredLayoutDefinition}
+        currencyCode={currencyCode}
+      />
 
       {/* Filters: category tabs + chips */}
       <section className="mb-6">

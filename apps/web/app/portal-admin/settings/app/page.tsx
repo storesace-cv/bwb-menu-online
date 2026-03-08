@@ -27,6 +27,11 @@ export default async function ParamsAppPage() {
   const settings = (row?.settings as Record<string, string> | null) ?? {};
   const menuTemplateKey = settings.menu_template_key ?? "bwb-branco";
 
+  const { data: featuredTemplates } = await supabase
+    .from("menu_featured_presentation_templates")
+    .select("id, name, component_key")
+    .order("name");
+
   const { data: lastRunRow } = await supabase
     .from("sync_runs")
     .select("id, status, started_at, finished_at, counts, error")
@@ -50,6 +55,7 @@ export default async function ParamsAppPage() {
       <Card>
         <SettingsForm
           storeId={storeId}
+          featuredTemplates={featuredTemplates ?? []}
           initial={{
             store_display_name: settings.store_display_name ?? "",
             primary_color: settings.primary_color ?? "",
@@ -61,6 +67,8 @@ export default async function ParamsAppPage() {
             contact_url: settings.contact_url ?? "",
             privacy_url: settings.privacy_url ?? "",
             reservation_url: settings.reservation_url ?? "",
+            featured_section_label: settings.featured_section_label ?? "",
+            featured_template_key: settings.featured_template_key ?? "modelo-destaque-1",
           }}
         />
       </Card>

@@ -111,10 +111,14 @@ function groupZonesIntoRows(
   return rows;
 }
 
+type LayoutUpdateFn = (templateId: string, payload: Parameters<typeof updatePresentationTemplateLayout>[1]) => Promise<{ error?: string }>;
+
 type Props = {
   templateId: string;
   templateName: string;
   initialLayout: LayoutDefinition | null;
+  /** Quando fornecido (ex.: editor de modelos de destaques), usa esta função em vez de updatePresentationTemplateLayout. */
+  onUpdateLayout?: LayoutUpdateFn;
 };
 
 /** Default zoneWidths: price_old e price a metade (mesma linha) para compatibilidade. */
@@ -154,7 +158,7 @@ function getInitialCanvasHeight(initialLayout: LayoutDefinition | null): number 
   return null;
 }
 
-export function LayoutEditorClient({ templateId, templateName, initialLayout }: Props) {
+export function LayoutEditorClient({ templateId, templateName, initialLayout, onUpdateLayout }: Props) {
   const defaultLayout = getDefaultLayoutDefinition();
   const [canvasHeight, setCanvasHeight] = useState<number | null>(() =>
     getInitialCanvasHeight(initialLayout)
@@ -315,7 +319,8 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
         if (effective !== defaultH) heightsToSave[z] = effective;
       });
       if (Object.keys(heightsToSave).length > 0) payload.zoneHeights = heightsToSave;
-      const result = await updatePresentationTemplateLayout(templateId, payload);
+      const updateFn = onUpdateLayout ?? updatePresentationTemplateLayout;
+      const result = await updateFn(templateId, payload);
       if (result?.error) {
         setError(result.error);
         return;

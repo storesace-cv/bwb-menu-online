@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase-server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { sendFirstStoreWelcomeEmail } from "@/lib/mailer";
 import { tenantsActionLog } from "@/lib/portal-debug-log";
 
@@ -622,6 +623,124 @@ export async function updatePresentationTemplateLayout(
   return {};
 }
 
+/** Actualizar layout de um modelo de apresentação de Destaques (superadmin). Mesma assinatura e payload que updatePresentationTemplateLayout. */
+export async function updateFeaturedPresentationTemplateLayout(
+  templateId: string,
+  layoutDefinition: Parameters<typeof updatePresentationTemplateLayout>[1]
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) return { error: "Acesso reservado a superadmin." };
+  const id = (templateId ?? "").trim();
+  if (!id) return { error: "ID do template obrigatório." };
+  const zones = Array.isArray(layoutDefinition?.zoneOrder) ? layoutDefinition.zoneOrder : [];
+  if (zones.length === 0) return { error: "Indique pelo menos um campo na ordem." };
+  const invalid = zones.find((z) => typeof z !== "string" || !LAYOUT_ZONE_TYPES.has(z));
+  if (invalid !== undefined) return { error: `Tipo de zona inválido: ${invalid}` };
+  const canvasHeight =
+    layoutDefinition.canvasHeight != null && Number.isFinite(Number(layoutDefinition.canvasHeight))
+      ? Number(layoutDefinition.canvasHeight)
+      : null;
+  let zoneWidths: Record<string, string> | undefined;
+  if (layoutDefinition.zoneWidths && typeof layoutDefinition.zoneWidths === "object") {
+    zoneWidths = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneWidths)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "string" || !ZONE_WIDTH_VALUES.has(val)) continue;
+      zoneWidths[key] = val;
+    }
+    if (Object.keys(zoneWidths).length === 0) zoneWidths = undefined;
+  }
+  let rowSpacingPx: number | null = null;
+  if (layoutDefinition.rowSpacingPx != null && Number.isFinite(Number(layoutDefinition.rowSpacingPx))) {
+    const n = Math.round(Number(layoutDefinition.rowSpacingPx));
+    if (n >= 0 && n <= 48) rowSpacingPx = n;
+  }
+  let zoneHeights: Record<string, number> | undefined;
+  if (layoutDefinition.zoneHeights && typeof layoutDefinition.zoneHeights === "object") {
+    zoneHeights = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneHeights)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "number" || !Number.isFinite(val)) continue;
+      const n = Math.round(Number(val));
+      if (n >= 0 && n <= ZONE_HEIGHT_MAX) zoneHeights[key] = n;
+    }
+    if (Object.keys(zoneHeights).length === 0) zoneHeights = undefined;
+  }
+  let contentPaddingPx: number | null = null;
+  if (layoutDefinition.contentPaddingPx != null && Number.isFinite(Number(layoutDefinition.contentPaddingPx))) {
+    const n = Math.round(Number(layoutDefinition.contentPaddingPx));
+    if (n >= CONTENT_PADDING_MIN && n <= CONTENT_PADDING_MAX) contentPaddingPx = n;
+  }
+  let contentRowGapPx: number | null = null;
+  if (layoutDefinition.contentRowGapPx != null && Number.isFinite(Number(layoutDefinition.contentRowGapPx))) {
+    const n = Math.round(Number(layoutDefinition.contentRowGapPx));
+    if (n >= CONTENT_ROW_GAP_MIN && n <= CONTENT_ROW_GAP_MAX) contentRowGapPx = n;
+  }
+  const nameFontSize =
+    typeof layoutDefinition.nameFontSize === "string" && CONTENT_FONT_SIZES.has(layoutDefinition.nameFontSize)
+      ? layoutDefinition.nameFontSize
+      : null;
+  const nameFontWeight =
+    typeof layoutDefinition.nameFontWeight === "string" && CONTENT_FONT_WEIGHTS.has(layoutDefinition.nameFontWeight)
+      ? layoutDefinition.nameFontWeight
+      : null;
+  const priceFontSize =
+    typeof layoutDefinition.priceFontSize === "string" && CONTENT_FONT_SIZES.has(layoutDefinition.priceFontSize)
+      ? layoutDefinition.priceFontSize
+      : null;
+  const priceLineHeight =
+    typeof layoutDefinition.priceLineHeight === "string" && CONTENT_LINE_HEIGHTS.has(layoutDefinition.priceLineHeight)
+      ? layoutDefinition.priceLineHeight
+      : null;
+
+  const payload = {
+    zoneOrder: zones,
+    ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
+    ...(zoneWidths ? { zoneWidths } : {}),
+    ...(zoneHeights ? { zoneHeights } : {}),
+    ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
+    ...(contentPaddingPx !== null ? { contentPaddingPx } : {}),
+    ...(contentRowGapPx !== null ? { contentRowGapPx } : {}),
+    ...(nameFontSize ? { nameFontSize } : {}),
+    ...(nameFontWeight ? { nameFontWeight } : {}),
+    ...(priceFontSize ? { priceFontSize } : {}),
+    ...(priceLineHeight ? { priceLineHeight } : {}),
+  };
+  const { error } = await supabase
+    .from("menu_featured_presentation_templates")
+    .update({ layout_definition: payload })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/presentation-templates");
+  revalidatePath(`/portal-admin/settings/presentation-templates/featured/${id}/layout`);
+  return {};
+}
+
+/** Criar "Modelo Destaque 1" a partir do layout de Modelo Restaurante 1 (superadmin). Só cria se ainda não existir. */
+export async function createFeaturedTemplateFromRestaurante1(_prev: { error?: string } | null): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createClient();
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) return { error: "Acesso reservado a superadmin." };
+  const { data: existing } = await supabase
+    .from("menu_featured_presentation_templates")
+    .select("id")
+    .eq("name", "Modelo Destaque 1")
+    .maybeSingle();
+  if (existing) return { error: "Modelo Destaque 1 já existe." };
+  const { data: source } = await supabase
+    .from("menu_presentation_templates")
+    .select("layout_definition")
+    .eq("name", "Modelo Restaurante 1")
+    .single();
+  const { error } = await supabase.from("menu_featured_presentation_templates").insert({
+    name: "Modelo Destaque 1",
+    component_key: "modelo-destaque-1",
+    layout_definition: source?.layout_definition ?? null,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/presentation-templates");
+  redirect("/portal-admin/settings/presentation-templates");
+}
+
 export async function assignRole(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const userId = (formData.get("user_id") as string)?.trim() ?? "";
@@ -997,6 +1116,8 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   const contactUrl = (formData.get("contact_url") as string)?.trim() ?? "";
   const privacyUrl = (formData.get("privacy_url") as string)?.trim() ?? "";
   const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
+  const featuredSectionLabel = (formData.get("featured_section_label") as string)?.trim() ?? "";
+  const featuredTemplateKey = (formData.get("featured_template_key") as string)?.trim() || "modelo-destaque-1";
 
   const merged: Record<string, string> = { ...currentSettings };
   merged.store_display_name = storeDisplayName;
@@ -1009,6 +1130,8 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   merged.contact_url = contactUrl;
   merged.privacy_url = privacyUrl;
   merged.reservation_url = reservationUrl;
+  merged.featured_section_label = featuredSectionLabel;
+  merged.featured_template_key = featuredTemplateKey;
 
   const { error } = await supabase.from("store_settings").upsert(
     { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
