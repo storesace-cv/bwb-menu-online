@@ -111,11 +111,15 @@ export default async function MenuPage({
   }));
   const itemsById = new Map(itemsWithResolvedPrice.map((i) => [i.id, i]));
   const byCategory = new Map<string, { menu_item_id: string; sort_order: number }[]>();
+  const itemIdsInCategory = new Set<string>();
   for (const ci of categoryItems ?? []) {
+    itemIdsInCategory.add(ci.menu_item_id);
     const list = byCategory.get(ci.category_id) ?? [];
     list.push({ menu_item_id: ci.menu_item_id, sort_order: ci.sort_order });
     byCategory.set(ci.category_id, list);
   }
+
+  const uncategorizedItems = itemsWithResolvedPrice.filter((i) => !itemIdsInCategory.has(i.id));
 
   const categoriesFiltered =
     categoryFilterIds.length > 0
@@ -129,6 +133,29 @@ export default async function MenuPage({
 
   const includeNoSection = sectionFilterIds.length === 0 || sectionFilterIds.includes("__none__");
   const sectionsToInclude = new Set(sectionFilterIds.length > 0 ? sectionFilterIds : null);
+  const includeUncategorized = sectionFilterIds.length === 0 || sectionFilterIds.includes("__uncategorized__");
+
+  if (uncategorizedItems.length > 0 && includeUncategorized) {
+    const entries = q ? uncategorizedItems.filter((i) => matchesText(q, i)) : uncategorizedItems;
+    const sorted = [...entries].sort((a, b) => (a.menu_name_display ?? "").localeCompare(b.menu_name_display ?? "", "pt"));
+    const uncategorizedNode: SectionNode = {
+      sectionKey: "__uncategorized__",
+      sectionName: "Por configurar",
+      categories: [
+        {
+          categoryId: "__uncategorized__",
+          categoryName: "Artigos sem secção/categoria",
+          items: sorted.map((i) => ({
+            id: i.id,
+            menu_name: i.menu_name_display ?? "",
+            menu_price: i.menu_price_display ?? i.menu_price,
+            is_featured: i.is_featured,
+          })),
+        },
+      ],
+    };
+    tree.push(uncategorizedNode);
+  }
 
   if (hasNoSection && includeNoSection) {
     const catNodes = noSectionCategories
@@ -176,6 +203,7 @@ export default async function MenuPage({
 
   const allCategories = (categories ?? []).sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"));
   const sectionOptions = [
+    { id: "__uncategorized__", label: "Por configurar" },
     { id: "__none__", label: "Sem secção" },
     ...(sections ?? []).map((s) => ({ id: s.id, label: s.name ?? "" })),
   ];

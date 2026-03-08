@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (menu vazio e Definições: getPortalHost, migration 042; admin_create_store preserve on conflict, migration 041).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (itens sem secção/categoria na página Menu; menu vazio e Definições: getPortalHost, migration 042).
 
 ---
 
@@ -77,6 +77,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Importação de imagens em lote (migrations 039–040):** Em Definições → Importação de Imagens o utilizador pode enviar múltiplas imagens (JPG/PNG/WebP); o código do artigo é extraído do nome do ficheiro (token antes do primeiro `_`, `-` ou espaço). Migration 039: colunas em `menu_items` (`item_code`, `image_base_path`, `has_image`, `image_updated_at`), índice por loja+código, backfill de `item_code` a partir de `catalog_items.external_id`, e `public_menu_by_hostname` passa a incluir `image_base_path`. Migration 040: `propagate_import_to_catalog_and_menu` preenche `item_code` ao criar `menu_items`. API POST `/api/portal-admin/settings/image-import/upload` com sharp (rotação EXIF, resize 640×480 e 320×240, WebP), upload para o bucket Supabase `menu-images` (doc em [docs/STORAGE_MENU_IMAGES.md](docs/STORAGE_MENU_IMAGES.md)); template BWB - Branco e editor de item usam `image_base_path` (640.webp/320.webp) com fallback para `image_path`/`image_url`.
 - **Preservar origem dos dados ao criar loja (migration 041):** RPC `admin_create_store` passou a usar `ON CONFLICT DO UPDATE SET created_at = stores.created_at`, evitando que bootstraps (ex.: deploy) sobrescrevam `name` e `source_type` de lojas já configuradas. No dropdown "Origem dos Dados" por loja (Tenants / Lojas), feedback visual "Guardado" durante 2,5 s após alteração.
 - **Menu vazio e link Definições no portal tenant (migration 042):** Função `getPortalHost(headers)` em `lib/portal-mode.ts` para obter o host sem porta (x-portal-host → host → x-forwarded-host). Layout e todas as páginas/APIs do portal-admin tenant usam `getPortalHost` para resolver a loja; migration 042 altera `get_store_id_by_hostname` para comparar host sem porta (ex.: 9999999991.menu.bwb.pt:443 coincide com 9999999991.menu.bwb.pt). Corrige menu vazio e ausência do link Definições quando o host chega com porta.
+- **Itens sem secção/categoria na página Menu (portal tenant):** Na página `/portal-admin/menu`, os artigos que ainda não têm secção ou categoria associada aparecem numa secção virtual "Por configurar" → "Artigos sem secção/categoria", permitindo configurá-los após importação; o filtro de secções inclui a opção "Por configurar".
 
 ---
 
