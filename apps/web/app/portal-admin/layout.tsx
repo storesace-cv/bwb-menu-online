@@ -2,7 +2,7 @@ import "./admin.css";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
-import { getPortalMode } from "@/lib/portal-mode";
+import { getPortalHost, getPortalMode } from "@/lib/portal-mode";
 import { portalDebugLog } from "@/lib/portal-debug-log";
 import Link from "next/link";
 import { RedirectTo } from "./redirect-client";
@@ -21,7 +21,7 @@ export default async function PortalAdminLayout({
   let pathname = "/portal-admin";
   try {
     const headersList = await headers();
-    const host = headersList.get("host") ?? headersList.get("x-forwarded-host") ?? "";
+    const host = getPortalHost(headersList);
     pathname = headersList.get("x-pathname") ?? "/portal-admin";
     const mode = getPortalMode(host, pathname);
     const isLoginPage = pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/");

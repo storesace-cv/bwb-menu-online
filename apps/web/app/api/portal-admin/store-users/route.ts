@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
+import { getPortalHost } from "@/lib/portal-mode";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { sendWelcomeOrResetEmail } from "@/lib/mailer";
@@ -10,7 +11,7 @@ const DEFAULT_PASSWORD = "bwb-menu";
 async function getStoreIdFromRequest(supabase: Awaited<ReturnType<typeof createClient>>, request: NextRequest): Promise<string | null> {
   const queryStoreId = request.nextUrl.searchParams.get("store_id") ?? null;
   if (queryStoreId) return queryStoreId;
-  const host = request.headers.get("host") ?? request.headers.get("x-forwarded-host") ?? "";
+  const host = getPortalHost(request.headers);
   const { data } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
   return data ?? null;
 }

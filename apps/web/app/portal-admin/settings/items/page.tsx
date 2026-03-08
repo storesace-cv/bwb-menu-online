@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
+import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
 import { CreateItemForm } from "./create-item-form";
 import { ItemsListClient } from "./items-list-client";
@@ -7,7 +8,7 @@ import { Card } from "@/components/admin";
 
 export default async function SettingsItemsPage() {
   const headersList = await headers();
-  const host = headersList.get("x-portal-host") ?? headersList.get("host") ?? "";
+  const host = getPortalHost(headersList);
   const supabase = await createClient();
   const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
 

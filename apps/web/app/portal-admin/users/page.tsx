@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
-import { getPortalMode } from "@/lib/portal-mode";
+import { getPortalHost, getPortalMode } from "@/lib/portal-mode";
 import Link from "next/link";
 import { AddUserForm } from "./add-user-form";
 import { AssignRoleForm } from "./assign-role-form";
@@ -30,7 +30,7 @@ type StoreUserRow = {
 
 export default async function UsersPage() {
   const headersList = await headers();
-  const host = headersList.get("host") ?? headersList.get("x-forwarded-host") ?? "";
+  const host = getPortalHost(headersList);
   const pathname = headersList.get("x-pathname") ?? "/portal-admin/users";
   const mode = getPortalMode(host, pathname);
 

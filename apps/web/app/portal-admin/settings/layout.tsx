@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
-import { getPortalMode } from "@/lib/portal-mode";
+import { getPortalHost, getPortalMode } from "@/lib/portal-mode";
 import { RedirectTo } from "../redirect-client";
 
 export default async function PortalAdminSettingsLayout({
@@ -10,7 +10,7 @@ export default async function PortalAdminSettingsLayout({
   children: React.ReactNode;
 }) {
   const headersList = await headers();
-  const host = headersList.get("host") ?? headersList.get("x-forwarded-host") ?? "";
+  const host = getPortalHost(headersList);
   const pathname = headersList.get("x-pathname") ?? "/portal-admin/settings";
   const mode = getPortalMode(host, pathname);
 
