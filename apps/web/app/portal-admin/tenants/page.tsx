@@ -18,10 +18,29 @@ function formatDomains(domains: DomainRow[]): string {
     .join(", ");
 }
 
+function normalizeTenantRow(row: unknown): TenantRow | null {
+  if (!row || typeof row !== "object") return null;
+  const r = row as Record<string, unknown>;
+  if (typeof r.id !== "string") return null;
+  return {
+    id: r.id,
+    nif: typeof r.nif === "string" ? r.nif : "",
+    name: r.name != null ? String(r.name) : null,
+    contact_email: r.contact_email != null ? String(r.contact_email) : null,
+    created_at: r.created_at != null ? String(r.created_at) : undefined,
+  };
+}
+
 export default async function TenantsPage() {
   const supabase = await createClient();
-  const { data: raw } = await supabase.rpc("admin_list_tenants");
-  const list: TenantRow[] = Array.isArray(raw) ? raw : [];
+  let list: TenantRow[] = [];
+  try {
+    const { data: raw } = await supabase.rpc("admin_list_tenants");
+    const rawList = Array.isArray(raw) ? raw : [];
+    list = rawList.map(normalizeTenantRow).filter((t): t is TenantRow => t !== null);
+  } catch (err) {
+    console.error("TenantsPage admin_list_tenants:", err);
+  }
 
   const tenantsWithStores = await Promise.all(
     list.map(async (t) => {

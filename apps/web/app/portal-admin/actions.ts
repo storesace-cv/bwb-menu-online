@@ -71,16 +71,16 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
     if (domainErr) return { error: `Loja criada, mas falha ao associar domínio: ${domainErr.message}` };
   }
 
-  // Primeira loja: criar utilizador tenant_admin e enviar e-mail com credenciais
-  const { data: tenantRow } = await supabase.from("tenants").select("contact_email").eq("id", tenantId).single();
-  const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
-  const { count } = await supabase.from("stores").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
-  if (count === 1 && contactEmail) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (url && serviceKey) {
+  // Primeira loja: criar utilizador tenant_admin e enviar e-mail com credenciais (service role para contornar RLS em tenants)
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && serviceKey) {
+    const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+    const { data: tenantRow } = await admin.from("tenants").select("contact_email").eq("id", tenantId).single();
+    const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
+    const { count } = await admin.from("stores").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
+    if (count === 1 && contactEmail) {
       try {
-        const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
         const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
         const existing = listData?.users?.find((u) => u.email?.toLowerCase() === contactEmail);
         let userId: string;
@@ -190,24 +190,24 @@ export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ erro
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return { error: "Configuração do servidor em falta." };
 
-  const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
-  const { data: tenantRow } = await admin.from("tenants").select("contact_email").eq("id", tid).single();
-  const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
-  tenantsActionLog({
-    action: "resendTenantWelcomeEmail",
-    step: "tenant_read",
-    hasContactEmail: !!contactEmail,
-  });
-  if (!contactEmail) {
+  try {
+    const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+    const { data: tenantRow } = await admin.from("tenants").select("contact_email").eq("id", tid).single();
+    const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
     tenantsActionLog({
       action: "resendTenantWelcomeEmail",
-      step: "early_return",
-      reason: "no_contact_email",
+      step: "tenant_read",
+      hasContactEmail: !!contactEmail,
     });
-    return { error: "Defina o email do tenant antes de re-enviar." };
-  }
+    if (!contactEmail) {
+      tenantsActionLog({
+        action: "resendTenantWelcomeEmail",
+        step: "early_return",
+        reason: "no_contact_email",
+      });
+      return { error: "Defina o email do tenant antes de re-enviar." };
+    }
 
-  try {
     const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
     const existing = listData?.users?.find((u) => u.email?.toLowerCase() === contactEmail);
     let userId: string;
@@ -279,9 +279,17 @@ export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ erro
     });
     return { error: (err as Error).message };
   }
-  tenantsActionLog({ action: "resendTenantWelcomeEmail", step: "success" });
-  revalidatePath("/portal-admin/tenants");
-  return null;
+    tenantsActionLog({ action: "resendTenantWelcomeEmail", step: "success" });
+    revalidatePath("/portal-admin/tenants");
+    return null;
+  } catch (err) {
+    tenantsActionLog({
+      action: "resendTenantWelcomeEmail",
+      step: "catch",
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { error: err instanceof Error ? err.message : "Erro ao re-enviar e-mail." };
+  }
 }
 
 export async function setStoreDomain(_prev: { error?: string } | null, formData: FormData) {

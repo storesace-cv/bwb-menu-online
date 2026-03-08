@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (URL email boas-vindas para a loja; debug Server Actions tenants; PORTAL_DEBUG=1 no servidor; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (resiliência Tenants; deploy e verificação no container).
 
 ---
 
@@ -68,6 +68,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Logout redirect, login redirect e fix "Erro ao carregar" após login:** Em `/api/auth/signout/route.ts`, a URL de redirect é construída a partir de `Host` / `X-Forwarded-Host` e `X-Forwarded-Proto` (com fallback a `NEXT_PUBLIC_APP_URL`) em vez de `nextUrl`, evitando redirecionar para `http://0.0.0.0:3000/portal-admin/login`. Na página de login: uso de `navigator.sendBeacon` para `/api/debug/portal-log` e redirect com `window.location.href = "/portal-admin"` (full-page) em vez de `router.push` + `router.refresh`. Em `/api/debug/portal-log/route.ts`, leitura tolerante do body (ex.: `request.text()` + `JSON.parse`) para aceitar o payload enviado por sendBeacon. No layout do portal-admin, no `catch` do try/catch, re-lançar exceções com digest/mensagem de `NEXT_REDIRECT` (e opcionalmente `NEXT_NOT_FOUND`) em vez de as tratar como erro e mostrar a UI de fallback, eliminando o "Erro ao carregar. Verifique a sessão." após autenticação bem-sucedida.
 - **URL do email de boas-vindas ao tenant:** O email "Primeira loja criada" passou a enviar o link para o portal da loja (ex.: `https://<hostname>/portal-admin/login`) em vez de `https://menu.bwb.pt/portal-admin/login`. Em `createStore` usa-se o hostname da nova loja quando definido; em `resendTenantWelcomeEmail` obtém-se o hostname primário da primeira loja do tenant via `store_domains` e constrói-se `storeUrl` para o template.
 - **Debug Server Actions (tenants):** Logging estruturado `tenants_action` em `updateTenantContactEmail` e `resendTenantWelcomeEmail` (fases e erros); buffer em memória e endpoint GET `/api/debug/tenants-actions` (quando `PORTAL_DEBUG=1`) para inspeção dos últimos logs; doc em [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md). No deploy, o script `remote-update.sh` adiciona ou define `PORTAL_DEBUG=1` no `.env` do servidor para activar estes logs e o endpoint.
+- **Resiliência Tenants (consola, email, logs):** Em `createStore`, leitura de `contact_email` e contagem de lojas passou a usar cliente service role (contornar RLS em `tenants`). Página Tenants com `normalizeTenantRow` e try/catch em `admin_list_tenants` para parsing defensivo e fallback em falha. Layout portal-admin com try/catch alargado a `headers()` e pathname. `resendTenantWelcomeEmail` com try/catch externo e retorno serializável em erro. Reduz erros na consola e garante que o email do tenant aparece quando a migração 028 está aplicada.
 
 ---
 

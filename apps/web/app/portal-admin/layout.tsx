@@ -18,21 +18,22 @@ export default async function PortalAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const headersList = await headers();
-  const host = headersList.get("host") ?? headersList.get("x-forwarded-host") ?? "";
-  const pathname = headersList.get("x-pathname") ?? "/portal-admin";
-  const mode = getPortalMode(host, pathname);
-  const isLoginPage = pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/");
-  const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
-
-  portalDebugLog("layout", { pathname, host, isLoginPage, isRsc });
-
-  if (isLoginPage) {
-    portalDebugLog("layout", { pathname, decision: "login_page" });
-    return <div className={THEME_WRAPPER_CLASS}>{children}</div>;
-  }
-
+  let pathname = "/portal-admin";
   try {
+    const headersList = await headers();
+    const host = headersList.get("host") ?? headersList.get("x-forwarded-host") ?? "";
+    pathname = headersList.get("x-pathname") ?? "/portal-admin";
+    const mode = getPortalMode(host, pathname);
+    const isLoginPage = pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/");
+    const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
+
+    portalDebugLog("layout", { pathname, host, isLoginPage, isRsc });
+
+    if (isLoginPage) {
+      portalDebugLog("layout", { pathname, decision: "login_page" });
+      return <div className={THEME_WRAPPER_CLASS}>{children}</div>;
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     let mustRenew = false;
