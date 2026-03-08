@@ -19,9 +19,14 @@ export const LAYOUT_ZONE_TYPES = [
 
 export type LayoutZoneType = (typeof LAYOUT_ZONE_TYPES)[number];
 
+/** Largura da zona no layout: linha inteira, metade (50%) ou um quarto (25%). Consecutivos half/quarter ficam na mesma linha. */
+export type ZoneWidth = "full" | "half" | "quarter";
+
 export interface LayoutDefinition {
   canvasHeight?: number;
   zoneOrder: string[];
+  /** Opcional: largura por tipo de zona. Omitido = "full". Consecutivos "half" formam uma linha de 2; "quarter" até 4. */
+  zoneWidths?: Record<string, ZoneWidth>;
 }
 
 export const DEFAULT_CANVAS_HEIGHT = 560;

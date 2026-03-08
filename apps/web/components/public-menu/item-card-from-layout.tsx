@@ -1,10 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
-import type { LayoutDefinition } from "@/lib/presentation-templates";
+import type { LayoutDefinition, ZoneWidth } from "@/lib/presentation-templates";
 import { MenuIcon } from "../menu-icons";
 import { getImageSrc } from "./item-card-restaurante-1";
+
+function getEffectiveWidth(type: string, zoneWidths: Record<string, ZoneWidth> | undefined): ZoneWidth {
+  if (zoneWidths?.[type]) return zoneWidths[type];
+  return type === "price_old" || type === "price" ? "half" : "full";
+}
+
+/** Agrupa zoneOrder em linhas conforme zoneWidths (compatível com o editor). */
+function groupZonesIntoRows(
+  zoneOrder: string[],
+  zoneWidths: Record<string, ZoneWidth> | undefined
+): string[][] {
+  const rows: string[][] = [];
+  let i = 0;
+  while (i < zoneOrder.length) {
+    const type = zoneOrder[i];
+    const w = getEffectiveWidth(type, zoneWidths);
+    if (w === "full") {
+      rows.push([type]);
+      i += 1;
+    } else if (w === "half") {
+      const group = [type];
+      i += 1;
+      while (i < zoneOrder.length && getEffectiveWidth(zoneOrder[i], zoneWidths) === "half") {
+        group.push(zoneOrder[i]);
+        i += 1;
+        if (group.length >= 2) break;
+      }
+      rows.push(group);
+    } else {
+      const group = [type];
+      i += 1;
+      while (i < zoneOrder.length && getEffectiveWidth(zoneOrder[i], zoneWidths) === "quarter") {
+        group.push(zoneOrder[i]);
+        i += 1;
+        if (group.length >= 4) break;
+      }
+      rows.push(group);
+    }
+  }
+  return rows;
+}
 
 function formatPrice(value: number, currencyCode?: string): string {
   const formatted = value.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -201,10 +242,16 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
     }
   };
 
-  const contentZones = zoneOrder.filter((t) => t !== "image");
+  const zoneRows = useMemo(
+    () => groupZonesIntoRows(zoneOrder, layoutDefinition.zoneWidths),
+    [zoneOrder, layoutDefinition.zoneWidths]
+  );
   const hasImage = zoneOrder.includes("image");
-  const priceRowZones = zoneOrder.filter((t) => t === "price_old" || t === "price");
-  const contentWithoutPriceRow = contentZones.filter((t) => t !== "price_old" && t !== "price");
+  const imageRowIndex = zoneRows.findIndex((row) => row.length === 1 && row[0] === "image");
+  const contentRows = useMemo(
+    () => zoneRows.filter((_, idx) => idx !== imageRowIndex),
+    [zoneRows, imageRowIndex]
+  );
 
   return (
     <li className="list-none h-full flex">
@@ -212,19 +259,29 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
         className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col w-full h-full"
         style={minHeight != null ? { minHeight: `${minHeight}px` } : undefined}
       >
-        {hasImage && renderZone("image")}
+        {hasImage && imageRowIndex >= 0 && renderZone("image")}
         <div className="p-3 flex flex-col flex-1 min-h-0">
-          {contentWithoutPriceRow.map((type) => {
-            const el = renderZone(type);
-            return el != null ? <div key={type}>{el}</div> : null;
+          {contentRows.map((row, rowIdx) => {
+            if (row.length === 1) {
+              const el = renderZone(row[0]);
+              return el != null ? <div key={`r-${rowIdx}`} className="mt-0.5 first:mt-0">{el}</div> : null;
+            }
+            return (
+              <div
+                key={`r-${rowIdx}`}
+                className={`mt-2 flex items-center gap-4 ${row.length === 2 ? "" : "flex-wrap"}`}
+              >
+                {row.map((type) => {
+                  const el = renderZone(type);
+                  return el != null ? (
+                    <div key={type} className="flex-1 min-w-0">
+                      {el}
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            );
           })}
-          {priceRowZones.length > 0 && (
-            <div className={`mt-2 flex items-center gap-4 ${priceRowZones.length === 2 ? "" : "justify-end"}`}>
-              {priceRowZones.map((type) => (
-                <div key={type}>{renderZone(type)}</div>
-              ))}
-            </div>
-          )}
         </div>
       </article>
       <ImageIngredientsModal

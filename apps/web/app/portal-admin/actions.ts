@@ -507,11 +507,12 @@ export async function copyPresentationTemplate(_prev: { error?: string } | null,
 }
 
 const LAYOUT_ZONE_TYPES = new Set(["image", "icons", "name", "description", "ingredients", "prep_time", "allergens", "price_old", "price"]);
+const ZONE_WIDTH_VALUES = new Set(["full", "half", "quarter"]);
 
 /** Actualizar layout de um modelo de apresentação (superadmin). */
 export async function updatePresentationTemplateLayout(
   templateId: string,
-  layoutDefinition: { canvasHeight?: number; zoneOrder: string[] }
+  layoutDefinition: { canvasHeight?: number; zoneOrder: string[]; zoneWidths?: Record<string, string> }
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
@@ -526,7 +527,20 @@ export async function updatePresentationTemplateLayout(
     layoutDefinition.canvasHeight != null && Number.isFinite(Number(layoutDefinition.canvasHeight))
       ? Number(layoutDefinition.canvasHeight)
       : null;
-  const payload = { zoneOrder: zones, ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}) };
+  let zoneWidths: Record<string, string> | undefined;
+  if (layoutDefinition.zoneWidths && typeof layoutDefinition.zoneWidths === "object") {
+    zoneWidths = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneWidths)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "string" || !ZONE_WIDTH_VALUES.has(val)) continue;
+      zoneWidths[key] = val;
+    }
+    if (Object.keys(zoneWidths).length === 0) zoneWidths = undefined;
+  }
+  const payload = {
+    zoneOrder: zones,
+    ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
+    ...(zoneWidths ? { zoneWidths } : {}),
+  };
   const { error } = await supabase
     .from("menu_presentation_templates")
     .update({ layout_definition: payload })
