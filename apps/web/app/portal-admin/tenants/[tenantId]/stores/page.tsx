@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CreateStoreForm } from "./create-store-form";
-import { StoreSourceTypeCell } from "../../store-source-type-cell";
-import { Card, TableContainer } from "@/components/admin";
+import { StoresTableClient } from "../../stores-table-client";
+import { Card } from "@/components/admin";
 
 type Props = { params: Promise<{ tenantId: string }> };
 
@@ -25,13 +25,6 @@ export default async function TenantStoresPage({ params }: Props) {
     })
   );
 
-  function formatDomains(domains: DomainRow[]): string {
-    if (domains.length === 0) return "—";
-    return domains
-      .map((d) => (d.is_primary ? `${d.hostname} (primário)` : d.hostname))
-      .join(", ");
-  }
-
   return (
     <div>
       <p className="mb-4">
@@ -49,34 +42,11 @@ export default async function TenantStoresPage({ params }: Props) {
       <section>
         <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
         <Card>
-          <TableContainer>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-slate-600">
-                  <th className="text-left py-2 px-3 text-slate-300">Nº</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Nome da Loja</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Origem dos Dados</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Domínio(s)</th>
-                  <th className="text-left py-2 px-3 text-slate-300"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {storesWithDomains.map(({ store: s, domains }) => (
-                  <tr key={s.id} className="border-b border-slate-700">
-                    <td className="py-2 px-3 text-slate-200">{s.store_number}</td>
-                    <td className="py-2 px-3 text-slate-200">{s.name ?? "—"}</td>
-                    <td className="py-2 px-3 text-slate-200">
-                      <StoreSourceTypeCell storeId={s.id} sourceType={s.source_type} />
-                    </td>
-                    <td className="py-2 px-3 text-slate-200">{formatDomains(domains)}</td>
-                    <td className="py-2 px-3">
-                      <Link href={`/portal-admin/tenants/${tenantId}/stores/${s.id}/domains`} className="text-emerald-400 hover:text-emerald-300">Domínios</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </TableContainer>
+          <StoresTableClient
+            tenantId={tenantId}
+            storesWithDomains={storesWithDomains}
+            showActionsColumn={false}
+          />
           {storesWithDomains.length === 0 && <p className="text-slate-500 py-4">Nenhuma loja.</p>}
         </Card>
       </section>

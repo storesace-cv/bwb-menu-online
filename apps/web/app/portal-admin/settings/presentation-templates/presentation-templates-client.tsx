@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
 import Link from "next/link";
 import { copyPresentationTemplate } from "../../actions";
-import { Button, Input, Alert } from "@/components/admin";
+import { Button, Input, Alert, BwbTable } from "@/components/admin";
+import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 
 type Template = { id: string; name: string; component_key: string };
 
@@ -18,35 +19,50 @@ export function PresentationTemplatesClient({ templates }: { templates: Template
     }
   }, [copyState]);
 
+  const columns: ColumnDef<Template>[] = [
+    {
+      key: "name",
+      label: "Nome",
+      type: "text",
+      accessor: (t) => t.name,
+      render: (t) => t.name,
+    },
+    {
+      key: "component_key",
+      label: "Componente",
+      type: "text",
+      accessor: (t) => t.component_key,
+      render: (t) => <span className="text-slate-400 text-sm">{t.component_key}</span>,
+    },
+    {
+      key: "actions",
+      label: "Ações",
+      type: "text",
+      sortable: false,
+      headerClassName: "w-48",
+      render: (t) => (
+        <span className="flex flex-wrap gap-1">
+          <Link href={`/portal-admin/settings/presentation-templates/${t.id}/layout`}>
+            <Button type="button" variant="outline" className="py-1 px-2 text-sm">
+              Editar layout
+            </Button>
+          </Link>
+          <Button type="button" variant="outline" className="py-1 px-2 text-sm" onClick={() => setCopyModalSource(t)}>
+            Copiar
+          </Button>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b border-slate-600 text-left">
-            <th className="py-2 px-3 text-slate-300 font-medium">Nome</th>
-            <th className="py-2 px-3 text-slate-300 font-medium">Componente</th>
-            <th className="py-2 px-3 text-slate-300 font-medium w-48">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {templates.map((t) => (
-            <tr key={t.id} className="border-b border-slate-700">
-              <td className="py-2 px-3 text-slate-200">{t.name}</td>
-              <td className="py-2 px-3 text-slate-400 text-sm">{t.component_key}</td>
-              <td className="py-2 px-3 flex flex-wrap gap-1">
-                <Link href={`/portal-admin/settings/presentation-templates/${t.id}/layout`}>
-                  <Button type="button" variant="outline" className="py-1 px-2 text-sm">
-                    Editar layout
-                  </Button>
-                </Link>
-                <Button type="button" variant="outline" className="py-1 px-2 text-sm" onClick={() => setCopyModalSource(t)}>
-                  Copiar
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <BwbTable<Template>
+        columns={columns}
+        rows={templates}
+        rowKey={(t) => t.id}
+        defaultSort={[{ key: "name", direction: "asc", type: "text" }]}
+      />
       {templates.length === 0 && <p className="text-slate-500 py-4">Nenhum modelo.</p>}
 
       {copyModalSource && (

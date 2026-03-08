@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { updateImportFieldMapping } from "../../actions";
-import { Button, Alert, TableContainer } from "@/components/admin";
+import { Button, Alert, BwbTable } from "@/components/admin";
+import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 
 export type MappingRow = {
   id: string;
@@ -20,6 +21,187 @@ function getTransformType(transform: unknown): string {
   return "copy";
 }
 
+const PVP_OPTIONS = ["PVP1", "PVP2", "PVP3", "PVP4", "PVP5"] as const;
+const PRICE_ORIGINAL_TARGET = "catalog_items.price_original";
+
+type EditState = {
+  sourceField?: string;
+  targetField?: string;
+  transformType?: string;
+  isActive?: boolean;
+};
+
+function ImportMappingsGroupTable({ list }: { list: MappingRow[] }) {
+  const [editState, setEditState] = useState<Record<string, EditState>>({});
+  const [savingState, setSavingState] = useState<Record<string, boolean>>({});
+  const [resultState, setResultState] = useState<Record<string, { error?: string } | null>>({});
+
+  const getSourceField = (row: MappingRow) => editState[row.id]?.sourceField ?? row.source_field;
+  const getTargetField = (row: MappingRow) => editState[row.id]?.targetField ?? row.target_field;
+  const getTransformTypeVal = (row: MappingRow) => editState[row.id]?.transformType ?? getTransformType(row.transform);
+  const getIsActive = (row: MappingRow) => editState[row.id]?.isActive ?? row.is_active;
+
+  const dirty = (row: MappingRow) => {
+    const isPriceMapping = row.target_field === PRICE_ORIGINAL_TARGET;
+    return (
+      (isPriceMapping && getSourceField(row) !== row.source_field) ||
+      getTargetField(row) !== row.target_field ||
+      getTransformTypeVal(row) !== getTransformType(row.transform) ||
+      getIsActive(row) !== row.is_active
+    );
+  };
+
+  const handleSave = async (row: MappingRow) => {
+    setResultState((prev) => ({ ...prev, [row.id]: null }));
+    setSavingState((prev) => ({ ...prev, [row.id]: true }));
+    try {
+      const isPriceMapping = row.target_field === PRICE_ORIGINAL_TARGET;
+      const res = await updateImportFieldMapping(
+        row.id,
+        getTargetField(row),
+        { type: getTransformTypeVal(row) },
+        getIsActive(row),
+        isPriceMapping ? getSourceField(row) : undefined
+      );
+      setResultState((prev) => ({ ...prev, [row.id]: res ?? null }));
+    } catch {
+      setResultState((prev) => ({ ...prev, [row.id]: { error: "Erro ao guardar. Tente novamente." } }));
+    } finally {
+      setSavingState((prev) => ({ ...prev, [row.id]: false }));
+    }
+  };
+
+  const columns: ColumnDef<MappingRow>[] = useMemo(
+    () => [
+      {
+        key: "source_field",
+        label: "Campo origem",
+        type: "text",
+        accessor: (r) => getSourceField(r),
+        render: (row) => {
+          const isPriceMapping = row.target_field === PRICE_ORIGINAL_TARGET;
+          const value = getSourceField(row);
+          if (isPriceMapping) {
+            return (
+              <select
+                value={PVP_OPTIONS.includes(value as (typeof PVP_OPTIONS)[number]) ? value : "PVP1"}
+                onChange={(e) =>
+                  setEditState((prev) => ({
+                    ...prev,
+                    [row.id]: { ...prev[row.id], sourceField: e.target.value },
+                  }))
+                }
+                className="rounded bg-slate-800 border border-slate-600 px-2 py-1 text-slate-200 text-sm focus:ring-2 focus:ring-emerald-500"
+              >
+                {PVP_OPTIONS.map((pvp) => (
+                  <option key={pvp} value={pvp}>{pvp}</option>
+                ))}
+              </select>
+            );
+          }
+          return <span className="text-slate-200">{row.source_field}</span>;
+        },
+      },
+      {
+        key: "target_field",
+        label: "Campo destino",
+        type: "text",
+        accessor: (r) => getTargetField(r),
+        render: (row) => (
+          <input
+            type="text"
+            value={getTargetField(row)}
+            onChange={(e) =>
+              setEditState((prev) => ({
+                ...prev,
+                [row.id]: { ...prev[row.id], targetField: e.target.value },
+              }))
+            }
+            className="w-full max-w-xs rounded bg-slate-800 border border-slate-600 px-2 py-1 text-slate-200 text-sm focus:ring-2 focus:ring-emerald-500"
+            placeholder="ex: catalog_items.name_original"
+          />
+        ),
+      },
+      {
+        key: "transform",
+        label: "Transformação",
+        type: "text",
+        accessor: (r) => getTransformTypeVal(r),
+        render: (row) => (
+          <select
+            value={getTransformTypeVal(row)}
+            onChange={(e) =>
+              setEditState((prev) => ({
+                ...prev,
+                [row.id]: { ...prev[row.id], transformType: e.target.value },
+              }))
+            }
+            className="rounded bg-slate-800 border border-slate-600 px-2 py-1 text-slate-200 text-sm focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="copy">copy</option>
+            <option value="number">number</option>
+            <option value="boolean">boolean</option>
+          </select>
+        ),
+      },
+      {
+        key: "is_active",
+        label: "Ativo",
+        type: "text",
+        accessor: (r) => (getIsActive(r) ? "Sim" : "Não"),
+        render: (row) => (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={getIsActive(row)}
+              onChange={(e) =>
+                setEditState((prev) => ({
+                  ...prev,
+                  [row.id]: { ...prev[row.id], isActive: e.target.checked },
+                }))
+              }
+              className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span className="text-slate-200">{getIsActive(row) ? "Sim" : "Não"}</span>
+          </label>
+        ),
+      },
+      {
+        key: "actions",
+        label: "Ações",
+        type: "text",
+        sortable: false,
+        render: (row) => (
+          <div className="flex flex-col gap-1">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => handleSave(row)}
+              disabled={savingState[row.id] || !dirty(row)}
+            >
+              {savingState[row.id] ? "A guardar…" : "Guardar"}
+            </Button>
+            {resultState[row.id]?.error && (
+              <Alert variant="error" className="text-xs">{resultState[row.id]?.error}</Alert>
+            )}
+          </div>
+        ),
+      },
+    ],
+    [editState, savingState, resultState]
+  );
+
+  return (
+    <BwbTable<MappingRow>
+      columns={columns}
+      rows={list}
+      rowKey={(r) => r.id}
+      defaultSort={[{ key: "source_field", direction: "asc", type: "text" }]}
+      tableClassName="text-sm"
+    />
+  );
+}
+
 export function ImportMappingsTable({ rows }: { rows: MappingRow[] }) {
   const grouped = rows.reduce<Record<string, MappingRow[]>>((acc, r) => {
     const k = r.source_type;
@@ -33,133 +215,9 @@ export function ImportMappingsTable({ rows }: { rows: MappingRow[] }) {
       {Object.entries(grouped).map(([sourceType, list]) => (
         <section key={sourceType}>
           <h2 className="text-lg font-medium text-slate-200 mb-3">{sourceType}</h2>
-          <TableContainer>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2 border-slate-600">
-                  <th className="text-left py-2 px-3 text-slate-300">Campo origem</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Campo destino</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Transformação</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Ativo</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((row) => (
-                  <MappingRowEdit
-                    key={row.id}
-                    row={row}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </TableContainer>
+          <ImportMappingsGroupTable list={list} />
         </section>
       ))}
     </div>
-  );
-}
-
-const PVP_OPTIONS = ["PVP1", "PVP2", "PVP3", "PVP4", "PVP5"] as const;
-const PRICE_ORIGINAL_TARGET = "catalog_items.price_original";
-
-function MappingRowEdit({ row }: { row: MappingRow }) {
-  const isPriceMapping = row.target_field === PRICE_ORIGINAL_TARGET;
-  const [sourceField, setSourceField] = useState(row.source_field);
-  const [targetField, setTargetField] = useState(row.target_field);
-  const [transformType, setTransformType] = useState(getTransformType(row.transform));
-  const [isActive, setIsActive] = useState(row.is_active);
-  const [saving, setSaving] = useState(false);
-  const [result, setResult] = useState<{ error?: string } | null>(null);
-
-  const dirty =
-    (isPriceMapping && sourceField !== row.source_field) ||
-    targetField !== row.target_field ||
-    transformType !== getTransformType(row.transform) ||
-    isActive !== row.is_active;
-
-  async function handleSave() {
-    setResult(null);
-    setSaving(true);
-    try {
-      const res = await updateImportFieldMapping(
-        row.id,
-        targetField,
-        { type: transformType },
-        isActive,
-        isPriceMapping ? sourceField : undefined
-      );
-      setResult(res ?? null);
-    } catch {
-      setResult({ error: "Erro ao guardar. Tente novamente." });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <tr className="border-b border-slate-700/50">
-      <td className="py-2 px-3 text-slate-200">
-        {isPriceMapping ? (
-          <select
-            value={PVP_OPTIONS.includes(sourceField as (typeof PVP_OPTIONS)[number]) ? sourceField : "PVP1"}
-            onChange={(e) => setSourceField(e.target.value)}
-            className="rounded bg-slate-800 border border-slate-600 px-2 py-1 text-slate-200 text-sm focus:ring-2 focus:ring-emerald-500"
-          >
-            {PVP_OPTIONS.map((pvp) => (
-              <option key={pvp} value={pvp}>{pvp}</option>
-            ))}
-          </select>
-        ) : (
-          row.source_field
-        )}
-      </td>
-      <td className="py-2 px-3">
-        <input
-          type="text"
-          value={targetField}
-          onChange={(e) => setTargetField(e.target.value)}
-          className="w-full max-w-xs rounded bg-slate-800 border border-slate-600 px-2 py-1 text-slate-200 text-sm focus:ring-2 focus:ring-emerald-500"
-          placeholder="ex: catalog_items.name_original"
-        />
-      </td>
-      <td className="py-2 px-3">
-        <select
-          value={transformType}
-          onChange={(e) => setTransformType(e.target.value)}
-          className="rounded bg-slate-800 border border-slate-600 px-2 py-1 text-slate-200 text-sm focus:ring-2 focus:ring-emerald-500"
-        >
-          <option value="copy">copy</option>
-          <option value="number">number</option>
-          <option value="boolean">boolean</option>
-        </select>
-      </td>
-      <td className="py-2 px-3">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500"
-          />
-          <span className="text-slate-200">{isActive ? "Sim" : "Não"}</span>
-        </label>
-      </td>
-      <td className="py-2 px-3">
-        <div className="flex flex-col gap-1">
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleSave}
-            disabled={saving || !dirty}
-          >
-            {saving ? "A guardar…" : "Guardar"}
-          </Button>
-          {result?.error && (
-            <Alert variant="error" className="text-xs">{result.error}</Alert>
-          )}
-        </div>
-      </td>
-    </tr>
   );
 }

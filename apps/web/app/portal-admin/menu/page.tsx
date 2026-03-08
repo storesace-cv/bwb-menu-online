@@ -157,19 +157,24 @@ export default async function MenuPage({
     tree.push(uncategorizedNode);
   }
 
+  type ItemWithOrder = { item: NonNullable<ReturnType<typeof itemsById.get>>; sort_order: number };
   if (hasNoSection && includeNoSection) {
     const catNodes = noSectionCategories
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"))
       .map((cat) => {
-        const entries = (byCategory.get(cat.id) ?? [])
-          .map(({ menu_item_id }) => itemsById.get(menu_item_id))
-          .filter(Boolean) as { id: string; menu_name: string | null; name_original?: string | null; menu_name_display: string; menu_price: number | null; menu_price_display: number | null; is_featured: boolean; menu_description?: string | null; menu_ingredients?: string | null }[];
-        const filtered = q ? entries.filter((i) => matchesText(q, i)) : entries;
-        const sorted = filtered.sort((a, b) => (a.menu_name_display ?? "").localeCompare(b.menu_name_display ?? "", "pt"));
+        const withOrder = (byCategory.get(cat.id) ?? [])
+          .map(({ menu_item_id, sort_order }) => ({ item: itemsById.get(menu_item_id), sort_order }))
+          .filter((e): e is ItemWithOrder => e.item != null);
+        const filtered = q ? withOrder.filter((e) => matchesText(q, e.item)) : withOrder;
+        const sorted = filtered.sort((a, b) => {
+          const c = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+          if (c !== 0) return c;
+          return (a.item.menu_name_display ?? "").localeCompare(b.item.menu_name_display ?? "", "pt");
+        });
         return {
           categoryId: cat.id,
           categoryName: cat.name ?? "",
-          items: sorted.map((i) => ({ id: i.id, menu_name: i.menu_name_display ?? "", menu_price: i.menu_price_display ?? i.menu_price, is_featured: i.is_featured })),
+          items: sorted.map((e) => ({ id: e.item.id, menu_name: e.item.menu_name_display ?? "", menu_price: e.item.menu_price_display ?? e.item.menu_price, is_featured: e.item.is_featured })),
         };
       })
       .filter((n) => n.items.length > 0 || !q);
@@ -184,15 +189,19 @@ export default async function MenuPage({
     const catNodes = catsInSection
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"))
       .map((cat) => {
-        const entries = (byCategory.get(cat.id) ?? [])
-          .map(({ menu_item_id }) => itemsById.get(menu_item_id))
-          .filter(Boolean) as { id: string; menu_name: string | null; name_original?: string | null; menu_name_display: string; menu_price: number | null; menu_price_display: number | null; is_featured: boolean; menu_description?: string | null; menu_ingredients?: string | null }[];
-        const filtered = q ? entries.filter((i) => matchesText(q, i)) : entries;
-        const sorted = filtered.sort((a, b) => (a.menu_name_display ?? "").localeCompare(b.menu_name_display ?? "", "pt"));
+        const withOrder = (byCategory.get(cat.id) ?? [])
+          .map(({ menu_item_id, sort_order }) => ({ item: itemsById.get(menu_item_id), sort_order }))
+          .filter((e): e is ItemWithOrder => e.item != null);
+        const filtered = q ? withOrder.filter((e) => matchesText(q, e.item)) : withOrder;
+        const sorted = filtered.sort((a, b) => {
+          const c = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+          if (c !== 0) return c;
+          return (a.item.menu_name_display ?? "").localeCompare(b.item.menu_name_display ?? "", "pt");
+        });
         return {
           categoryId: cat.id,
           categoryName: cat.name ?? "",
-          items: sorted.map((i) => ({ id: i.id, menu_name: i.menu_name_display ?? "", menu_price: i.menu_price_display ?? i.menu_price, is_featured: i.is_featured })),
+          items: sorted.map((e) => ({ id: e.item.id, menu_name: e.item.menu_name_display ?? "", menu_price: e.item.menu_price_display ?? e.item.menu_price, is_featured: e.item.is_featured })),
         };
       })
       .filter((n) => n.items.length > 0 || !q);

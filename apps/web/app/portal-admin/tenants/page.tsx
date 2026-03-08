@@ -2,22 +2,14 @@ import { createClient } from "@/lib/supabase-server";
 import { portalDebugLog } from "@/lib/portal-debug-log";
 import Link from "next/link";
 import { CreateStoreForm } from "./[tenantId]/stores/create-store-form";
-import { ClearStoreMenuButton } from "./clear-store-menu-button";
 import { StoreDomainsBlock } from "./store-domains-block";
-import { StoreSourceTypeCell } from "./store-source-type-cell";
+import { StoresTableClient } from "./stores-table-client";
 import { TenantContactEmailBlock } from "./tenant-contact-email-block";
-import { Card, TableContainer } from "@/components/admin";
+import { Card } from "@/components/admin";
 
 type TenantRow = { id: string; nif: string; name: string | null; contact_email?: string | null; created_at?: string };
 type StoreRow = { id: string; tenant_id: string; store_number: number; name: string | null; source_type: string; is_active?: boolean };
 type DomainRow = { hostname: string; is_primary?: boolean };
-
-function formatDomains(domains: DomainRow[]): string {
-  if (domains.length === 0) return "—";
-  return domains
-    .map((d) => (d.is_primary ? `${d.hostname} (primário)` : d.hostname))
-    .join(", ");
-}
 
 function normalizeTenantRow(row: unknown): TenantRow | null {
   if (!row || typeof row !== "object") return null;
@@ -109,40 +101,11 @@ export default async function TenantsPage() {
             </div>
 
             <h3 className="text-sm font-medium text-slate-300 mb-3">Lojas</h3>
-            <TableContainer>
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-slate-600">
-                    <th className="text-left py-2 px-3 text-slate-300">Nº</th>
-                    <th className="text-left py-2 px-3 text-slate-300">Nome da Loja</th>
-                    <th className="text-left py-2 px-3 text-slate-300">Origem dos Dados</th>
-                    <th className="text-left py-2 px-3 text-slate-300">Domínio(s)</th>
-                    <th className="text-left py-2 px-3 text-slate-300">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {storesWithDomains.map(({ store: s, domains }) => (
-                    <tr key={s.id} className="border-b border-slate-700">
-                      <td className="py-2 px-3 text-slate-200">{s.store_number}</td>
-                      <td className="py-2 px-3 text-slate-200">{s.name ?? "—"}</td>
-                      <td className="py-2 px-3 text-slate-200">
-                        <StoreSourceTypeCell storeId={s.id} sourceType={s.source_type} />
-                      </td>
-                      <td className="py-2 px-3 text-slate-200">{formatDomains(domains)}</td>
-                      <td className="py-2 px-3 space-x-2">
-                        <Link
-                          href={`/portal-admin/tenants/${t.id}/stores/${s.id}/domains`}
-                          className="text-emerald-400 hover:text-emerald-300"
-                        >
-                          Domínios
-                        </Link>
-                        <ClearStoreMenuButton storeId={s.id} storeName={s.name} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TableContainer>
+            <StoresTableClient
+              tenantId={t.id}
+              storesWithDomains={storesWithDomains}
+              showActionsColumn
+            />
             {storesWithDomains.length === 0 && <p className="text-slate-500 py-4">Nenhuma loja.</p>}
             {storesWithDomains.map(({ store: s, domains }) => (
               <StoreDomainsBlock key={s.id} storeId={s.id} storeName={s.name} domains={domains} />

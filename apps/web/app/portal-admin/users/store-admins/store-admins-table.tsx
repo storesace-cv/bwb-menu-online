@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, TableContainer } from "@/components/admin";
+import { Card, BwbTable } from "@/components/admin";
+import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 import { UserManageActions } from "../user-manage-actions";
 
 type StoreAdminRow = {
@@ -16,38 +17,49 @@ export function StoreAdminsTable({ list }: { list: StoreAdminRow[] }) {
     window.dispatchEvent(new CustomEvent("store-admins-refresh"));
   }
 
+  const columns: ColumnDef<StoreAdminRow>[] = [
+    {
+      key: "email",
+      label: "Email",
+      type: "text",
+      accessor: (u) => u.email ?? "",
+      render: (u) => u.email ?? "—",
+    },
+    {
+      key: "lojas",
+      label: "Lojas associadas",
+      type: "text",
+      accessor: (u) =>
+        u.bindings?.map((b) => b.store_name ?? b.store_id ?? "—").join(", ") ?? "",
+      render: (u) =>
+        u.bindings?.length
+          ? u.bindings.map((b) => b.store_name ?? b.store_id ?? "—").join(", ")
+          : "—",
+    },
+    {
+      key: "gerir",
+      label: "Gerir",
+      type: "text",
+      sortable: false,
+      render: (u) => (
+        <UserManageActions
+          userId={u.id}
+          deletedAt={u.deleted_at ?? null}
+          onSuccess={onSuccess}
+        />
+      ),
+    },
+  ];
+
   return (
     <Card>
-      <TableContainer>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-slate-600">
-              <th className="text-left py-2 px-3 text-slate-300">Email</th>
-              <th className="text-left py-2 px-3 text-slate-300">Lojas associadas</th>
-              <th className="text-left py-2 px-3 text-slate-300">Gerir</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((u) => (
-              <tr key={u.id} className={`border-b border-slate-700 ${u.deleted_at ? "opacity-70" : ""}`}>
-                <td className="py-2 px-3 text-slate-200">{u.email ?? "—"}</td>
-                <td className="py-2 px-3 text-slate-200">
-                  {u.bindings?.length
-                    ? u.bindings.map((b) => b.store_name ?? b.store_id ?? "—").join(", ")
-                    : "—"}
-                </td>
-                <td className="py-2 px-3">
-                  <UserManageActions
-                    userId={u.id}
-                    deletedAt={u.deleted_at ?? null}
-                    onSuccess={onSuccess}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </TableContainer>
+      <BwbTable<StoreAdminRow>
+        columns={columns}
+        rows={list}
+        rowKey={(u) => u.id}
+        defaultSort={[{ key: "email", direction: "asc", type: "text" }]}
+        getRowClassName={(u) => (u.deleted_at ? "opacity-70" : "")}
+      />
       {list.length === 0 && <p className="text-slate-500 py-4">Nenhum admin de loja.</p>}
     </Card>
   );

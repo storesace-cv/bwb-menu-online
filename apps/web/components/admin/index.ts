@@ -7,3 +7,5 @@ export type { MultiSelectOption } from "./MultiSelectDropdown";
 export { Select } from "./Select";
 export { Spinner } from "./Spinner";
 export { TableContainer } from "./TableContainer";
+export { BwbTable } from "./BwbTable";
+export type { ColumnDef, SortRule } from "./BwbTable";

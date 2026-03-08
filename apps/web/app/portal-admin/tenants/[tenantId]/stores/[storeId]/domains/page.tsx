@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { SetDomainForm } from "./set-domain-form";
-import { Card, TableContainer } from "@/components/admin";
+import { DomainsTableClient } from "../../../../domains-table-client";
+import { Card } from "@/components/admin";
 
 type Props = { params: Promise<{ tenantId: string; storeId: string }> };
 
@@ -32,26 +33,7 @@ export default async function StoreDomainsPage({ params }: Props) {
       <section>
         <h2 className="text-lg font-medium text-slate-200 mb-4">Lista</h2>
         <Card>
-          <TableContainer>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-slate-600">
-                  <th className="text-left py-2 px-3 text-slate-300">Hostname</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Origem do Domínio</th>
-                  <th className="text-left py-2 px-3 text-slate-300">Primário</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((d) => (
-                  <tr key={d.id} className="border-b border-slate-700">
-                    <td className="py-2 px-3 text-slate-200">{d.hostname}</td>
-                    <td className="py-2 px-3 text-slate-200">{d.domain_type === "default" ? "Partilhado" : d.domain_type === "custom" ? "Privado" : d.domain_type}</td>
-                    <td className="py-2 px-3 text-slate-200">{d.is_primary ? "Sim" : "Não"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </TableContainer>
+          <DomainsTableClient rows={list} />
           {list.length === 0 && <p className="text-slate-500 py-4">Nenhum domínio.</p>}
         </Card>
       </section>

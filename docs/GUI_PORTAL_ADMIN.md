@@ -54,6 +54,31 @@ Em `apps/web/components/admin/`:
 | `Alert` | Variants: `error`, `success`. |
 | `Spinner` | Indicador de carregamento (classe `.spinner` em admin.css). |
 | `TableContainer` | Wrapper com max-height e overflow para tabelas. |
+| `BwbTable` | Tabela com **Ordenação BWB** (multinível por clique nos cabeçalhos). Ver secção abaixo. |
+
+### Ordenação BWB
+
+Todas as tabelas do portal-admin com cabeçalhos utilizam o método padrão **Ordenação BWB**, implementado no componente `BwbTable` e na lógica em `apps/web/lib/admin/bwbTableSort.ts`.
+
+**Comportamento:**
+
+1. **Ordenação multinível (multi-coluna)** por cliques sucessivos nos cabeçalhos.
+2. **Ciclo por coluna:**  
+   - 1.º clique: adiciona a coluna como **última prioridade** em ASC.  
+   - 2.º clique: passa a coluna de ASC para DESC.  
+   - 3.º clique: remove a coluna da ordenação.
+3. A lista de regras de ordenação é mantida (várias colunas podem estar ativas com prioridades 1, 2, …).
+4. **Indicadores no cabeçalho (TH):**  
+   - Sem ordenação na coluna: ⇅ (cinza).  
+   - Ordenado: ↑ (ASC) ou ↓ (DESC) em emerald.  
+   - Se houver várias colunas ordenadas: número da prioridade (1, 2, …) junto da seta.
+5. **Tipos de coluna suportados:** `text`, `number`, `date`, `datetime`.
+6. **Texto:** normalização case-insensitive e sem acentos (NFD + remoção de diacríticos) para comparação.
+7. **Auto-deteção:** coluna definida como `text` mas com todos os valores numéricos é ordenada como número.
+8. **Datas:** parse com `Date`; para datetime aceita "YYYY-MM-DD HH:mm" (espaço substituído por "T" como fallback).
+9. Ordenação **estável**: em empate mantém a ordem original (índice como desempate).
+
+**Uso em novas tabelas:** Utilizar `<BwbTable />` com `columns` (definindo `key`, `label`, `type`, `accessor`, `render` quando necessário) e `defaultSort` quando fizer sentido. Colunas de ações ou não ordenáveis usam `sortable: false`. A ordenação é **client-side** nos dados já carregados; para listas muito grandes no futuro, está previsto no roadmap (P2) suporte a ordenação server-side com parâmetros de query.
 
 ### Exemplos de uso
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card } from "@/components/admin";
+import { Button, Card, BwbTable } from "@/components/admin";
+import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 
 type FileResult = {
   filename: string;
@@ -105,31 +106,48 @@ export function ImageImportClient({ storeId }: { storeId: string }) {
       {results && results.length > 0 && (
         <Card className="p-5 overflow-x-auto">
           <h3 className="text-lg font-medium text-slate-200 mb-3">Resultado</h3>
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b border-slate-600">
-                <th className="text-left py-2 px-3 text-slate-400 font-medium">Ficheiro</th>
-                <th className="text-left py-2 px-3 text-slate-400 font-medium">Código</th>
-                <th className="text-left py-2 px-3 text-slate-400 font-medium">Artigo</th>
-                <th className="text-left py-2 px-3 text-slate-400 font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((r, i) => (
-                <tr key={i} className="border-b border-slate-700/50">
-                  <td className="py-2 px-3 text-slate-200">{r.filename}</td>
-                  <td className="py-2 px-3 text-slate-200">{r.code || "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{r.item_name ?? "—"}</td>
-                  <td className="py-2 px-3">
-                    {r.status === "saved" && <span className="text-emerald-400">Guardado</span>}
-                    {r.status === "ignored" && <span className="text-amber-400">Ignorado</span>}
-                    {r.status === "unmatched" && <span className="text-slate-400">Sem artigo</span>}
-                    {r.status === "error" && <span className="text-red-400">{r.message ?? "Erro"}</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <BwbTable<FileResult>
+            columns={[
+              {
+                key: "filename",
+                label: "Ficheiro",
+                type: "text",
+                accessor: (r) => r.filename,
+                render: (r) => r.filename,
+              },
+              {
+                key: "code",
+                label: "Código",
+                type: "text",
+                accessor: (r) => r.code,
+                render: (r) => r.code || "—",
+              },
+              {
+                key: "item_name",
+                label: "Artigo",
+                type: "text",
+                accessor: (r) => r.item_name ?? "",
+                render: (r) => r.item_name ?? "—",
+              },
+              {
+                key: "status",
+                label: "Estado",
+                type: "text",
+                accessor: (r) => r.status,
+                render: (r) => {
+                  if (r.status === "saved") return <span className="text-emerald-400">Guardado</span>;
+                  if (r.status === "ignored") return <span className="text-amber-400">Ignorado</span>;
+                  if (r.status === "unmatched") return <span className="text-slate-400">Sem artigo</span>;
+                  if (r.status === "error") return <span className="text-red-400">{r.message ?? "Erro"}</span>;
+                  return "—";
+                },
+              },
+            ]}
+            rows={results}
+            rowKey={(r) => `${r.filename}-${r.code}-${r.item_id ?? ""}`}
+            defaultSort={[{ key: "filename", direction: "asc", type: "text" }]}
+            tableClassName="text-sm"
+          />
         </Card>
       )}
     </div>

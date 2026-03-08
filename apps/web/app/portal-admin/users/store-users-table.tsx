@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, TableContainer } from "@/components/admin";
+import { Card, BwbTable } from "@/components/admin";
+import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 import { UserManageActions } from "./user-manage-actions";
 
 type StoreUserRow = {
@@ -10,6 +11,14 @@ type StoreUserRow = {
   deleted_at?: string | null;
   store_id: string;
   store_name: string | null;
+};
+
+type AggregatedRow = {
+  id: string;
+  email: string | null;
+  created_at: string;
+  deleted_at: string | null;
+  stores: string;
 };
 
 export function StoreUsersTable({ list, storeId }: { list: StoreUserRow[]; storeId?: string }) {
@@ -23,7 +32,7 @@ export function StoreUsersTable({ list, storeId }: { list: StoreUserRow[]; store
     if (!byUser.has(key)) byUser.set(key, []);
     byUser.get(key)!.push(row);
   }
-  const rows = Array.from(byUser.entries()).map(([, rows]) => ({
+  const rows: AggregatedRow[] = Array.from(byUser.entries()).map(([, rows]) => ({
     id: rows[0]!.id,
     email: rows[0]!.email,
     created_at: rows[0]!.created_at,
@@ -31,36 +40,47 @@ export function StoreUsersTable({ list, storeId }: { list: StoreUserRow[]; store
     stores: rows.map((r) => r.store_name ?? r.store_id).join(", "),
   }));
 
+  const columns: ColumnDef<AggregatedRow>[] = [
+    {
+      key: "email",
+      label: "Email",
+      type: "text",
+      accessor: (u) => u.email ?? "",
+      render: (u) => u.email ?? "—",
+    },
+    {
+      key: "stores",
+      label: "Lojas",
+      type: "text",
+      accessor: (u) => u.stores,
+      render: (u) => u.stores,
+    },
+    {
+      key: "gerir",
+      label: "Gerir",
+      type: "text",
+      sortable: false,
+      render: (u) => (
+        <UserManageActions
+          userId={u.id}
+          deletedAt={u.deleted_at}
+          onSuccess={onSuccess}
+          storeId={storeId}
+          context={storeId ? "store_users" : undefined}
+        />
+      ),
+    },
+  ];
+
   return (
     <Card>
-      <TableContainer>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-slate-600">
-              <th className="text-left py-2 px-3 text-slate-300">Email</th>
-              <th className="text-left py-2 px-3 text-slate-300">Lojas</th>
-              <th className="text-left py-2 px-3 text-slate-300">Gerir</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((u) => (
-              <tr key={u.id} className={`border-b border-slate-700 ${u.deleted_at ? "opacity-70" : ""}`}>
-                <td className="py-2 px-3 text-slate-200">{u.email ?? "—"}</td>
-                <td className="py-2 px-3 text-slate-200">{u.stores}</td>
-                <td className="py-2 px-3">
-                  <UserManageActions
-                    userId={u.id}
-                    deletedAt={u.deleted_at}
-                    onSuccess={onSuccess}
-                    storeId={storeId}
-                    context={storeId ? "store_users" : undefined}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </TableContainer>
+      <BwbTable<AggregatedRow>
+        columns={columns}
+        rows={rows}
+        rowKey={(u) => u.id}
+        defaultSort={[{ key: "email", direction: "asc", type: "text" }]}
+        getRowClassName={(u) => (u.deleted_at ? "opacity-70" : "")}
+      />
       {rows.length === 0 && <p className="text-slate-500 py-4">Nenhum utilizador desta loja.</p>}
     </Card>
   );

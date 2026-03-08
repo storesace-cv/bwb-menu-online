@@ -4,7 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useFormState } from "react-dom";
 import { ItemActions } from "./item-actions";
 import { MenuIcon } from "@/components/menu-icons";
-import { TableContainer, Button } from "@/components/admin";
+import { BwbTable, Button } from "@/components/admin";
+import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 import { batchUpdateItemsSectionCategory } from "../../actions";
 
 type Section = { id: string; name: string; sort_order: number | null };
@@ -27,8 +28,6 @@ type Item = {
   prep_minutes: number | null;
 };
 
-type SortKey = "name" | "price" | "type" | "promo" | "ta" | "prep" | "section" | "category" | "familia" | "sub_familia";
-
 export function ItemsListClient({
   items,
   sections,
@@ -45,8 +44,6 @@ export function ItemsListClient({
   itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }>;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState<SortKey>("name");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [batchModalOpen, setBatchModalOpen] = useState(false);
   const [batchSectionId, setBatchSectionId] = useState("");
   const [batchCategoryId, setBatchCategoryId] = useState("");
@@ -92,61 +89,6 @@ export function ItemsListClient({
     });
   }, [items, filterName, filterType, filterFamilia, filterSubFamilia, filterPromo, filterTA, filterVisible, filterFeatured, itemFamilia]);
 
-  const sortedItems = useMemo(() => {
-    const arr = [...filteredItems];
-    arr.sort((a, b) => {
-      let cmp = 0;
-      const atA = a.article_type_id ? typeById.get(a.article_type_id)?.name ?? "" : "";
-      const atB = b.article_type_id ? typeById.get(b.article_type_id)?.name ?? "" : "";
-      switch (sortBy) {
-        case "name":
-          cmp = displayName(a).localeCompare(displayName(b));
-          break;
-        case "price":
-          cmp = (displayPrice(a) ?? 0) - (displayPrice(b) ?? 0);
-          break;
-        case "type":
-          cmp = atA.localeCompare(atB);
-          break;
-        case "promo":
-          cmp = (a.is_promotion ? 1 : 0) - (b.is_promotion ? 1 : 0);
-          break;
-        case "ta":
-          cmp = (a.take_away ? 1 : 0) - (b.take_away ? 1 : 0);
-          break;
-        case "prep":
-          cmp = (a.prep_minutes ?? -1) - (b.prep_minutes ?? -1);
-          break;
-        case "section":
-          cmp = (itemSectionCategory[a.id]?.sectionName ?? "").localeCompare(itemSectionCategory[b.id]?.sectionName ?? "");
-          break;
-        case "category":
-          cmp = (itemSectionCategory[a.id]?.categoryName ?? "").localeCompare(itemSectionCategory[b.id]?.categoryName ?? "");
-          break;
-        case "familia":
-          cmp = (itemFamilia[a.id]?.familia ?? "").localeCompare(itemFamilia[b.id]?.familia ?? "");
-          break;
-        case "sub_familia":
-          cmp = (itemFamilia[a.id]?.sub_familia ?? "").localeCompare(itemFamilia[b.id]?.sub_familia ?? "");
-          break;
-        default:
-          break;
-      }
-      if (cmp === 0) cmp = (a.sort_order ?? 0) - (b.sort_order ?? 0);
-      if (cmp === 0) cmp = a.id.localeCompare(b.id);
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-    return arr;
-  }, [filteredItems, sortBy, sortDir, typeById, itemSectionCategory, itemFamilia]);
-
-  const toggleSort = (key: SortKey) => {
-    if (sortBy === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortBy(key);
-      setSortDir("asc");
-    }
-  };
-
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -157,8 +99,8 @@ export function ItemsListClient({
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === sortedItems.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedItems.map((i) => i.id)));
+    if (selectedIds.size === filteredItems.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filteredItems.map((i) => i.id)));
   };
 
   const [batchState, batchFormAction] = useFormState(batchUpdateItemsSectionCategory, null);
@@ -171,6 +113,136 @@ export function ItemsListClient({
       setBatchCategoryId("");
     }
   }, [batchState?.success]);
+
+  const columns: ColumnDef<Item>[] = useMemo(
+    () => [
+      {
+        key: "_select",
+        label: "",
+        type: "text",
+        sortable: false,
+        headerRender: (
+          <input
+            type="checkbox"
+            checked={filteredItems.length > 0 && selectedIds.size === filteredItems.length}
+            onChange={toggleSelectAll}
+            aria-label="Selecionar todos"
+          />
+        ),
+        headerClassName: "w-10",
+        render: (i) => (
+          <input
+            type="checkbox"
+            checked={selectedIds.has(i.id)}
+            onChange={() => toggleSelect(i.id)}
+            aria-label={`Selecionar ${displayName(i) || i.id}`}
+          />
+        ),
+      },
+      {
+        key: "name",
+        label: "Nome",
+        type: "text",
+        accessor: (i) => displayName(i),
+        render: (i) => displayName(i) || "—",
+      },
+      {
+        key: "price",
+        label: "Preço",
+        type: "number",
+        accessor: (i) => displayPrice(i),
+        render: (i) => (displayPrice(i) != null ? `${Number(displayPrice(i)).toFixed(2)} €` : "—"),
+      },
+      {
+        key: "type",
+        label: "Tipo",
+        type: "text",
+        accessor: (i) => (i.article_type_id ? typeById.get(i.article_type_id)?.name ?? "" : ""),
+        render: (i) => {
+          const at = i.article_type_id ? typeById.get(i.article_type_id) : null;
+          return at ? <span title={at.name}><MenuIcon code={at.icon_code} size={18} /></span> : "—";
+        },
+      },
+      {
+        key: "familia",
+        label: "Familia",
+        type: "text",
+        accessor: (i) => itemFamilia[i.id]?.familia ?? "",
+        render: (i) => itemFamilia[i.id]?.familia ?? "—",
+      },
+      {
+        key: "sub_familia",
+        label: "Sub Familia",
+        type: "text",
+        accessor: (i) => itemFamilia[i.id]?.sub_familia ?? "",
+        render: (i) => itemFamilia[i.id]?.sub_familia ?? "—",
+      },
+      {
+        key: "promo",
+        label: "Promo",
+        type: "text",
+        accessor: (i) => (i.is_promotion ? "1" : "0"),
+        render: (i) => (i.is_promotion ? (i.price_old != null ? `${i.price_old}→` : "Sim") : "—"),
+      },
+      {
+        key: "ta",
+        label: "TA",
+        type: "text",
+        accessor: (i) => (i.take_away ? "Sim" : "Não"),
+        render: (i) => (i.take_away ? "Sim" : "—"),
+      },
+      {
+        key: "prep",
+        label: "Tempo prep.",
+        type: "number",
+        accessor: (i) => i.prep_minutes,
+        render: (i) => (i.prep_minutes != null ? `${i.prep_minutes}'` : "—"),
+      },
+      {
+        key: "sort_order",
+        label: "Ordem",
+        type: "number",
+        accessor: (i) => i.sort_order,
+        render: (i) => i.sort_order,
+      },
+      {
+        key: "is_visible",
+        label: "Visível",
+        type: "text",
+        accessor: (i) => (i.is_visible ? "Sim" : "Não"),
+        render: (i) => (i.is_visible ? "Sim" : "Não"),
+      },
+      {
+        key: "is_featured",
+        label: "Destaque",
+        type: "text",
+        accessor: (i) => (i.is_featured ? "★" : ""),
+        render: (i) => (i.is_featured ? "★" : "—"),
+      },
+      {
+        key: "section",
+        label: "Secção",
+        type: "text",
+        accessor: (i) => itemSectionCategory[i.id]?.sectionName ?? "",
+        render: (i) => itemSectionCategory[i.id]?.sectionName ?? "—",
+      },
+      {
+        key: "category",
+        label: "Categoria",
+        type: "text",
+        accessor: (i) => itemSectionCategory[i.id]?.categoryName ?? "",
+        render: (i) => itemSectionCategory[i.id]?.categoryName ?? "—",
+      },
+      {
+        key: "actions",
+        label: "Ações",
+        type: "text",
+        sortable: false,
+        render: (i) => <ItemActions itemId={i.id} menuName={displayName(i)} />,
+      },
+    ],
+    [filteredItems.length, selectedIds.size, typeById, itemSectionCategory, itemFamilia]
+  );
 
   return (
     <>
@@ -281,111 +353,13 @@ export function ItemsListClient({
         </label>
       </div>
 
-      <TableContainer>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-slate-600">
-              <th className="text-left py-2 px-3 text-slate-300 w-10">
-                <input
-                  type="checkbox"
-                  checked={sortedItems.length > 0 && selectedIds.size === sortedItems.length}
-                  onChange={toggleSelectAll}
-                  aria-label="Selecionar todos"
-                />
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("name")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Nome {sortBy === "name" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("price")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Preço {sortBy === "price" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("type")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Tipo {sortBy === "type" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("familia")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Familia {sortBy === "familia" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("sub_familia")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Sub Familia {sortBy === "sub_familia" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("promo")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Promo {sortBy === "promo" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("ta")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  TA {sortBy === "ta" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("prep")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Tempo prep. {sortBy === "prep" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">Ordem</th>
-              <th className="text-left py-2 px-3 text-slate-300">Visível</th>
-              <th className="text-left py-2 px-3 text-slate-300">Destaque</th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("section")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Secção {sortBy === "section" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">
-                <button type="button" onClick={() => toggleSort("category")} className="text-left font-medium text-slate-300 hover:text-slate-100">
-                  Categoria {sortBy === "category" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="text-left py-2 px-3 text-slate-300">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedItems.map((i) => {
-              const at = i.article_type_id ? typeById.get(i.article_type_id) : null;
-              const sc = itemSectionCategory[i.id];
-              return (
-                <tr key={i.id} className="border-b border-slate-700">
-                  <td className="py-2 px-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(i.id)}
-                      onChange={() => toggleSelect(i.id)}
-                      aria-label={`Selecionar ${displayName(i) || i.id}`}
-                    />
-                  </td>
-                  <td className="py-2 px-3 text-slate-200">{displayName(i) || "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{displayPrice(i) != null ? `${Number(displayPrice(i)).toFixed(2)} €` : "—"}</td>
-                  <td className="py-2 px-3">{at ? <span title={at.name}><MenuIcon code={at.icon_code} size={18} /></span> : "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{itemFamilia[i.id]?.familia ?? "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{itemFamilia[i.id]?.sub_familia ?? "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{i.is_promotion ? (i.price_old != null ? `${i.price_old}→` : "Sim") : "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{i.take_away ? "Sim" : "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{i.prep_minutes != null ? `${i.prep_minutes}'` : "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{i.sort_order}</td>
-                  <td className="py-2 px-3 text-slate-200">{i.is_visible ? "Sim" : "Não"}</td>
-                  <td className="py-2 px-3 text-slate-200">{i.is_featured ? "★" : "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{sc?.sectionName ?? "—"}</td>
-                  <td className="py-2 px-3 text-slate-200">{sc?.categoryName ?? "—"}</td>
-                  <td className="py-2 px-3">
-                    <ItemActions itemId={i.id} menuName={displayName(i)} />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </TableContainer>
-      {sortedItems.length === 0 && <p className="text-slate-500 py-4">Nenhum item.</p>}
+      <BwbTable<Item>
+        columns={columns}
+        rows={filteredItems}
+        rowKey={(i) => i.id}
+        defaultSort={[{ key: "name", direction: "asc", type: "text" }]}
+      />
+      {filteredItems.length === 0 && <p className="text-slate-500 py-4">Nenhum item.</p>}
 
       {/* Janela Alteração em Lote */}
       {batchModalOpen && (
