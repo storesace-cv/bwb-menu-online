@@ -271,14 +271,6 @@ export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ erro
       passwordDefault: DEFAULT_PASSWORD,
     });
     tenantsActionLog({ action: "resendTenantWelcomeEmail", step: "email_sent" });
-  } catch (err) {
-    tenantsActionLog({
-      action: "resendTenantWelcomeEmail",
-      step: "catch",
-      error: (err as Error).message,
-    });
-    return { error: (err as Error).message };
-  }
     tenantsActionLog({ action: "resendTenantWelcomeEmail", step: "success" });
     revalidatePath("/portal-admin/tenants");
     return null;
