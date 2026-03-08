@@ -63,6 +63,7 @@ export function CreateItemForm({
           ))}
         </Select>
         <Input id="item-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} className="w-24" />
+        <Input id="item-prep-minutes" name="prep_minutes" label="Tempo de Preparação (min)" type="number" min={0} placeholder="opcional" className="w-28" />
       </div>
       <div className="flex flex-wrap gap-6 items-center">
         <label className="flex items-center gap-2 text-slate-300 text-sm">

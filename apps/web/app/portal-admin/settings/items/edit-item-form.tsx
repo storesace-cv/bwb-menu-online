@@ -26,6 +26,7 @@ type MenuItem = {
   price_old: number | null;
   take_away: boolean;
   menu_ingredients: string | null;
+  prep_minutes: number | null;
   is_visible: boolean;
   is_featured: boolean;
   image_url?: string | null;
@@ -200,7 +201,7 @@ export function EditItemForm({
         </Select>
       </div>
 
-      {/* 5. Ordem + Tipo de artigo */}
+      {/* 5. Ordem + Tipo de artigo + Tempo de Preparação */}
       <div className="flex flex-wrap gap-4 items-end">
         <Input
           id="edit-sort"
@@ -223,6 +224,16 @@ export function EditItemForm({
             </option>
           ))}
         </Select>
+        <Input
+          id="edit-prep-minutes"
+          name="prep_minutes"
+          label="Tempo de Preparação (min)"
+          type="number"
+          min={0}
+          placeholder="opcional"
+          defaultValue={item.prep_minutes ?? ""}
+          className="w-28"
+        />
       </div>
 
       {/* 6. Visível, Destaque, Take-away, Em promoção */}

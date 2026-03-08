@@ -583,6 +583,9 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
   const takeAway = formData.get("take_away") === "1";
   const menuIngredients = (formData.get("menu_ingredients") as string)?.trim() || null;
   const allergenIds = (formData.getAll("allergen_ids") as string[]).filter((x) => x && x.trim());
+  const prepMinutesRaw = (formData.get("prep_minutes") as string)?.trim() ?? "";
+  const prepMinutesParsed = prepMinutesRaw === "" ? null : parseInt(prepMinutesRaw, 10);
+  const prep_minutes = prepMinutesParsed == null || isNaN(prepMinutesParsed) || prepMinutesParsed < 0 ? null : prepMinutesParsed;
   if (!storeId || !menuName) return { error: "Loja e nome do item obrigatórios" };
   const { data: inserted, error } = await supabase
     .from("menu_items")
@@ -597,6 +600,7 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
       price_old: isPromotion && !isNaN(priceOld) ? priceOld : null,
       take_away: takeAway,
       menu_ingredients: menuIngredients,
+      prep_minutes,
     })
     .select("id")
     .single();
@@ -644,6 +648,9 @@ export async function updateMenuItem(
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
   const categoryId = (formData.get("category_id") as string)?.trim() || null;
   const allergenIds = (formData.getAll("allergen_ids") as string[]).filter((x) => x && x.trim());
+  const prepMinutesRaw = (formData.get("prep_minutes") as string)?.trim() ?? "";
+  const prepMinutesParsed = prepMinutesRaw === "" ? null : parseInt(prepMinutesRaw, 10);
+  const prep_minutes = prepMinutesParsed == null || isNaN(prepMinutesParsed) || prepMinutesParsed < 0 ? null : prepMinutesParsed;
 
   if (!id || !menuName) return { error: "ID e nome do item obrigatórios" };
   if (imageUrl !== null && !isValidUrl(imageUrl)) return { error: "URL da imagem inválida." };
@@ -672,6 +679,7 @@ export async function updateMenuItem(
       is_visible: isVisible,
       is_featured: isFeatured,
       image_url: imageUrl,
+      prep_minutes,
     })
     .eq("id", id);
   if (error) return { error: error.message };

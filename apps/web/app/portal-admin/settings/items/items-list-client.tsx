@@ -24,9 +24,10 @@ type Item = {
   price_old: number | null;
   take_away: boolean;
   article_type_id: string | null;
+  prep_minutes: number | null;
 };
 
-type SortKey = "name" | "price" | "type" | "promo" | "ta" | "section" | "category" | "familia" | "sub_familia";
+type SortKey = "name" | "price" | "type" | "promo" | "ta" | "prep" | "section" | "category" | "familia" | "sub_familia";
 
 export function ItemsListClient({
   items,
@@ -112,6 +113,9 @@ export function ItemsListClient({
           break;
         case "ta":
           cmp = (a.take_away ? 1 : 0) - (b.take_away ? 1 : 0);
+          break;
+        case "prep":
+          cmp = (a.prep_minutes ?? -1) - (b.prep_minutes ?? -1);
           break;
         case "section":
           cmp = (itemSectionCategory[a.id]?.sectionName ?? "").localeCompare(itemSectionCategory[b.id]?.sectionName ?? "");
@@ -324,6 +328,11 @@ export function ItemsListClient({
                   TA {sortBy === "ta" && (sortDir === "asc" ? "↑" : "↓")}
                 </button>
               </th>
+              <th className="text-left py-2 px-3 text-slate-300">
+                <button type="button" onClick={() => toggleSort("prep")} className="text-left font-medium text-slate-300 hover:text-slate-100">
+                  Tempo prep. {sortBy === "prep" && (sortDir === "asc" ? "↑" : "↓")}
+                </button>
+              </th>
               <th className="text-left py-2 px-3 text-slate-300">Ordem</th>
               <th className="text-left py-2 px-3 text-slate-300">Visível</th>
               <th className="text-left py-2 px-3 text-slate-300">Destaque</th>
@@ -361,6 +370,7 @@ export function ItemsListClient({
                   <td className="py-2 px-3 text-slate-200">{itemFamilia[i.id]?.sub_familia ?? "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.is_promotion ? (i.price_old != null ? `${i.price_old}→` : "Sim") : "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.take_away ? "Sim" : "—"}</td>
+                  <td className="py-2 px-3 text-slate-200">{i.prep_minutes != null ? `${i.prep_minutes}'` : "—"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.sort_order}</td>
                   <td className="py-2 px-3 text-slate-200">{i.is_visible ? "Sim" : "Não"}</td>
                   <td className="py-2 px-3 text-slate-200">{i.is_featured ? "★" : "—"}</td>

@@ -29,7 +29,7 @@ export default async function SettingsItemsPage() {
     .order("sort_order");
   const { data: itemsRaw } = await supabase
     .from("menu_items")
-    .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, catalog_item_id, catalog_items(name_original)")
+    .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order");
   const { data: resolvedPricesRows } = await supabase.rpc("get_resolved_prices_for_store", { p_store_id: storeId });
