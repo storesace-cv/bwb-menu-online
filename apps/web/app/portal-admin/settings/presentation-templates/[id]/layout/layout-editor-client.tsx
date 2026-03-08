@@ -134,10 +134,17 @@ function getEffectiveZoneHeight(
   return DEFAULT_ZONE_HEIGHTS[type as LayoutZoneType] ?? 32;
 }
 
+/** Altura mínima do card: null = automático (conteúdo); number = fixo em px. */
+function getInitialCanvasHeight(initialLayout: LayoutDefinition | null): number | null {
+  const v = initialLayout?.canvasHeight;
+  if (v != null && Number.isFinite(v) && v > 0) return Math.round(Number(v));
+  return null;
+}
+
 export function LayoutEditorClient({ templateId, templateName, initialLayout }: Props) {
   const defaultLayout = getDefaultLayoutDefinition();
-  const [canvasHeight, setCanvasHeight] = useState<number>(
-    initialLayout?.canvasHeight ?? defaultLayout.canvasHeight ?? DEFAULT_CANVAS_HEIGHT
+  const [canvasHeight, setCanvasHeight] = useState<number | null>(() =>
+    getInitialCanvasHeight(initialLayout)
   );
   const [zoneOrder, setZoneOrder] = useState<string[]>(
     initialLayout?.zoneOrder?.length ? initialLayout.zoneOrder : defaultLayout.zoneOrder
@@ -207,16 +214,20 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
 
   const zoneRows = useMemo(() => groupZonesIntoRows(zoneOrder, zoneWidths), [zoneOrder, zoneWidths]);
 
-  const calculateSuggestedHeight = useCallback(() => {
+  const computeSuggestedHeight = useCallback(() => {
     let total = 0;
     zoneOrder.forEach((type) => {
       total += getEffectiveZoneHeight(type, zoneHeights);
     });
-    const suggested = Math.max(200, Math.min(1200, total));
+    return Math.max(200, Math.min(1200, total));
+  }, [zoneOrder, zoneHeights]);
+
+  const calculateSuggestedHeight = useCallback(() => {
+    const suggested = computeSuggestedHeight();
     setCanvasHeight(suggested);
     setSuggestedHeightMessage(`Altura sugerida: ${suggested} px (pode ajustar manualmente).`);
     setTimeout(() => setSuggestedHeightMessage(null), 4000);
-  }, [zoneOrder, zoneHeights]);
+  }, [computeSuggestedHeight]);
 
   const setZoneWidth = useCallback((type: string, width: ZoneWidth) => {
     setZoneWidths((prev) => ({ ...prev, [type]: width }));
@@ -243,7 +254,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
         zoneHeights?: Record<string, number>;
         rowSpacingPx?: number;
       } = {
-        canvasHeight: canvasHeight > 0 ? canvasHeight : undefined,
+        ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
         zoneOrder,
         rowSpacingPx: rowSpacingPx >= 0 && rowSpacingPx <= 48 ? rowSpacingPx : DEFAULT_ROW_SPACING_PX,
       };
@@ -311,9 +322,12 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
         <p id="preview-description" className="text-slate-400 text-sm mb-3">
           Representação aproximada do card no menu público. A ordem e as zonas refletem as definições abaixo.
         </p>
+        {canvasHeight === null && (
+          <p className="text-slate-500 text-sm mb-2">Altura definida pelo conteúdo (mínimo possível).</p>
+        )}
         <div
           className="max-w-sm rounded-xl border-2 border-dashed border-slate-500 bg-slate-100/50 overflow-hidden flex flex-col"
-          style={{ minHeight: `${canvasHeight}px` }}
+          style={canvasHeight != null && canvasHeight > 0 ? { minHeight: `${canvasHeight}px` } : undefined}
         >
           {zoneRows.map((row, rowIdx) => (
             <div
@@ -328,18 +342,55 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
       </div>
 
       <div>
-        <Input
-          id="canvas-height"
-          type="number"
-          min={200}
-          max={1200}
-          step={10}
-          label="Altura mínima do card (px)"
-          value={canvasHeight}
-          onChange={(e) => setCanvasHeight(Number(e.target.value) || DEFAULT_CANVAS_HEIGHT)}
-        />
-        <div className="mt-2 flex items-center gap-2">
-          <Button type="button" variant="outline" onClick={calculateSuggestedHeight}>
+        <label className="block text-slate-200 font-medium mb-2">Altura mínima do card</label>
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="canvas-height-mode"
+              checked={canvasHeight === null}
+              onChange={() => setCanvasHeight(null)}
+              className="rounded border-slate-500"
+            />
+            <span className="text-slate-200">Automático (mínimo possível)</span>
+          </label>
+          <p className="text-slate-400 text-sm ml-6">O card não tem altura mínima; a altura segue o conteúdo.</p>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="canvas-height-mode"
+              checked={canvasHeight !== null}
+              onChange={() => setCanvasHeight(canvasHeight ?? computeSuggestedHeight())}
+              className="rounded border-slate-500"
+            />
+            <span className="text-slate-200">Fixo (px)</span>
+          </label>
+          {canvasHeight !== null && (
+            <div className="ml-6 flex flex-wrap items-center gap-2">
+              <Input
+                id="canvas-height"
+                type="number"
+                min={0}
+                max={1200}
+                step={10}
+                aria-label="Altura mínima do card em pixels"
+                value={canvasHeight}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  setCanvasHeight(Number.isFinite(n) && n >= 0 ? Math.min(1200, Math.round(n)) : 0);
+                }}
+                className="w-24"
+              />
+              <span className="text-slate-400 text-sm">px (0 = como automático)</span>
+            </div>
+          )}
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={calculateSuggestedHeight}
+          >
             Calcular altura sugerida
           </Button>
           {suggestedHeightMessage && (

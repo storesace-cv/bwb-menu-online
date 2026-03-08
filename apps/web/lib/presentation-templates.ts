@@ -23,6 +23,7 @@ export type LayoutZoneType = (typeof LAYOUT_ZONE_TYPES)[number];
 export type ZoneWidth = "full" | "half" | "quarter";
 
 export interface LayoutDefinition {
+  /** Altura mínima do card em px. Omitir ou 0 = altura mínima automática (conteúdo). */
   canvasHeight?: number;
   zoneOrder: string[];
   /** Opcional: largura por tipo de zona. Omitido = "full". Consecutivos "half" formam uma linha de 2; "quarter" até 4. */
