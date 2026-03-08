@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (resiliência Tenants; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do estado do projeto. Última revisão: 2026-03-08 (logo em emails CID; roadmap, commit, deploy, verificação no container).
 
 ---
 
@@ -69,6 +69,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **URL do email de boas-vindas ao tenant:** O email "Primeira loja criada" passou a enviar o link para o portal da loja (ex.: `https://<hostname>/portal-admin/login`) em vez de `https://menu.bwb.pt/portal-admin/login`. Em `createStore` usa-se o hostname da nova loja quando definido; em `resendTenantWelcomeEmail` obtém-se o hostname primário da primeira loja do tenant via `store_domains` e constrói-se `storeUrl` para o template.
 - **Debug Server Actions (tenants):** Logging estruturado `tenants_action` em `updateTenantContactEmail` e `resendTenantWelcomeEmail` (fases e erros); buffer em memória e endpoint GET `/api/debug/tenants-actions` (quando `PORTAL_DEBUG=1`) para inspeção dos últimos logs; doc em [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md). No deploy, o script `remote-update.sh` adiciona ou define `PORTAL_DEBUG=1` no `.env` do servidor para activar estes logs e o endpoint.
 - **Resiliência Tenants (consola, email, logs):** Em `createStore`, leitura de `contact_email` e contagem de lojas passou a usar cliente service role (contornar RLS em `tenants`). Página Tenants com `normalizeTenantRow` e try/catch em `admin_list_tenants` para parsing defensivo e fallback em falha. Layout portal-admin com try/catch alargado a `headers()` e pathname. `resendTenantWelcomeEmail` com try/catch externo e retorno serializável em erro. Reduz erros na consola e garante que o email do tenant aparece quando a migração 028 está aplicada.
+- **Logo nos emails (CID inline):** O logotipo nos emails de boas-vindas/reset passou a ser embedado como anexo MIME (Content-ID `logoBwb`) em vez de URL externa. Asset em `local/imagem/bwb-white-compact.png`; mailer com `getLogoBuffer()` (tenta cwd e cwd/..), anexo PNG em `sendWelcomeOrResetEmail` e `sendFirstStoreWelcomeEmail`; template com parâmetro opcional `logoCid` e `src="cid:logoBwb"` ou fallback `logoUrl`. Sem ficheiro no path, mantém-se o URL; no deploy garantir que `local/imagem/` existe (ex.: na imagem Docker ou volume).
 
 ---
 

@@ -4,6 +4,8 @@
  */
 export function getWelcomeResetEmailHtml(params: {
   logoUrl: string;
+  /** Quando definido, o logo é referenciado por CID (imagem em anexo inline). */
+  logoCid?: string | null;
   portalUrl: string;
   userEmail: string;
   defaultPassword: string;
@@ -11,7 +13,8 @@ export function getWelcomeResetEmailHtml(params: {
   /** Quando definido, substitui o parágrafo por baixo do título (ex.: variante "primeira loja"). */
   introParagraph?: string;
 }): string {
-  const { logoUrl, portalUrl, userEmail, defaultPassword, isResetText, introParagraph } = params;
+  const { logoUrl, logoCid, portalUrl, userEmail, defaultPassword, isResetText, introParagraph } = params;
+  const logoSrc = logoCid ? "cid:logoBwb" : logoUrl;
   const paragraphHtml = introParagraph ?? "O seu acesso ao <strong style=\"color:#ffffff;\">Portal Admin</strong> está pronto.";
   return `<!doctype html>
 <html lang="pt">
@@ -30,7 +33,7 @@ export function getWelcomeResetEmailHtml(params: {
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                   <tr>
                     <td align="left" style="vertical-align:middle;">
-                      <img src="${logoUrl}" width="140" alt="BWB" style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:140px;" />
+                      <img src="${logoSrc}" width="140" alt="BWB" style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:140px;" />
                     </td>
                     <td align="right" style="vertical-align:middle;color:#cbd5e1;font-family:Arial,sans-serif;font-size:12px;">
                       BWB Menu Online

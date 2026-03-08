@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
+import { portalDebugLog } from "@/lib/portal-debug-log";
 import Link from "next/link";
 import { CreateStoreForm } from "./[tenantId]/stores/create-store-form";
 import { ClearStoreMenuButton } from "./clear-store-menu-button";
@@ -22,14 +23,19 @@ function normalizeTenantRow(row: unknown): TenantRow | null {
   if (!row || typeof row !== "object") return null;
   const r = row as Record<string, unknown>;
   if (typeof r.id !== "string") return null;
+  const rawEmail = r.contact_email;
+  const contact_email =
+    typeof rawEmail === "string" && rawEmail.trim() !== "" ? rawEmail.trim() : null;
   return {
     id: r.id,
     nif: typeof r.nif === "string" ? r.nif : "",
     name: r.name != null ? String(r.name) : null,
-    contact_email: r.contact_email != null ? String(r.contact_email) : null,
+    contact_email,
     created_at: r.created_at != null ? String(r.created_at) : undefined,
   };
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function TenantsPage() {
   const supabase = await createClient();
@@ -38,6 +44,13 @@ export default async function TenantsPage() {
     const { data: raw } = await supabase.rpc("admin_list_tenants");
     const rawList = Array.isArray(raw) ? raw : [];
     list = rawList.map(normalizeTenantRow).filter((t): t is TenantRow => t !== null);
+    if (process.env.PORTAL_DEBUG === "1" && rawList.length > 0) {
+      const first = rawList[0] as Record<string, unknown>;
+      portalDebugLog("tenants_page", {
+        sampleKeys: Object.keys(first),
+        hasContactEmailKey: "contact_email" in first,
+      });
+    }
   } catch (err) {
     console.error("TenantsPage admin_list_tenants:", err);
   }

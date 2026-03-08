@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+import path from "path";
 import nodemailer from "nodemailer";
 import { getWelcomeResetEmailHtml } from "./email-template";
 
@@ -29,6 +31,29 @@ function getLogoUrl(): string {
   return `${base.replace(/\/$/, "")}/email/bwb-white-compact.jpeg`;
 }
 
+const LOGO_CID = "logoBwb";
+const LOGO_FILENAME = "bwb-white-compact.png";
+
+/**
+ * Lê o logo de local/imagem/bwb-white-compact.png para embedding no email (CID).
+ * Tenta cwd e depois cwd/.. para suportar execução a partir da raiz do repo ou de apps/web.
+ */
+async function getLogoBuffer(): Promise<Buffer | null> {
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(cwd, "local", "imagem", LOGO_FILENAME),
+    path.join(cwd, "..", "local", "imagem", LOGO_FILENAME),
+  ];
+  for (const filePath of candidates) {
+    try {
+      return await fs.readFile(filePath);
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 export type SendWelcomeOrResetOptions = {
   to: string;
   portalUrl: string;
@@ -55,8 +80,10 @@ export async function sendWelcomeOrResetEmail(options: SendWelcomeOrResetOptions
     ? "A sua palavra-passe foi reposta."
     : "A sua conta foi criada.";
 
+  const logoBuffer = await getLogoBuffer();
   const html = getWelcomeResetEmailHtml({
     logoUrl: getLogoUrl(),
+    logoCid: logoBuffer ? LOGO_CID : null,
     portalUrl,
     userEmail: to,
     defaultPassword: passwordDefault,
@@ -64,13 +91,18 @@ export async function sendWelcomeOrResetEmail(options: SendWelcomeOrResetOptions
   });
 
   const transporter = getTransporter();
-  const mailOptions = {
+  const mailOptions: Parameters<ReturnType<typeof getTransporter>["sendMail"]>[0] = {
     from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
     to,
     subject: isReset ? "Reset de Password" : "BWB Menu Online — Acesso ao Portal Admin",
     html,
     text: `${isResetText}\n\nEmail: ${to}\nPassword (por defeito): ${passwordDefault}\n\nAceder: ${portalUrl}`,
   };
+  if (logoBuffer) {
+    mailOptions.attachments = [
+      { filename: "bwb-logo.png", content: logoBuffer, cid: LOGO_CID },
+    ];
+  }
 
   const send = () => transporter.sendMail(mailOptions);
 
@@ -105,8 +137,10 @@ export async function sendFirstStoreWelcomeEmail(options: SendFirstStoreWelcomeO
   const fromEmail = process.env.GOTRUE_SMTP_ADMIN_EMAIL ?? process.env.GOTRUE_SMTP_USER;
   const fromName = process.env.GOTRUE_SMTP_SENDER_NAME ?? "Suporte | BWB";
 
+  const logoBuffer = await getLogoBuffer();
   const html = getWelcomeResetEmailHtml({
     logoUrl: getLogoUrl(),
+    logoCid: logoBuffer ? LOGO_CID : null,
     portalUrl,
     userEmail: to,
     defaultPassword: passwordDefault,
@@ -115,13 +149,18 @@ export async function sendFirstStoreWelcomeEmail(options: SendFirstStoreWelcomeO
   });
 
   const transporter = getTransporter();
-  const mailOptions = {
+  const mailOptions: Parameters<ReturnType<typeof getTransporter>["sendMail"]>[0] = {
     from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
     to,
     subject: "BWB Menu Online — Primeira loja criada / Acesso ao Portal Admin",
     html,
     text: `A sua primeira loja foi criada. É o administrador de todas as lojas da sua organização.\n\nEmail: ${to}\nPassword (por defeito): ${passwordDefault}\n\nAceder: ${portalUrl}`,
   };
+  if (logoBuffer) {
+    mailOptions.attachments = [
+      { filename: "bwb-logo.png", content: logoBuffer, cid: LOGO_CID },
+    ];
+  }
 
   const send = () => transporter.sendMail(mailOptions);
   try {
