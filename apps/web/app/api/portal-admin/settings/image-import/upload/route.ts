@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createClient as createServiceClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import {
@@ -13,10 +13,8 @@ export const maxDuration = 120;
 
 const BUCKET = "menu-images";
 
-type SupabaseAdmin = ReturnType<typeof createServiceClient>;
-
 /** Garante que o bucket menu-images existe; cria-o com public: true se faltar (service role). */
-async function ensureMenuImagesBucket(admin: SupabaseAdmin): Promise<void> {
+async function ensureMenuImagesBucket(admin: SupabaseClient): Promise<void> {
   const { data: buckets } = await admin.storage.listBuckets();
   const exists = buckets?.some((b) => b.id === BUCKET || b.name === BUCKET);
   if (exists) return;
