@@ -71,6 +71,7 @@ async function main() {
   const { data: tenantId, error: e1 } = await supabase.rpc("admin_create_tenant", {
     p_nif: data.tenant.nif.trim().toLowerCase(),
     p_name: data.tenant.name || null,
+    p_contact_email: null,
   });
   if (e1) {
     console.error("admin_create_tenant:", e1.message);

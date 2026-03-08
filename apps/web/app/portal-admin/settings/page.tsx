@@ -21,7 +21,7 @@ export default async function SettingsPage() {
         <div className="grid gap-4 sm:grid-cols-2 max-w-3xl mb-6">
           <Card className="p-5">
             <h2 className="text-lg font-medium text-slate-100 mb-2">Criar tenant</h2>
-            <p className="text-sm text-slate-400 mb-4">Registar um novo tenant (NIF e nome).</p>
+            <p className="text-sm text-slate-400 mb-4">Registar um novo tenant (NIF, nome e email).</p>
             <CreateTenantForm />
           </Card>
           {globalLinks.map(({ href, label, description }) => (

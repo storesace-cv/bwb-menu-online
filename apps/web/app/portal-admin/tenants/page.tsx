@@ -4,8 +4,10 @@ import { CreateStoreForm } from "./[tenantId]/stores/create-store-form";
 import { ClearStoreMenuButton } from "./clear-store-menu-button";
 import { StoreDomainsBlock } from "./store-domains-block";
 import { StoreSourceTypeCell } from "./store-source-type-cell";
+import { TenantContactEmailBlock } from "./tenant-contact-email-block";
 import { Card, TableContainer } from "@/components/admin";
 
+type TenantRow = { id: string; nif: string; name: string | null; contact_email?: string | null; created_at?: string };
 type StoreRow = { id: string; tenant_id: string; store_number: number; name: string | null; source_type: string; is_active?: boolean };
 type DomainRow = { hostname: string; is_primary?: boolean };
 
@@ -19,7 +21,7 @@ function formatDomains(domains: DomainRow[]): string {
 export default async function TenantsPage() {
   const supabase = await createClient();
   const { data: raw } = await supabase.rpc("admin_list_tenants");
-  const list: { id: string; nif: string; name: string | null; created_at?: string }[] = Array.isArray(raw) ? raw : [];
+  const list: TenantRow[] = Array.isArray(raw) ? raw : [];
 
   const tenantsWithStores = await Promise.all(
     list.map(async (t) => {
@@ -54,6 +56,8 @@ export default async function TenantsPage() {
                 </Link>
               </p>
             </div>
+
+            <TenantContactEmailBlock tenantId={t.id} initialEmail={t.contact_email ?? null} />
 
             <div className="mb-6">
               <h3 className="text-sm font-medium text-slate-300 mb-3">Adicionar loja</h3>

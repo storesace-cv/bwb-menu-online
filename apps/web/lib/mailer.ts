@@ -84,3 +84,53 @@ export async function sendWelcomeOrResetEmail(options: SendWelcomeOrResetOptions
     }
   }
 }
+
+export type SendFirstStoreWelcomeOptions = {
+  to: string;
+  portalUrl: string;
+  passwordDefault?: string;
+};
+
+/**
+ * Envia e-mail "Primeira loja criada" com credenciais (tenant admin).
+ * Reutiliza o mesmo estilo do template welcome/reset.
+ */
+export async function sendFirstStoreWelcomeEmail(options: SendFirstStoreWelcomeOptions): Promise<void> {
+  const {
+    to,
+    portalUrl,
+    passwordDefault = DEFAULT_PASSWORD,
+  } = options;
+
+  const fromEmail = process.env.GOTRUE_SMTP_ADMIN_EMAIL ?? process.env.GOTRUE_SMTP_USER;
+  const fromName = process.env.GOTRUE_SMTP_SENDER_NAME ?? "Suporte | BWB";
+
+  const html = getWelcomeResetEmailHtml({
+    logoUrl: getLogoUrl(),
+    portalUrl,
+    userEmail: to,
+    defaultPassword: passwordDefault,
+    isResetText: "A sua primeira loja foi criada.",
+    introParagraph: "É o administrador de todas as lojas da sua organização. O seu acesso ao <strong style=\"color:#ffffff;\">Portal Admin</strong> está pronto.",
+  });
+
+  const transporter = getTransporter();
+  const mailOptions = {
+    from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
+    to,
+    subject: "BWB Menu Online — Primeira loja criada / Acesso ao Portal Admin",
+    html,
+    text: `A sua primeira loja foi criada. É o administrador de todas as lojas da sua organização.\n\nEmail: ${to}\nPassword (por defeito): ${passwordDefault}\n\nAceder: ${portalUrl}`,
+  };
+
+  const send = () => transporter.sendMail(mailOptions);
+  try {
+    await send();
+  } catch (err) {
+    try {
+      await send();
+    } catch (retryErr) {
+      throw retryErr;
+    }
+  }
+}

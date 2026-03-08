@@ -8,8 +8,11 @@ export function getWelcomeResetEmailHtml(params: {
   userEmail: string;
   defaultPassword: string;
   isResetText: string;
+  /** Quando definido, substitui o parágrafo por baixo do título (ex.: variante "primeira loja"). */
+  introParagraph?: string;
 }): string {
-  const { logoUrl, portalUrl, userEmail, defaultPassword, isResetText } = params;
+  const { logoUrl, portalUrl, userEmail, defaultPassword, isResetText, introParagraph } = params;
+  const paragraphHtml = introParagraph ?? "O seu acesso ao <strong style=\"color:#ffffff;\">Portal Admin</strong> está pronto.";
   return `<!doctype html>
 <html lang="pt">
   <head>
@@ -44,7 +47,7 @@ export function getWelcomeResetEmailHtml(params: {
                 </h1>
 
                 <p style="margin:0 0 16px 0;font-size:14px;line-height:1.6;color:#cbd5e1;">
-                  O seu acesso ao <strong style="color:#ffffff;">Portal Admin</strong> está pronto.
+                  ${paragraphHtml}
                 </p>
 
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:16px 0;background-color:#0b1220;border:1px solid #334155;border-radius:12px;">

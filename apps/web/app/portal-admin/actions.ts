@@ -1,7 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase-server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { sendFirstStoreWelcomeEmail } from "@/lib/mailer";
+
+const DEFAULT_PASSWORD = "bwb-menu";
 
 const ARTICLE_TYPE_ICON_WHITELIST: readonly string[] = ["fish", "meat", "seafood", "veggie", "hot-spice"];
 function normalizeArticleTypeIconCode(code: string): string {
@@ -12,10 +16,15 @@ export async function createTenant(_prev: { error?: string } | null, formData: F
   const supabase = await createClient();
   const nif = (formData.get("nif") as string)?.trim() ?? "";
   const name = (formData.get("name") as string)?.trim() ?? "";
+  const contactEmail = (formData.get("contact_email") as string)?.trim()?.toLowerCase() ?? "";
   if (!nif) return { error: "NIF obrigatório" };
+  if (!contactEmail) return { error: "Email obrigatório" };
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(contactEmail)) return { error: "Email inválido" };
   const { data, error } = await supabase.rpc("admin_create_tenant", {
     p_nif: nif,
     p_name: name || null,
+    p_contact_email: contactEmail,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/tenants");
@@ -60,7 +69,146 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
     });
     if (domainErr) return { error: `Loja criada, mas falha ao associar domínio: ${domainErr.message}` };
   }
+
+  // Primeira loja: criar utilizador tenant_admin e enviar e-mail com credenciais
+  const { data: tenantRow } = await supabase.from("tenants").select("contact_email").eq("id", tenantId).single();
+  const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
+  const { count } = await supabase.from("stores").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId);
+  if (count === 1 && contactEmail) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (url && serviceKey) {
+      try {
+        const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+        const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+        const existing = listData?.users?.find((u) => u.email?.toLowerCase() === contactEmail);
+        let userId: string;
+        if (existing) {
+          userId = existing.id;
+          await admin.auth.admin.updateUserById(userId, {
+            password: DEFAULT_PASSWORD,
+            user_metadata: { must_change_password: true },
+          });
+          await admin.from("profiles").upsert(
+            { id: userId, email: contactEmail, renew_password: true },
+            { onConflict: "id" }
+          );
+          await admin.from("user_role_bindings").delete().eq("user_id", userId).eq("role_code", "tenant_admin").eq("tenant_id", tenantId);
+        } else {
+          const { data: created, error: createErr } = await admin.auth.admin.createUser({
+            email: contactEmail,
+            password: DEFAULT_PASSWORD,
+            email_confirm: true,
+            user_metadata: { must_change_password: true },
+          });
+          if (createErr) throw createErr;
+          if (!created?.user) throw new Error("User not created");
+          userId = created.user.id;
+          await admin.from("profiles").upsert(
+            { id: userId, email: contactEmail, renew_password: true },
+            { onConflict: "id" }
+          );
+        }
+        await admin.from("user_role_bindings").insert({
+          user_id: userId,
+          role_code: "tenant_admin",
+          tenant_id: tenantId,
+          store_id: null,
+        });
+        const portalUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://menu.bwb.pt";
+        await sendFirstStoreWelcomeEmail({
+          to: contactEmail,
+          portalUrl: `${portalUrl}/portal-admin/login`,
+          passwordDefault: DEFAULT_PASSWORD,
+        });
+      } catch (err) {
+        console.error("First store welcome (create user/email):", (err as Error).message);
+      }
+    }
+  }
+
   revalidatePath(`/portal-admin/tenants/${tenantId}/stores`);
+  revalidatePath("/portal-admin/tenants");
+  return null;
+}
+
+export async function updateTenantContactEmail(tenantId: string, contactEmail: string) {
+  const supabase = await createClient();
+  const tid = (tenantId ?? "").trim();
+  const email = (contactEmail ?? "").trim().toLowerCase();
+  if (!tid) return { error: "Tenant obrigatório" };
+  if (!email) return { error: "Email obrigatório" };
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return { error: "Email inválido" };
+  const { error } = await supabase.rpc("admin_update_tenant", {
+    p_tenant_id: tid,
+    p_name: null,
+    p_contact_email: email,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/tenants");
+  revalidatePath("/portal-admin/settings");
+  return null;
+}
+
+export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ error?: string } | null> {
+  const supabase = await createClient();
+  const tid = (tenantId ?? "").trim();
+  if (!tid) return { error: "Tenant obrigatório" };
+  const { data: tenantRow } = await supabase.from("tenants").select("contact_email").eq("id", tid).single();
+  const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
+  if (!contactEmail) return { error: "Defina o email do tenant antes de re-enviar." };
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return { error: "Configuração do servidor em falta." };
+
+  try {
+    const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+    const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const existing = listData?.users?.find((u) => u.email?.toLowerCase() === contactEmail);
+    let userId: string;
+    if (existing) {
+      userId = existing.id;
+      await admin.auth.admin.updateUserById(userId, {
+        password: DEFAULT_PASSWORD,
+        user_metadata: { must_change_password: true },
+      });
+      await admin.from("profiles").upsert(
+        { id: userId, email: contactEmail, renew_password: true },
+        { onConflict: "id" }
+      );
+      await admin.from("user_role_bindings").delete().eq("user_id", userId).eq("role_code", "tenant_admin").eq("tenant_id", tid);
+    } else {
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email: contactEmail,
+        password: DEFAULT_PASSWORD,
+        email_confirm: true,
+        user_metadata: { must_change_password: true },
+      });
+      if (createErr) return { error: createErr.message };
+      if (!created?.user) return { error: "Utilizador não foi criado." };
+      userId = created.user.id;
+      await admin.from("profiles").upsert(
+        { id: userId, email: contactEmail, renew_password: true },
+        { onConflict: "id" }
+      );
+    }
+    await admin.from("user_role_bindings").insert({
+      user_id: userId,
+      role_code: "tenant_admin",
+      tenant_id: tid,
+      store_id: null,
+    });
+    const portalUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://menu.bwb.pt";
+    await sendFirstStoreWelcomeEmail({
+      to: contactEmail,
+      portalUrl: `${portalUrl}/portal-admin/login`,
+      passwordDefault: DEFAULT_PASSWORD,
+    });
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
   revalidatePath("/portal-admin/tenants");
   return null;
 }
