@@ -29,7 +29,22 @@ export interface LayoutDefinition {
   zoneWidths?: Record<string, ZoneWidth>;
   /** Espaçamento em px entre linhas de conteúdo do card; default 8. */
   rowSpacingPx?: number;
+  /** Opcional: altura em px por tipo de zona. Omitido = DEFAULT_ZONE_HEIGHTS[type]. */
+  zoneHeights?: Record<string, number>;
 }
+
+/** Alturas por defeito por zona (px), para UI e card público quando zoneHeights não define o tipo. */
+export const DEFAULT_ZONE_HEIGHTS: Record<LayoutZoneType, number> = {
+  image: 240,
+  icons: 28,
+  name: 32,
+  description: 48,
+  ingredients: 40,
+  prep_time: 32,
+  allergens: 32,
+  price_old: 40,
+  price: 40,
+};
 
 export const DEFAULT_CANVAS_HEIGHT = 560;
 

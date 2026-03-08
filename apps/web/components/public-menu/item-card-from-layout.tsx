@@ -3,8 +3,22 @@
 import { useState, useEffect, useMemo } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
 import type { LayoutDefinition, ZoneWidth } from "@/lib/presentation-templates";
+import type { LayoutZoneType } from "@/lib/presentation-templates";
+import { DEFAULT_ZONE_HEIGHTS } from "@/lib/presentation-templates";
 import { MenuIcon } from "../menu-icons";
 import { getImageSrc } from "./item-card-restaurante-1";
+
+const ZONE_HEIGHT_MIN = 12;
+const ZONE_HEIGHT_MAX = 600;
+
+function getEffectiveZoneHeight(type: string, zoneHeights: Record<string, number> | undefined): number {
+  if (zoneHeights?.[type] != null && Number.isFinite(zoneHeights[type])) {
+    const n = Math.round(Number(zoneHeights[type]));
+    if (n >= ZONE_HEIGHT_MIN && n <= ZONE_HEIGHT_MAX) return n;
+  }
+  const d = DEFAULT_ZONE_HEIGHTS[type as LayoutZoneType];
+  return typeof d === "number" ? d : 32;
+}
 
 function getEffectiveWidth(type: string, zoneWidths: Record<string, ZoneWidth> | undefined): ZoneWidth {
   if (zoneWidths?.[type]) return zoneWidths[type];
@@ -158,6 +172,11 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
   const rowSpacingPx = layoutDefinition.rowSpacingPx != null && layoutDefinition.rowSpacingPx >= 0 && layoutDefinition.rowSpacingPx <= 48
     ? layoutDefinition.rowSpacingPx
     : 8;
+  const zoneHeights = layoutDefinition.zoneHeights;
+  const imageHeightPx =
+    zoneHeights?.image != null
+      ? getEffectiveZoneHeight("image", zoneHeights)
+      : null;
 
   const renderZone = (type: string) => {
     switch (type) {
@@ -166,7 +185,8 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
           <button
             type="button"
             onClick={() => setImageModalOpen(true)}
-            className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
+            className={`block w-full overflow-hidden bg-gray-100 text-left focus:outline-none border-0 ${imageHeightPx == null ? "aspect-[4/3]" : ""}`}
+            style={imageHeightPx != null ? { height: `${imageHeightPx}px`, minHeight: `${imageHeightPx}px` } : undefined}
             aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
           >
             <img src={imageSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" />
@@ -265,11 +285,13 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
         {hasImage && imageRowIndex >= 0 && renderZone("image")}
         <div className="p-3 flex flex-col flex-1 min-h-0">
           {contentRows.map((row, rowIdx) => {
-            const rowStyle = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : undefined;
+            const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
             if (row.length === 1) {
-              const el = renderZone(row[0]);
+              const type = row[0];
+              const el = renderZone(type);
+              const minH = getEffectiveZoneHeight(type, zoneHeights);
               return el != null ? (
-                <div key={`r-${rowIdx}`} style={rowStyle}>
+                <div key={`r-${rowIdx}`} style={{ ...rowStyle, minHeight: `${minH}px` }}>
                   {el}
                 </div>
               ) : null;
@@ -282,8 +304,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
               >
                 {row.map((type) => {
                   const el = renderZone(type);
+                  const minH = getEffectiveZoneHeight(type, zoneHeights);
                   return el != null ? (
-                    <div key={type} className="flex-1 min-w-0">
+                    <div key={type} className="flex-1 min-w-0" style={{ minHeight: `${minH}px` }}>
                       {el}
                     </div>
                   ) : null;

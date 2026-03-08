@@ -508,6 +508,8 @@ export async function copyPresentationTemplate(_prev: { error?: string } | null,
 
 const LAYOUT_ZONE_TYPES = new Set(["image", "icons", "name", "description", "ingredients", "prep_time", "allergens", "price_old", "price"]);
 const ZONE_WIDTH_VALUES = new Set(["full", "half", "quarter"]);
+const ZONE_HEIGHT_MIN = 12;
+const ZONE_HEIGHT_MAX = 600;
 
 /** Actualizar layout de um modelo de apresentação (superadmin). */
 export async function updatePresentationTemplateLayout(
@@ -516,6 +518,7 @@ export async function updatePresentationTemplateLayout(
     canvasHeight?: number;
     zoneOrder: string[];
     zoneWidths?: Record<string, string>;
+    zoneHeights?: Record<string, number>;
     rowSpacingPx?: number;
   }
 ): Promise<{ error?: string }> {
@@ -546,10 +549,21 @@ export async function updatePresentationTemplateLayout(
     const n = Math.round(Number(layoutDefinition.rowSpacingPx));
     if (n >= 0 && n <= 48) rowSpacingPx = n;
   }
+  let zoneHeights: Record<string, number> | undefined;
+  if (layoutDefinition.zoneHeights && typeof layoutDefinition.zoneHeights === "object") {
+    zoneHeights = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneHeights)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "number" || !Number.isFinite(val)) continue;
+      const n = Math.round(Number(val));
+      if (n >= ZONE_HEIGHT_MIN && n <= ZONE_HEIGHT_MAX) zoneHeights[key] = n;
+    }
+    if (Object.keys(zoneHeights).length === 0) zoneHeights = undefined;
+  }
   const payload = {
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
     ...(zoneWidths ? { zoneWidths } : {}),
+    ...(zoneHeights ? { zoneHeights } : {}),
     ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
   };
   const { error } = await supabase

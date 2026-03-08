@@ -31,6 +31,7 @@ export type PublicMenuCategory = {
     canvasHeight?: number;
     zoneOrder: string[];
     zoneWidths?: Record<string, string>;
+    zoneHeights?: Record<string, number>;
     rowSpacingPx?: number;
   } | null;
   items: PublicMenuItem[];
