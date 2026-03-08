@@ -73,3 +73,37 @@ Ou seja, o servidor **não vê a sessão** nesses pedidos: o cookie de auth não
 **Fix aplicado:** Foi criado o cliente browser em `lib/supabase-browser.ts` com `createBrowserClient` de `@supabase/ssr`, que guarda a sessão em cookies. As páginas de login e change-password passaram a usar este cliente; após login, os cookies são enviados nos pedidos seguintes e o layout passa a ver o utilizador.
 
 A página de login envia o evento `LoginSuccess` para `/api/debug/portal-log` **antes** de `router.push`, para o POST não ser abortado pela navegação e aparecer nos logs quando `PORTAL_DEBUG=1`.
+
+## Diagnóstico das Server Actions em Tenants
+
+As Server Actions da página Tenants (`updateTenantContactEmail` e `resendTenantWelcomeEmail`) registam logs com **phase** `tenants_action`. Isto permite identificar a causa de erros "Fetch failed" no cliente: saber se o pedido chegou à action, em que passo falhou (createClient, RPC, revalidatePath, auth, email) e qual a mensagem de erro.
+
+### Formato dos logs `tenants_action`
+
+Cada linha inclui `phase: "tenants_action"` e campos como:
+
+- **action:** `"updateTenantContactEmail"` ou `"resendTenantWelcomeEmail"`.
+- **tenantId:** primeiros 8 caracteres do ID (para correlação, sem expor o ID completo se necessário).
+- **step:** ponto da execução: entrada (sem step), `createClient_ok`, `rpc_done`, `revalidatePath_ok`, `success`, `tenant_read`, `early_return`, `auth_done`, `email_sent`, ou `catch`.
+- **rpcError:** (só em updateTenantContactEmail após RPC) mensagem de erro do Supabase ou `null`.
+- **error:** (no catch) mensagem da exceção.
+- **emailLen** / **hasContactEmail:** metadados sem valor do email (privacidade).
+
+Para filtrar apenas estas ações nos logs:
+
+```bash
+docker compose logs web 2>&1 | grep '\[portal-debug\]' | grep tenants_action
+```
+
+### Endpoint opcional: últimas invocações em JSON
+
+Com `PORTAL_DEBUG=1` no servidor, está disponível um GET que devolve as últimas invocações (buffer em memória, até 50 entradas), para diagnóstico sem acesso a `docker compose logs`:
+
+```
+GET https://menu.bwb.pt/api/debug/tenants-actions
+```
+
+- Se `PORTAL_DEBUG` não for `1`, o endpoint responde 404.
+- A resposta é um array JSON de objetos com `ts`, `action`, `step` e restantes campos descritos acima, ordenados por `ts`.
+
+Fluxo sugerido: definir `PORTAL_DEBUG=1`, reproduzir o problema (guardar email, Re-enviar), depois consultar os logs com o grep acima ou abrir `/api/debug/tenants-actions` no browser para inspecionar o último `step` e presença de `catch` com `error`.

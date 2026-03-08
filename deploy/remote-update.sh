@@ -62,6 +62,12 @@ if [[ -f "$APP_DIR/.env" ]]; then
   else
     echo "COMMIT_SHA=$EXPECTED_COMMIT" >> "$APP_DIR/.env"
   fi
+  # Enable portal debug (tenant actions logs + /api/debug/tenants-actions)
+  if grep -q '^PORTAL_DEBUG=' "$APP_DIR/.env" 2>/dev/null; then
+    sed -i 's/^PORTAL_DEBUG=.*/PORTAL_DEBUG=1/' "$APP_DIR/.env"
+  else
+    echo "PORTAL_DEBUG=1" >> "$APP_DIR/.env"
+  fi
 fi
 
 echo "=== Step 2: Migrations ==="

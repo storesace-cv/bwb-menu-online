@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { sendFirstStoreWelcomeEmail } from "@/lib/mailer";
+import { tenantsActionLog } from "@/lib/portal-debug-log";
 
 const DEFAULT_PASSWORD = "bwb-menu";
 
@@ -116,9 +117,12 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
           store_id: null,
         });
         const portalUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://menu.bwb.pt";
+        const storeUrl = hostnameToSet
+          ? `https://${hostnameToSet}/portal-admin/login`
+          : `${portalUrl}/portal-admin/login`;
         await sendFirstStoreWelcomeEmail({
           to: contactEmail,
-          portalUrl: `${portalUrl}/portal-admin/login`,
+          portalUrl: storeUrl,
           passwordDefault: DEFAULT_PASSWORD,
         });
       } catch (err) {
@@ -133,8 +137,14 @@ export async function createStore(_prev: { error?: string } | null, formData: Fo
 }
 
 export async function updateTenantContactEmail(tenantId: string, contactEmail: string) {
+  tenantsActionLog({
+    action: "updateTenantContactEmail",
+    tenantId: tenantId?.slice(0, 8),
+    emailLen: contactEmail?.length ?? 0,
+  });
   try {
     const supabase = await createClient();
+    tenantsActionLog({ action: "updateTenantContactEmail", step: "createClient_ok" });
     const tid = (tenantId ?? "").trim();
     const email = (contactEmail ?? "").trim().toLowerCase();
     if (!tid) return { error: "Tenant obrigatório" };
@@ -146,17 +156,33 @@ export async function updateTenantContactEmail(tenantId: string, contactEmail: s
       p_name: null,
       p_contact_email: email,
     });
+    tenantsActionLog({
+      action: "updateTenantContactEmail",
+      step: "rpc_done",
+      rpcError: error?.message ?? null,
+    });
     if (error) return { error: error.message };
     revalidatePath("/portal-admin/tenants");
     revalidatePath("/portal-admin/settings");
+    tenantsActionLog({ action: "updateTenantContactEmail", step: "revalidatePath_ok" });
+    tenantsActionLog({ action: "updateTenantContactEmail", step: "success" });
     return null;
   } catch (err) {
     console.error(err);
+    tenantsActionLog({
+      action: "updateTenantContactEmail",
+      step: "catch",
+      error: err instanceof Error ? err.message : String(err),
+    });
     return { error: err instanceof Error ? err.message : "Erro ao guardar email." };
   }
 }
 
 export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ error?: string } | null> {
+  tenantsActionLog({
+    action: "resendTenantWelcomeEmail",
+    tenantId: tenantId?.slice(0, 8),
+  });
   const tid = (tenantId ?? "").trim();
   if (!tid) return { error: "Tenant obrigatório" };
 
@@ -167,7 +193,19 @@ export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ erro
   const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
   const { data: tenantRow } = await admin.from("tenants").select("contact_email").eq("id", tid).single();
   const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
-  if (!contactEmail) return { error: "Defina o email do tenant antes de re-enviar." };
+  tenantsActionLog({
+    action: "resendTenantWelcomeEmail",
+    step: "tenant_read",
+    hasContactEmail: !!contactEmail,
+  });
+  if (!contactEmail) {
+    tenantsActionLog({
+      action: "resendTenantWelcomeEmail",
+      step: "early_return",
+      reason: "no_contact_email",
+    });
+    return { error: "Defina o email do tenant antes de re-enviar." };
+  }
 
   try {
     const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -199,6 +237,7 @@ export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ erro
         { onConflict: "id" }
       );
     }
+    tenantsActionLog({ action: "resendTenantWelcomeEmail", step: "auth_done" });
     await admin.from("user_role_bindings").insert({
       user_id: userId,
       role_code: "tenant_admin",
@@ -206,14 +245,41 @@ export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ erro
       store_id: null,
     });
     const portalUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://menu.bwb.pt";
+    let storeUrl = `${portalUrl}/portal-admin/login`;
+    const { data: firstStore } = await admin
+      .from("stores")
+      .select("id")
+      .eq("tenant_id", tid)
+      .order("store_number", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (firstStore?.id) {
+      const { data: primaryDomain } = await admin
+        .from("store_domains")
+        .select("hostname")
+        .eq("store_id", firstStore.id)
+        .eq("is_primary", true)
+        .limit(1)
+        .maybeSingle();
+      if (primaryDomain?.hostname) {
+        storeUrl = `https://${primaryDomain.hostname}/portal-admin/login`;
+      }
+    }
     await sendFirstStoreWelcomeEmail({
       to: contactEmail,
-      portalUrl: `${portalUrl}/portal-admin/login`,
+      portalUrl: storeUrl,
       passwordDefault: DEFAULT_PASSWORD,
     });
+    tenantsActionLog({ action: "resendTenantWelcomeEmail", step: "email_sent" });
   } catch (err) {
+    tenantsActionLog({
+      action: "resendTenantWelcomeEmail",
+      step: "catch",
+      error: (err as Error).message,
+    });
     return { error: (err as Error).message };
   }
+  tenantsActionLog({ action: "resendTenantWelcomeEmail", step: "success" });
   revalidatePath("/portal-admin/tenants");
   return null;
 }
