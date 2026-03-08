@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useFormState } from "react-dom";
-import { updateSectionTitleAppearance } from "../../actions";
+import { useRouter } from "next/navigation";
+import { updateSectionTitleAppearance, resetSectionTitleAppearance } from "../../actions";
 import { Input, Button, Alert, Select } from "@/components/admin";
 
 const ALIGN_OPTIONS: { value: string; label: string }[] = [
@@ -22,9 +24,17 @@ export function SectionTitleAppearanceForm({
     section_title_color?: string;
   };
 }) {
+  const router = useRouter();
   const [state, formAction] = useFormState(updateSectionTitleAppearance, null);
+  const [resetState, resetFormAction] = useFormState(resetSectionTitleAppearance, null);
+
+  useEffect(() => {
+    if (resetState?.success) router.refresh();
+  }, [resetState?.success, router]);
+
   return (
-    <form action={formAction} className="flex flex-col gap-4 max-w-md">
+    <div className="flex flex-col gap-4 max-w-md">
+    <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="store_id" value={storeId} />
       <Select
         id="section_title_align"
@@ -70,5 +80,14 @@ export function SectionTitleAppearanceForm({
       </Button>
       {state?.error && <Alert variant="error">{state.error}</Alert>}
     </form>
+    <form action={resetFormAction} className="flex flex-col gap-2">
+      <input type="hidden" name="store_id" value={storeId} />
+      <p className="text-xs text-slate-500">Volta a aplicar os valores iniciais (ex.: centro, 20px, cor herdada).</p>
+      <Button type="submit" variant="secondary">
+        Repor valores por defeito
+      </Button>
+      {resetState?.error && <Alert variant="error">{resetState.error}</Alert>}
+    </form>
+    </div>
   );
 }

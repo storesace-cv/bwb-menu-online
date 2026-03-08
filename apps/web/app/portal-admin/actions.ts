@@ -1089,3 +1089,62 @@ export async function updateCategoryTitleAppearance(_prev: { error?: string } | 
   revalidatePath("/portal-admin/settings/categories");
   return null;
 }
+
+export async function resetSectionTitleAppearance(_prev: { success?: boolean; error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  if (!storeId) return { error: "Loja obrigatória" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+
+  const { data: existing } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
+
+  const merged: Record<string, string> = { ...currentSettings };
+  merged.section_title_align = "center";
+  merged.section_title_margin_bottom = "20";
+  merged.section_title_padding_top = "20";
+  merged.section_title_color = "";
+
+  const { error } = await supabase.from("store_settings").upsert(
+    { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
+    { onConflict: "store_id" }
+  );
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/sections");
+  return { success: true };
+}
+
+export async function resetCategoryTitleAppearance(_prev: { success?: boolean; error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  if (!storeId) return { error: "Loja obrigatória" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+
+  const { data: existing } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
+
+  const merged: Record<string, string> = { ...currentSettings };
+  merged.category_title_align = "left";
+  merged.category_title_margin_bottom = "15";
+  merged.category_title_padding_top = "16";
+  merged.category_title_indent_px = "10";
+  merged.category_title_color = "rgb(167, 143, 57)";
+
+  const { error } = await supabase.from("store_settings").upsert(
+    { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
+    { onConflict: "store_id" }
+  );
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/categories");
+  return { success: true };
+}
