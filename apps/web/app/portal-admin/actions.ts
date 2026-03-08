@@ -152,19 +152,19 @@ export async function updateTenantContactEmail(tenantId: string, contactEmail: s
 }
 
 export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ error?: string } | null> {
-  const supabase = await createClient();
   const tid = (tenantId ?? "").trim();
   if (!tid) return { error: "Tenant obrigatório" };
-  const { data: tenantRow } = await supabase.from("tenants").select("contact_email").eq("id", tid).single();
-  const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
-  if (!contactEmail) return { error: "Defina o email do tenant antes de re-enviar." };
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return { error: "Configuração do servidor em falta." };
 
+  const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+  const { data: tenantRow } = await admin.from("tenants").select("contact_email").eq("id", tid).single();
+  const contactEmail = (tenantRow?.contact_email ?? "").trim().toLowerCase();
+  if (!contactEmail) return { error: "Defina o email do tenant antes de re-enviar." };
+
   try {
-    const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
     const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
     const existing = listData?.users?.find((u) => u.email?.toLowerCase() === contactEmail);
     let userId: string;
