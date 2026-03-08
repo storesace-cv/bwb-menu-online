@@ -8,9 +8,19 @@ import {
   getDefaultLayoutDefinition,
   DEFAULT_CANVAS_HEIGHT,
   DEFAULT_ZONE_HEIGHTS,
+  DEFAULT_CONTENT_PADDING_PX,
+  DEFAULT_CONTENT_ROW_GAP_PX,
+  CONTENT_PADDING_PRESETS,
+  CONTENT_ROW_GAP_PRESETS,
+  CONTENT_FONT_SIZE_LABELS,
+  CONTENT_FONT_WEIGHT_LABELS,
+  CONTENT_LINE_HEIGHT_LABELS,
   type LayoutDefinition,
   type LayoutZoneType,
   type ZoneWidth,
+  type ContentFontSize,
+  type ContentFontWeight,
+  type ContentLineHeight,
 } from "@/lib/presentation-templates";
 import { updatePresentationTemplateLayout } from "@/app/portal-admin/actions";
 import { Button, Input, Alert } from "@/components/admin";
@@ -181,6 +191,36 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     }
     return base;
   });
+  const [contentPaddingPx, setContentPaddingPx] = useState<number>(
+    initialLayout?.contentPaddingPx != null && Number.isFinite(initialLayout.contentPaddingPx)
+      ? Math.max(4, Math.min(24, Math.round(Number(initialLayout.contentPaddingPx))))
+      : DEFAULT_CONTENT_PADDING_PX
+  );
+  const [contentRowGapPx, setContentRowGapPx] = useState<number>(
+    initialLayout?.contentRowGapPx != null && Number.isFinite(initialLayout.contentRowGapPx)
+      ? Math.max(2, Math.min(24, Math.round(Number(initialLayout.contentRowGapPx))))
+      : DEFAULT_CONTENT_ROW_GAP_PX
+  );
+  const [nameFontSize, setNameFontSize] = useState<ContentFontSize>(
+    initialLayout?.nameFontSize === "sm" || initialLayout?.nameFontSize === "base" || initialLayout?.nameFontSize === "lg"
+      ? initialLayout.nameFontSize
+      : "lg"
+  );
+  const [nameFontWeight, setNameFontWeight] = useState<ContentFontWeight>(
+    initialLayout?.nameFontWeight === "semibold" || initialLayout?.nameFontWeight === "bold"
+      ? initialLayout.nameFontWeight
+      : "bold"
+  );
+  const [priceFontSize, setPriceFontSize] = useState<ContentFontSize>(
+    initialLayout?.priceFontSize === "sm" || initialLayout?.priceFontSize === "base" || initialLayout?.priceFontSize === "lg"
+      ? initialLayout.priceFontSize
+      : "base"
+  );
+  const [priceLineHeight, setPriceLineHeight] = useState<ContentLineHeight>(
+    initialLayout?.priceLineHeight === "none" || initialLayout?.priceLineHeight === "normal"
+      ? initialLayout.priceLineHeight
+      : "normal"
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -251,16 +291,16 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     setSaving(true);
     setSaved(false);
     try {
-      const payload: {
-        canvasHeight?: number;
-        zoneOrder: string[];
-        zoneWidths?: Record<string, ZoneWidth>;
-        zoneHeights?: Record<string, number>;
-        rowSpacingPx?: number;
-      } = {
+      const payload: Parameters<typeof updatePresentationTemplateLayout>[1] = {
         ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
         zoneOrder,
         rowSpacingPx: rowSpacingPx >= 0 && rowSpacingPx <= 48 ? rowSpacingPx : DEFAULT_ROW_SPACING_PX,
+        contentPaddingPx: contentPaddingPx >= 4 && contentPaddingPx <= 24 ? contentPaddingPx : DEFAULT_CONTENT_PADDING_PX,
+        contentRowGapPx: contentRowGapPx >= 2 && contentRowGapPx <= 24 ? contentRowGapPx : DEFAULT_CONTENT_ROW_GAP_PX,
+        nameFontSize,
+        nameFontWeight,
+        priceFontSize,
+        priceLineHeight,
       };
       const widthsToSave: Record<string, ZoneWidth> = {};
       zoneOrder.forEach((z) => {
@@ -285,7 +325,20 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
     } finally {
       setSaving(false);
     }
-  }, [templateId, canvasHeight, zoneOrder, zoneWidths, zoneHeights, rowSpacingPx]);
+  }, [
+    templateId,
+    canvasHeight,
+    zoneOrder,
+    zoneWidths,
+    zoneHeights,
+    rowSpacingPx,
+    contentPaddingPx,
+    contentRowGapPx,
+    nameFontSize,
+    nameFontWeight,
+    priceFontSize,
+    priceLineHeight,
+  ]);
 
   const renderPreviewBlock = (type: string, inRow: boolean) => {
     const label = PREVIEW_ZONE_LABELS[type as LayoutZoneType] ?? LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type;
@@ -334,15 +387,20 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
           className="max-w-sm rounded-xl border-2 border-dashed border-slate-500 bg-slate-100/50 overflow-hidden flex flex-col"
           style={canvasHeight != null && canvasHeight > 0 ? { minHeight: `${canvasHeight}px` } : undefined}
         >
-          {zoneRows.map((row, rowIdx) => (
-            <div
-              key={rowIdx}
-              className={`flex items-stretch gap-0 ${row.length > 1 ? "flex flex-row border-t-2 border-dashed border-slate-400" : ""}`}
-              style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : undefined}
-            >
-              {row.map((type) => renderPreviewBlock(type, row.length > 1))}
-            </div>
-          ))}
+          <div className="flex flex-col flex-1" style={{ padding: `${contentPaddingPx}px` }}>
+            {zoneRows.map((row, rowIdx) => (
+              <div
+                key={rowIdx}
+                className={`flex items-stretch ${row.length > 1 ? "flex flex-row border-t-2 border-dashed border-slate-400" : ""}`}
+                style={{
+                  ...(rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}),
+                  ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}),
+                }}
+              >
+                {row.map((type) => renderPreviewBlock(type, row.length > 1))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -434,6 +492,117 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout }: 
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-slate-200 font-medium mb-2">Estilo do conteúdo</h3>
+        <p className="text-slate-400 text-sm mb-3">
+          Padding interno do card, gap entre colunas na mesma linha e tipografia do nome e do preço.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="content-padding" className="block text-slate-300 text-sm font-medium mb-1">
+              Padding interno (px)
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                id="content-padding"
+                type="number"
+                min={4}
+                max={24}
+                step={1}
+                value={contentPaddingPx}
+                onChange={(e) => setContentPaddingPx(Math.max(4, Math.min(24, Number(e.target.value) || 4)))}
+                className="w-20"
+              />
+              {CONTENT_PADDING_PRESETS.map((px) => (
+                <button
+                  key={px}
+                  type="button"
+                  onClick={() => setContentPaddingPx(px)}
+                  className={`rounded px-2 py-1 text-xs border ${contentPaddingPx === px ? "border-emerald-500 bg-emerald-900/40 text-emerald-200" : "border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500"}`}
+                >
+                  {px}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="content-row-gap" className="block text-slate-300 text-sm font-medium mb-1">
+              Gap entre colunas (px)
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                id="content-row-gap"
+                type="number"
+                min={2}
+                max={24}
+                step={1}
+                value={contentRowGapPx}
+                onChange={(e) => setContentRowGapPx(Math.max(2, Math.min(24, Number(e.target.value) || 2)))}
+                className="w-20"
+              />
+              {CONTENT_ROW_GAP_PRESETS.map((px) => (
+                <button
+                  key={px}
+                  type="button"
+                  onClick={() => setContentRowGapPx(px)}
+                  className={`rounded px-2 py-1 text-xs border ${contentRowGapPx === px ? "border-emerald-500 bg-emerald-900/40 text-emerald-200" : "border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500"}`}
+                >
+                  {px}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <span className="block text-slate-300 text-sm font-medium mb-1">Nome do artigo</span>
+              <div className="flex flex-wrap gap-2">
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={nameFontSize}
+                  onChange={(e) => setNameFontSize(e.target.value as ContentFontSize)}
+                >
+                  {(Object.entries(CONTENT_FONT_SIZE_LABELS) as [ContentFontSize, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={nameFontWeight}
+                  onChange={(e) => setNameFontWeight(e.target.value as ContentFontWeight)}
+                >
+                  {(Object.entries(CONTENT_FONT_WEIGHT_LABELS) as [ContentFontWeight, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <span className="block text-slate-300 text-sm font-medium mb-1">Preço</span>
+              <div className="flex flex-wrap gap-2">
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={priceFontSize}
+                  onChange={(e) => setPriceFontSize(e.target.value as ContentFontSize)}
+                >
+                  {(Object.entries(CONTENT_FONT_SIZE_LABELS) as [ContentFontSize, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={priceLineHeight}
+                  onChange={(e) => setPriceLineHeight(e.target.value as ContentLineHeight)}
+                >
+                  {(Object.entries(CONTENT_LINE_HEIGHT_LABELS) as [ContentLineHeight, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

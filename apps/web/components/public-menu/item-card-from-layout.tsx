@@ -2,14 +2,44 @@
 
 import { useState, useEffect, useMemo } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
-import type { LayoutDefinition, ZoneWidth } from "@/lib/presentation-templates";
+import type {
+  LayoutDefinition,
+  ZoneWidth,
+  ContentFontSize,
+  ContentFontWeight,
+  ContentLineHeight,
+} from "@/lib/presentation-templates";
 import type { LayoutZoneType } from "@/lib/presentation-templates";
-import { DEFAULT_ZONE_HEIGHTS } from "@/lib/presentation-templates";
+import {
+  DEFAULT_ZONE_HEIGHTS,
+  DEFAULT_CONTENT_PADDING_PX,
+  DEFAULT_CONTENT_ROW_GAP_PX,
+} from "@/lib/presentation-templates";
+import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
 import { getImageSrc } from "./item-card-restaurante-1";
 
 const ZONE_HEIGHT_MIN = 12;
 const ZONE_HEIGHT_MAX = 600;
+
+const CONTENT_PADDING_MIN = 4;
+const CONTENT_PADDING_MAX = 24;
+const CONTENT_ROW_GAP_MIN = 2;
+const CONTENT_ROW_GAP_MAX = 24;
+
+const FONT_SIZE_CLASSES: Record<ContentFontSize, string> = {
+  sm: "text-sm",
+  base: "text-base",
+  lg: "text-lg",
+};
+const FONT_WEIGHT_CLASSES: Record<ContentFontWeight, string> = {
+  semibold: "font-semibold",
+  bold: "font-bold",
+};
+const LINE_HEIGHT_CLASSES: Record<ContentLineHeight, string> = {
+  none: "leading-none",
+  normal: "",
+};
 
 function getEffectiveZoneHeight(type: string, zoneHeights: Record<string, number> | undefined): number {
   if (zoneHeights?.[type] != null && Number.isFinite(zoneHeights[type])) {
@@ -60,12 +90,6 @@ function groupZonesIntoRows(
     }
   }
   return rows;
-}
-
-function formatPrice(value: number, currencyCode?: string): string {
-  const formatted = value.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const code = (currencyCode || "€").trim();
-  return code === "€" || code === "EUR" ? `${formatted} €` : `${formatted} ${code}`;
 }
 
 function getAllergenLabel(
@@ -179,6 +203,40 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
       ? getEffectiveZoneHeight("image", zoneHeights)
       : null;
 
+  const contentPaddingPx =
+    layoutDefinition.contentPaddingPx != null && Number.isFinite(layoutDefinition.contentPaddingPx)
+      ? Math.max(CONTENT_PADDING_MIN, Math.min(CONTENT_PADDING_MAX, Math.round(Number(layoutDefinition.contentPaddingPx))))
+      : DEFAULT_CONTENT_PADDING_PX;
+  const contentRowGapPx =
+    layoutDefinition.contentRowGapPx != null && Number.isFinite(layoutDefinition.contentRowGapPx)
+      ? Math.max(CONTENT_ROW_GAP_MIN, Math.min(CONTENT_ROW_GAP_MAX, Math.round(Number(layoutDefinition.contentRowGapPx))))
+      : DEFAULT_CONTENT_ROW_GAP_PX;
+
+  const nameFontSize: ContentFontSize =
+    layoutDefinition.nameFontSize === "sm" || layoutDefinition.nameFontSize === "base" || layoutDefinition.nameFontSize === "lg"
+      ? layoutDefinition.nameFontSize
+      : "lg";
+  const nameFontWeight: ContentFontWeight =
+    layoutDefinition.nameFontWeight === "semibold" || layoutDefinition.nameFontWeight === "bold"
+      ? layoutDefinition.nameFontWeight
+      : "bold";
+  const priceFontSize: ContentFontSize =
+    layoutDefinition.priceFontSize === "sm" || layoutDefinition.priceFontSize === "base" || layoutDefinition.priceFontSize === "lg"
+      ? layoutDefinition.priceFontSize
+      : "base";
+  const priceLineHeight: ContentLineHeight =
+    layoutDefinition.priceLineHeight === "none" || layoutDefinition.priceLineHeight === "normal"
+      ? layoutDefinition.priceLineHeight
+      : "normal";
+
+  const nameClassName = [
+    FONT_WEIGHT_CLASSES[nameFontWeight],
+    FONT_SIZE_CLASSES[nameFontSize],
+    "leading-snug m-0 text-gray-900 text-left",
+  ].join(" ");
+  const priceSizeClass = FONT_SIZE_CLASSES[priceFontSize];
+  const priceLeadClass = LINE_HEIGHT_CLASSES[priceLineHeight];
+
   const renderZone = (type: string) => {
     switch (type) {
       case "image":
@@ -203,7 +261,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
         );
       case "name":
         return (
-          <h3 className="font-bold text-lg text-gray-900 text-left mt-0.5">{item.menu_name}</h3>
+          <h3 className={nameClassName}>{item.menu_name}</h3>
         );
       case "description":
         return item.menu_description ? (
@@ -257,7 +315,16 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
         ) : null;
       case "price":
         return item.menu_price != null ? (
-          <div className={`font-bold text-right shrink-0 ${item.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}>
+          <div
+            className={[
+              "font-bold text-right shrink-0",
+              item.is_promotion ? "text-amber-700" : "text-gray-900",
+              item.is_promotion ? "text-lg" : priceSizeClass,
+              priceLeadClass,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
             {formatPrice(item.menu_price, currencyCode)}
           </div>
         ) : null;
@@ -284,7 +351,10 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
         style={minHeight != null ? { minHeight: `${minHeight}px` } : undefined}
       >
         {hasImage && imageRowIndex >= 0 && renderZone("image")}
-        <div className="p-3 flex flex-col flex-1 min-h-0">
+        <div
+          className="flex flex-col flex-1 min-h-0"
+          style={{ padding: `${contentPaddingPx}px` }}
+        >
           {contentRows.map((row, rowIdx) => {
             const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
             if (row.length === 1) {
@@ -302,8 +372,8 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
             return (
               <div
                 key={`r-${rowIdx}`}
-                className={`flex items-center gap-4 ${row.length === 2 ? "" : "flex-wrap"}`}
-                style={rowStyle}
+                className={`flex items-center ${row.length === 2 ? "" : "flex-wrap"}`}
+                style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
               >
                 {row.map((type) => {
                   const el = renderZone(type);

@@ -510,6 +510,13 @@ const LAYOUT_ZONE_TYPES = new Set(["image", "icons", "name", "description", "ing
 const ZONE_WIDTH_VALUES = new Set(["full", "half", "quarter"]);
 const ZONE_HEIGHT_MIN = 12;
 const ZONE_HEIGHT_MAX = 600;
+const CONTENT_PADDING_MIN = 4;
+const CONTENT_PADDING_MAX = 24;
+const CONTENT_ROW_GAP_MIN = 2;
+const CONTENT_ROW_GAP_MAX = 24;
+const CONTENT_FONT_SIZES = new Set(["sm", "base", "lg"]);
+const CONTENT_FONT_WEIGHTS = new Set(["semibold", "bold"]);
+const CONTENT_LINE_HEIGHTS = new Set(["none", "normal"]);
 
 /** Actualizar layout de um modelo de apresentação (superadmin). */
 export async function updatePresentationTemplateLayout(
@@ -520,6 +527,12 @@ export async function updatePresentationTemplateLayout(
     zoneWidths?: Record<string, string>;
     zoneHeights?: Record<string, number>;
     rowSpacingPx?: number;
+    contentPaddingPx?: number;
+    contentRowGapPx?: number;
+    nameFontSize?: string;
+    nameFontWeight?: string;
+    priceFontSize?: string;
+    priceLineHeight?: string;
   }
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
@@ -559,12 +572,45 @@ export async function updatePresentationTemplateLayout(
     }
     if (Object.keys(zoneHeights).length === 0) zoneHeights = undefined;
   }
+  let contentPaddingPx: number | null = null;
+  if (layoutDefinition.contentPaddingPx != null && Number.isFinite(Number(layoutDefinition.contentPaddingPx))) {
+    const n = Math.round(Number(layoutDefinition.contentPaddingPx));
+    if (n >= CONTENT_PADDING_MIN && n <= CONTENT_PADDING_MAX) contentPaddingPx = n;
+  }
+  let contentRowGapPx: number | null = null;
+  if (layoutDefinition.contentRowGapPx != null && Number.isFinite(Number(layoutDefinition.contentRowGapPx))) {
+    const n = Math.round(Number(layoutDefinition.contentRowGapPx));
+    if (n >= CONTENT_ROW_GAP_MIN && n <= CONTENT_ROW_GAP_MAX) contentRowGapPx = n;
+  }
+  const nameFontSize =
+    typeof layoutDefinition.nameFontSize === "string" && CONTENT_FONT_SIZES.has(layoutDefinition.nameFontSize)
+      ? layoutDefinition.nameFontSize
+      : null;
+  const nameFontWeight =
+    typeof layoutDefinition.nameFontWeight === "string" && CONTENT_FONT_WEIGHTS.has(layoutDefinition.nameFontWeight)
+      ? layoutDefinition.nameFontWeight
+      : null;
+  const priceFontSize =
+    typeof layoutDefinition.priceFontSize === "string" && CONTENT_FONT_SIZES.has(layoutDefinition.priceFontSize)
+      ? layoutDefinition.priceFontSize
+      : null;
+  const priceLineHeight =
+    typeof layoutDefinition.priceLineHeight === "string" && CONTENT_LINE_HEIGHTS.has(layoutDefinition.priceLineHeight)
+      ? layoutDefinition.priceLineHeight
+      : null;
+
   const payload = {
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
     ...(zoneWidths ? { zoneWidths } : {}),
     ...(zoneHeights ? { zoneHeights } : {}),
     ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
+    ...(contentPaddingPx !== null ? { contentPaddingPx } : {}),
+    ...(contentRowGapPx !== null ? { contentRowGapPx } : {}),
+    ...(nameFontSize ? { nameFontSize } : {}),
+    ...(nameFontWeight ? { nameFontWeight } : {}),
+    ...(priceFontSize ? { priceFontSize } : {}),
+    ...(priceLineHeight ? { priceLineHeight } : {}),
   };
   const { error } = await supabase
     .from("menu_presentation_templates")

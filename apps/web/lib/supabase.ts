@@ -33,6 +33,12 @@ export type PublicMenuCategory = {
     zoneWidths?: Record<string, string>;
     zoneHeights?: Record<string, number>;
     rowSpacingPx?: number;
+    contentPaddingPx?: number;
+    contentRowGapPx?: number;
+    nameFontSize?: string;
+    nameFontWeight?: string;
+    priceFontSize?: string;
+    priceLineHeight?: string;
   } | null;
   items: PublicMenuItem[];
 };

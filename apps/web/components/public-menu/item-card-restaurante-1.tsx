@@ -2,15 +2,10 @@
 
 import { useState, useEffect } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
+import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
 
 const STORAGE_BASE = (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "") + "/storage/v1/object/public/";
-
-function formatPrice(value: number, currencyCode?: string): string {
-  const formatted = value.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const code = (currencyCode || "€").trim();
-  return code === "€" || code === "EUR" ? `${formatted} €` : `${formatted} ${code}`;
-}
 
 /** Label do alergénio: locale → pt → en → code */
 function getAllergenLabel(

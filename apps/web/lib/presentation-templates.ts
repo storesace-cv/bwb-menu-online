@@ -22,6 +22,13 @@ export type LayoutZoneType = (typeof LAYOUT_ZONE_TYPES)[number];
 /** Largura da zona no layout: linha inteira, metade (50%) ou um quarto (25%). Consecutivos half/quarter ficam na mesma linha. */
 export type ZoneWidth = "full" | "half" | "quarter";
 
+/** Tamanho de fonte para nome e preço no card. */
+export type ContentFontSize = "sm" | "base" | "lg";
+/** Peso de fonte para o nome do artigo. */
+export type ContentFontWeight = "semibold" | "bold";
+/** Altura de linha para o preço. */
+export type ContentLineHeight = "none" | "normal";
+
 export interface LayoutDefinition {
   /** Altura mínima do card em px. Omitir ou 0 = altura mínima automática (conteúdo). */
   canvasHeight?: number;
@@ -32,7 +39,40 @@ export interface LayoutDefinition {
   rowSpacingPx?: number;
   /** Opcional: altura mínima por tipo de zona. 0 = automática (conteúdo); > 0 = altura mínima em px. Omitido = DEFAULT_ZONE_HEIGHTS[type]. */
   zoneHeights?: Record<string, number>;
+  /** Padding interno (px) do bloco de conteúdo do card; 4–24; default 12. */
+  contentPaddingPx?: number;
+  /** Gap (px) entre colunas na mesma linha; 2–24; default 16. */
+  contentRowGapPx?: number;
+  /** Tamanho da fonte do nome do artigo; default "lg". */
+  nameFontSize?: ContentFontSize;
+  /** Peso da fonte do nome; default "bold". */
+  nameFontWeight?: ContentFontWeight;
+  /** Tamanho da fonte do preço; default "base". */
+  priceFontSize?: ContentFontSize;
+  /** Altura de linha do preço ("none" = leading-none); default "normal". */
+  priceLineHeight?: ContentLineHeight;
 }
+
+/** Presets de padding interno (px) para a UI. */
+export const CONTENT_PADDING_PRESETS = [4, 6, 8, 12, 16, 20, 24] as const;
+/** Presets de gap entre colunas (px) para a UI. */
+export const CONTENT_ROW_GAP_PRESETS = [2, 4, 8, 16, 24] as const;
+export const DEFAULT_CONTENT_PADDING_PX = 12;
+export const DEFAULT_CONTENT_ROW_GAP_PX = 16;
+
+export const CONTENT_FONT_SIZE_LABELS: Record<ContentFontSize, string> = {
+  sm: "Pequeno",
+  base: "Normal",
+  lg: "Grande",
+};
+export const CONTENT_FONT_WEIGHT_LABELS: Record<ContentFontWeight, string> = {
+  semibold: "Semibold",
+  bold: "Bold",
+};
+export const CONTENT_LINE_HEIGHT_LABELS: Record<ContentLineHeight, string> = {
+  none: "Nenhum",
+  normal: "Normal",
+};
 
 /** Alturas por defeito por zona (px), para UI e card público quando zoneHeights não define o tipo. */
 export const DEFAULT_ZONE_HEIGHTS: Record<LayoutZoneType, number> = {
