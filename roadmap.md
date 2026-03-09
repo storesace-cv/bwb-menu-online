@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (FAB: scroll à secção, Menus, ordem, itens desativados, aria-hidden; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (FAB: lazy load secções, API section-categories, ordem visual; roadmap, commit, push, deploy).
 
 ---
 
@@ -104,6 +104,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **FAB Speed Dial (menu público, mobile-first):** Botão de ação flutuante no canto inferior direito com safe-area (env(safe-area-inset-*)); ao tocar abre Speed Dial com 5 ações: Secções (BottomSheet com lista e scroll para secção), Filtros (abrir/fechar painel de categorias), Pesquisar (mostrar e focar input), Idioma (BottomSheet placeholder “Em breve”), Reservar mesa (reutiliza modal existente). Componentes: `FabSpeedDial`, `BottomSheet` reutilizável, util `scrollToSection`; template BWB - Branco com input de pesquisa condicional, IDs nas secções para scroll; acessibilidade (ARIA, Esc, Tab, prefers-reduced-motion). z-index: FAB 900, BottomSheet 901, modal reserva 1000.
 - **Menu público: remoção de filtro visível e elementos do topo:** Removido o bloco de filtros que aparecia após o carrossel de Destaques (tabs de categorias, Base prato, toggles, Limpar). Removidos do header o texto “Nossos Menus” e o botão “Reservar uma mesa”; a reserva mantém-se via FAB. O menu lista sempre todas as categorias e itens (sem filtros); o FAB e as 5 ações mantêm-se.
 - **FAB: scroll à secção, Menus, ordem e itens desativados:** Ao escolher uma secção no FAB (Menus), o sheet fecha e o menu faz scroll para a secção escolhida (scroll agendado após fecho do BottomSheet). "Secções" renomeado para "Menus" no FAB e no título do sheet. Ordem das ações mantida (Menus, Filtros, Pesquisar, Idioma, Reservar Mesa). Idioma e Reservar Mesa com aspeto desativado (opacity, cursor) e props languageDisabled/reserveDisabled; continuam a abrir sheet/modal "Em breve". Aviso aria-hidden mitigado: aria-hidden apenas no backdrop do overlay do FAB, não no contentor dos botões.
+- **FAB: lazy load de secções e ordem visual:** API GET `/api/public-menu/section-categories` (host, sectionId, currencyCode) para o cliente obter categorias de uma secção; template BWB - Branco com estado `extraSectionCategories` e merge em `filteredCategories`; ao escolher secção no sheet, fetch das categorias se ainda não carregadas, depois scroll via useEffect quando o bloco existe no DOM. Ordem visual do FAB corrigida: no DOM os botões estão Reservar, Idioma, Pesquisar, Filtros, Menus (flex-col-reverse), resultando em 1 Menus 2 Filtros 3 Pesquisar 4 Idioma 5 Reservar de cima para baixo; firstActionRef no botão Menus.
 
 ---
 

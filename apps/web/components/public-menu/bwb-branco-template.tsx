@@ -2,7 +2,7 @@
 
 import type { ComponentType } from "react";
 import { useState, useMemo, useRef, useEffect } from "react";
-import type { PublicMenuPayload, PublicMenuInitialPayload, PublicMenuItem } from "@/lib/supabase";
+import type { PublicMenuPayload, PublicMenuInitialPayload, PublicMenuItem, PublicMenuCategory } from "@/lib/supabase";
 import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getPresentationCardComponent, DEFAULT_PRESENTATION_KEY } from "@/lib/presentation-templates";
 import { ItemCardFromLayout } from "./item-card-from-layout";
@@ -80,13 +80,15 @@ function collectFeaturedItemsWithCategory(menu: PublicMenuPayload): { item: Publ
   return out;
 }
 
-/** Quando existir alternância de secções, usar getPublicMenuSectionCategories(host, sectionId, currencyCode) para lazy load das categorias da secção e merge em estado (ex.: Map<sectionId, categories>). */
+/** Lazy load de secções: extraSectionCategories guarda categorias carregadas por sectionId; ao escolher secção faz fetch e scroll quando o bloco existir. */
 export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | PublicMenuPayload }) {
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
   const [isCategoriesPanelOpen, setIsCategoriesPanelOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [sectionsSheetOpen, setSectionsSheetOpen] = useState(false);
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const [extraSectionCategories, setExtraSectionCategories] = useState<Record<string, PublicMenuCategory[]>>({});
+  const [pendingScrollSectionId, setPendingScrollSectionId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const currencyCode = menu.store_settings?.currency_code ?? "€";
@@ -119,7 +121,20 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const featuredLayoutDefinition = menu.featured_layout_definition ?? null;
   const imageSource = menu.store_settings?.image_source?.trim() || undefined;
 
-  const filteredCategories = menu.categories ?? [];
+  const filteredCategories = useMemo(() => {
+    const sections = menu.sections ?? [];
+    const initial = menu.categories ?? [];
+    const result: PublicMenuCategory[] = [];
+    for (const sec of sections) {
+      const fromInitial = initial.filter((c) => c.section_id === sec.id);
+      const fromExtra = extraSectionCategories[sec.id] ?? [];
+      if (fromInitial.length) result.push(...fromInitial);
+      else if (fromExtra.length) result.push(...fromExtra);
+    }
+    const noSection = initial.filter((c) => !c.section_id);
+    if (noSection.length) result.push(...noSection);
+    return result;
+  }, [menu.sections, menu.categories, extraSectionCategories]);
 
   const currentSectionName = useMemo(() => {
     const first = filteredCategories[0];
@@ -157,11 +172,55 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
     }
   }, [isSearchOpen]);
 
+  useEffect(() => {
+    if (pendingScrollSectionId == null) return;
+    const id = pendingScrollSectionId;
+    const el = document.getElementById(`section-${id}`);
+    if (el) {
+      const t = setTimeout(() => {
+        scrollToSection(`section-${id}`);
+        setPendingScrollSectionId(null);
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [pendingScrollSectionId, filteredCategories]);
+
   const handleOpenSections = () => setSectionsSheetOpen(true);
-  const handleSelectSection = (sectionId: string | null) => {
+  const handleSelectSection = async (sectionId: string | null) => {
     const id = sectionId ?? "none";
     setSectionsSheetOpen(false);
-    setTimeout(() => scrollToSection(`section-${id}`), 0);
+
+    const sections = menu.sections ?? [];
+    const initial = menu.categories ?? [];
+    const alreadyHaveSection = id === "none"
+      ? initial.some((c) => !c.section_id)
+      : initial.some((c) => c.section_id === id) || (extraSectionCategories[id]?.length ?? 0) > 0;
+
+    if (alreadyHaveSection) {
+      setPendingScrollSectionId(id);
+      return;
+    }
+
+    if (id === "none") {
+      setPendingScrollSectionId(null);
+      return;
+    }
+
+    setPendingScrollSectionId(id);
+    const host = typeof window !== "undefined" ? window.location.hostname : "";
+    const params = new URLSearchParams({ host, sectionId: id, currencyCode: currencyCode ?? "" });
+    try {
+      const res = await fetch(`/api/public-menu/section-categories?${params}`);
+      if (!res.ok) return;
+      const { categories } = (await res.json()) as { categories: PublicMenuCategory[] };
+      if (Array.isArray(categories) && categories.length > 0) {
+        setExtraSectionCategories((prev) => ({ ...prev, [id]: categories }));
+      } else {
+        setPendingScrollSectionId(null);
+      }
+    } catch {
+      setPendingScrollSectionId(null);
+    }
   };
   const handleOpenLanguage = () => setLanguageSheetOpen(true);
   // TODO: idioma — funcionalidade futura; por agora só UI "Em breve".

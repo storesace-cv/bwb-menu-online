@@ -125,7 +125,7 @@ export function FabSpeedDial({
               aria-hidden="true"
               onClick={close}
             />
-            {/* Actions stacked above FAB: first in DOM (Sections) is closest to FAB via flex-col-reverse */}
+            {/* Order in DOM: Reservar, Idioma, Pesquisar, Filtros, Menus → with flex-col-reverse visual order is 1 Menus 2 Filtros 3 Pesquisar 4 Idioma 5 Reservar */}
             <div
               className="absolute flex flex-col-reverse gap-2 items-end"
               style={{
@@ -136,38 +136,16 @@ export function FabSpeedDial({
               aria-label={labels.openMenu}
             >
               <button
-                ref={firstActionRef}
                 type="button"
                 role="menuitem"
-                aria-label={labels.sections}
-                onClick={() => handleAction(onOpenSections)}
-                className={`${actionBtnBase} ${actionBtnActive}`}
+                aria-label={labels.reserve}
+                aria-disabled={reserveDisabled}
+                onClick={() => handleAction(onReserveTable)}
+                className={`${actionBtnBase} ${reserveDisabled ? actionBtnDisabled : actionBtnActive}`}
                 style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
               >
-                <SectionsIcon className="w-5 h-5 shrink-0" />
-                <span>{labels.sections}</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                aria-label={labels.filters}
-                onClick={() => handleAction(onToggleCategories)}
-                className={`${actionBtnBase} ${actionBtnActive}`}
-                style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
-              >
-                <FiltersIcon className="w-5 h-5 shrink-0" />
-                <span>{labels.filters}</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                aria-label={labels.search}
-                onClick={() => handleAction(onOpenSearch)}
-                className={`${actionBtnBase} ${actionBtnActive}`}
-                style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
-              >
-                <SearchIcon className="w-5 h-5 shrink-0" />
-                <span>{labels.search}</span>
+                <ReserveIcon className="w-5 h-5 shrink-0" />
+                <span>{labels.reserve}</span>
               </button>
               <button
                 type="button"
@@ -184,14 +162,36 @@ export function FabSpeedDial({
               <button
                 type="button"
                 role="menuitem"
-                aria-label={labels.reserve}
-                aria-disabled={reserveDisabled}
-                onClick={() => handleAction(onReserveTable)}
-                className={`${actionBtnBase} ${reserveDisabled ? actionBtnDisabled : actionBtnActive}`}
+                aria-label={labels.search}
+                onClick={() => handleAction(onOpenSearch)}
+                className={`${actionBtnBase} ${actionBtnActive}`}
                 style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
               >
-                <ReserveIcon className="w-5 h-5 shrink-0" />
-                <span>{labels.reserve}</span>
+                <SearchIcon className="w-5 h-5 shrink-0" />
+                <span>{labels.search}</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                aria-label={labels.filters}
+                onClick={() => handleAction(onToggleCategories)}
+                className={`${actionBtnBase} ${actionBtnActive}`}
+                style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
+              >
+                <FiltersIcon className="w-5 h-5 shrink-0" />
+                <span>{labels.filters}</span>
+              </button>
+              <button
+                ref={firstActionRef}
+                type="button"
+                role="menuitem"
+                aria-label={labels.sections}
+                onClick={() => handleAction(onOpenSections)}
+                className={`${actionBtnBase} ${actionBtnActive}`}
+                style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
+              >
+                <SectionsIcon className="w-5 h-5 shrink-0" />
+                <span>{labels.sections}</span>
               </button>
             </div>
           </div>,
