@@ -34,3 +34,5 @@ body {
 .featured-carousel-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* Menu público: z-index layers. FAB overlay + dial = 900; BottomSheet = 901; modal reserva = 1000. */

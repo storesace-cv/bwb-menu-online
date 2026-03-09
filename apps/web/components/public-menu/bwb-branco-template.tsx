@@ -1,12 +1,15 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import type { PublicMenuPayload, PublicMenuInitialPayload, PublicMenuItem } from "@/lib/supabase";
 import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getPresentationCardComponent, DEFAULT_PRESENTATION_KEY } from "@/lib/presentation-templates";
 import { ItemCardFromLayout } from "./item-card-from-layout";
 import { FeaturedCarouselSection } from "./featured-carousel-section";
+import { FabSpeedDial } from "./fab-speed-dial";
+import { BottomSheet } from "./bottom-sheet";
+import { scrollToSection } from "@/lib/scroll-to-section";
 
 const FALLBACK_PRIMARY = "#8b6914";
 
@@ -85,6 +88,11 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const [toggleTakeAway, setToggleTakeAway] = useState(false);
   const [toggleFeatured, setToggleFeatured] = useState(false);
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
+  const [isCategoriesPanelOpen, setIsCategoriesPanelOpen] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [sectionsSheetOpen, setSectionsSheetOpen] = useState(false);
+  const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const currencyCode = menu.store_settings?.currency_code ?? "€";
   const storeName = menu.store_settings?.store_display_name || menu.store_name || "Menu";
@@ -193,6 +201,25 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
     setToggleFeatured(false);
   };
 
+  useEffect(() => {
+    if (isSearchOpen) {
+      const t = requestAnimationFrame(() => {
+        searchInputRef.current?.focus();
+      });
+      return () => cancelAnimationFrame(t);
+    }
+  }, [isSearchOpen]);
+
+  const handleOpenSections = () => setSectionsSheetOpen(true);
+  const handleSelectSection = (sectionId: string | null) => {
+    const id = sectionId ?? "none";
+    scrollToSection(`section-${id}`);
+    setSectionsSheetOpen(false);
+  };
+  const handleOpenLanguage = () => setLanguageSheetOpen(true);
+  // TODO: idioma — funcionalidade futura; por agora só UI "Em breve".
+  const handleReserveTable = () => setReservationModalOpen(true);
+
   // suppressHydrationWarning: tolera alterações ao DOM por extensões do browser (ex.: token-signing) que provocam mismatch de hidratação (#418/#423); conteúdo final é equivalente.
   return (
     <div
@@ -267,6 +294,23 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         </section>
       )}
 
+      {/* Search (shown when FAB opens search) */}
+      {isSearchOpen && (
+        <section className="mb-4">
+          <label htmlFor="menu-search-input" className="sr-only">
+            Pesquisar artigos
+          </label>
+          <input
+            ref={searchInputRef}
+            id="menu-search-input"
+            type="search"
+            placeholder="Pesquisar artigos…"
+            className="w-full py-3 px-4 rounded-lg border border-gray-300 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
+            aria-label="Pesquisar artigos"
+          />
+        </section>
+      )}
+
       {/* Carrossel de destaques */}
       <FeaturedCarouselSection
         featuredItems={featuredItemsWithCategory}
@@ -277,7 +321,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         imageSource={imageSource}
       />
 
-      {/* Filters: category tabs + chips */}
+      {/* Filters: category tabs + chips (collapsible via FAB "Filtros") */}
+      {isCategoriesPanelOpen && (
       <section className="mb-6">
         <div className="mb-3 p-2 rounded-lg bg-gray-50 border border-gray-200">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Categorias</p>
@@ -364,6 +409,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           </button>
         </div>
       </section>
+      )}
 
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
@@ -377,7 +423,11 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         <p className="text-gray-600">Nenhum item corresponde aos filtros.</p>
       ) : (
         categoriesBySection.map((group) => (
-          <div key={group.sectionId ?? "_none"} className="mb-10">
+          <div
+            key={group.sectionId ?? "_none"}
+            id={`section-${group.sectionId ?? "none"}`}
+            className="mb-10"
+          >
             <h1
               className={`mt-0 title ${sectionTitleAlign === "left" ? "text-left" : sectionTitleAlign === "right" ? "text-right" : "text-center"}`}
               style={{
@@ -455,6 +505,72 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           <p className="m-0">© {storeName}</p>
         )}
       </footer>
+
+      {/* FAB Speed Dial: secções, filtros, pesquisa, idioma, reservar */}
+      <FabSpeedDial
+        onOpenSections={handleOpenSections}
+        onToggleCategories={() => setIsCategoriesPanelOpen((prev) => !prev)}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenLanguage={handleOpenLanguage}
+        onReserveTable={handleReserveTable}
+        isCategoriesOpen={isCategoriesPanelOpen}
+        isSearchOpen={isSearchOpen}
+      />
+
+      <BottomSheet
+        open={sectionsSheetOpen}
+        onClose={() => setSectionsSheetOpen(false)}
+        title="Secções"
+        ariaLabel="Escolher secção do menu"
+      >
+        <ul className="list-none p-4 m-0 space-y-1">
+          {(menu.sections ?? []).map((sec) => (
+            <li key={sec.id}>
+              <button
+                type="button"
+                className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 min-h-[44px]"
+                onClick={() => handleSelectSection(sec.id)}
+              >
+                {sec.name}
+              </button>
+            </li>
+          ))}
+          {(!menu.sections || menu.sections.length === 0) && (
+            <li className="py-3 text-gray-500 text-sm">Nenhuma secção disponível.</li>
+          )}
+        </ul>
+      </BottomSheet>
+
+      <BottomSheet
+        open={languageSheetOpen}
+        onClose={() => setLanguageSheetOpen(false)}
+        title="Idioma"
+        ariaLabel="Escolher idioma"
+      >
+        <div className="p-4">
+          <p className="text-gray-600 text-sm mb-4">Em breve poderá escolher o idioma aqui.</p>
+          <ul className="list-none m-0 space-y-1">
+            <li>
+              <button
+                type="button"
+                className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 min-h-[44px] disabled:opacity-60"
+                disabled
+              >
+                Português
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 min-h-[44px] disabled:opacity-60"
+                disabled
+              >
+                English
+              </button>
+            </li>
+          </ul>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
