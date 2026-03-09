@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: alergénios a branco; edição de item: código do artigo; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: carrossel estilo Apple; deploy e verificação no container).
 
 ---
 
@@ -99,6 +99,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Destaques: layout do Modelo Destaque 1 no menu público:** A ordem das zonas e a altura do card definidas em Definições → Modelos de apresentação → Modelo Destaque 1 → Editar layout passam a ser aplicadas no carrossel de destaques. `FeaturedCarouselSection` envia `featured_layout_definition` ao card; `ItemCardDestaque1` usa `layoutDefinition` quando presente (canvasHeight, zoneOrder sem "image", zoneWidths, contentPaddingPx, rowSpacingPx, etc.) e mantém fallback com estrutura fixa quando não há layout guardado.
 - **Destaques: texto dos alergénios a branco:** Nos cards do carrossel de destaques (Modelo Destaque 1), apenas o texto dos alergénios passou a ser exibido a branco (`ALLERGEN_BADGE_DESTAQUE`: texto branco e fundo discreto sobre o overlay); os restantes modelos de card mantêm as cores por severidade.
 - **Edição de item: código do artigo:** Na página de edição de item (`/portal-admin/settings/items/[id]/edit`) é exibido o código do artigo (`item_code`) em modo só leitura no topo do formulário; a query inclui `item_code` e o tipo `MenuItem` no formulário foi alargado.
+- **Destaques: carrossel estilo Apple:** A secção Destaques passou a ser um carrossel horizontal (shelf) com scroll suave, snap por item, peek do próximo card (~78vw/280px), indicador de progresso (barra fina), setas Anterior/Seguinte apenas em desktop (visíveis ao hover/focus), wheel-to-horizontal sobre o carrossel com edge handling, teclado (setas esquerda/direita) e `prefers-reduced-motion`; acessibilidade (region focável, ARIA). Implementado em `FeaturedCarouselSection` e classe `.featured-carousel-scroll` em globals.css para esconder a scrollbar.
 
 ---
 

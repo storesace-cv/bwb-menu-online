@@ -26,3 +26,11 @@ body {
   --menu-primary-foreground: #fff;
   --menu-primary-muted: rgba(139, 105, 20, 0.12);
 }
+
+/* Carrossel Destaques: esconder scrollbar (Apple-style) */
+.featured-carousel-scroll {
+  scrollbar-width: none;
+}
+.featured-carousel-scroll::-webkit-scrollbar {
+  display: none;
+}
