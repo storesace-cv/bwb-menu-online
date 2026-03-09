@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Ajustes posição carrossel stacked: simetria e afastamento; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Setas removidas do carrossel, z-index Destaques; roadmap, commit, push, deploy).
 
 ---
 
@@ -116,8 +116,10 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público: largura total e N colunas dinâmicas:** Em tablet e computador o menu deixa de estar limitado a uma faixa central (removido `max-w-4xl` do `<main>` em `page.tsx`); ocupa toda a largura do ecrã. A grelha de artigos por categoria usa `repeat(auto-fill, minmax(360px, 1fr))`, colocando na mesma linha tantos cards quantos couberem (largura modelo 360px); mobile mantém 1 coluna. Implementação sem subgrid (alturas por card independentes por linha).
 - **Carrossel Destaques (Escolhas do Chefe): stacked, 3 visíveis, loop e dots:** O carrossel de itens em destaque passou de faixa horizontal com scroll para layout tipo stacked: sempre no máximo 3 cartões visíveis (anterior, principal, seguinte), com os laterais por detrás e parcialmente sob o central (z-index e scale 0.88); centrado no ecrã; navegação por setas (desktop), toque (swipe), teclado (setas) e loop infinito nos dois sentidos. Barra de progresso substituída por indicadores em círculos (um por registo, centrados por baixo; o do registo activo destacado com cor primária e maior); dots clicáveis para ir ao destaque N. Removida a classe `.featured-carousel-scroll` em globals.css.
 - **Ajustes posição carrossel stacked:** Corrigida a assimetria do cartão da direita (estava mais "dentro" do central): slot direito passou a usar `translateX(OVERLAP_PX)` em vez de `calc(OVERLAP_PX - 50%)`, ficando simétrico ao esquerdo. Redução de `OVERLAP_PX` de 60px para 30px para afastar os laterais do centro (esquerda e direita à mesma distância).
+- **Carrossel Destaques: setas removidas e z-index:** Removidos os botões de setas (Anterior/Seguinte) à esquerda e direita do carrossel; navegação apenas por dots, swipe, wheel e teclado. Secção "Escolhas do Chefe" com `relative z-10` para que os destaques fiquem por cima do menu que segue (evitar que a secção/menu apareça por cima dos cartões do carrossel em desktop e mobile).
 
 ---
+
 
 
 ## Planeado / pendente

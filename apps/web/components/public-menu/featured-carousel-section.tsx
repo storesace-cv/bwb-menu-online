@@ -14,21 +14,6 @@ const CENTER_WIDTH = "min(320px, 85vw)";
 const SIDE_SCALE = 0.88;
 const OVERLAP_PX = 30;
 
-function ChevronLeft({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-  );
-}
-function ChevronRight({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M9 18l6-6-6-6" />
-    </svg>
-  );
-}
-
 export function FeaturedCarouselSection({
   featuredItems,
   featuredSectionLabel,
@@ -144,7 +129,7 @@ export function FeaturedCarouselSection({
   };
 
   return (
-    <section className="mb-8" aria-label="Destaques">
+    <section className="relative z-10 mb-8" aria-label="Destaques">
       <h2
         className="text-xl font-semibold mb-4 pb-2 border-b-2"
         style={{ borderColor: "var(--menu-primary)", color: "var(--menu-primary)" }}
@@ -152,23 +137,6 @@ export function FeaturedCarouselSection({
         {featuredSectionLabel}
       </h2>
       <div className="relative group/carousel flex justify-center">
-        <button
-          type="button"
-          onClick={goPrev}
-          aria-label="Anterior"
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-black/20 hover:bg-black/30 text-white border border-white/20 opacity-0 group-hover/carousel:opacity-100 group-focus-within/carousel:opacity-100 transition-opacity focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          onClick={goNext}
-          aria-label="Seguinte"
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-black/20 hover:bg-black/30 text-white border border-white/20 opacity-0 group-hover/carousel:opacity-100 group-focus-within/carousel:opacity-100 transition-opacity focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-
         <div
           tabIndex={0}
           role="region"
