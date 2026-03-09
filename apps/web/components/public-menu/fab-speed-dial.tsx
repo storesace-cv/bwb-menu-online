@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 const FAB_Z = 900;
 
 const DEFAULT_LABELS = {
-  sections: "Secções",
+  sections: "Menus",
   filters: "Filtros",
   search: "Pesquisar",
   language: "Idioma",
@@ -26,6 +26,8 @@ export type FabSpeedDialProps = {
   onReserveTable: () => void;
   isCategoriesOpen?: boolean;
   isSearchOpen?: boolean;
+  languageDisabled?: boolean;
+  reserveDisabled?: boolean;
   placement?: "bottom-right";
   offsetBottom?: number;
   offsetRight?: number;
@@ -38,6 +40,11 @@ export type FabSpeedDialProps = {
  * Props: onOpenSections, onToggleCategories, onOpenSearch, onOpenLanguage, onReserveTable;
  * isCategoriesOpen, isSearchOpen (optional); placement, offsetBottom, offsetRight; labels for i18n.
  */
+const actionBtnBase =
+  "min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 rounded-full shadow-lg text-white text-sm font-medium px-4 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50";
+const actionBtnActive = "hover:opacity-90 active:opacity-80";
+const actionBtnDisabled = "opacity-60 cursor-not-allowed";
+
 export function FabSpeedDial({
   onOpenSections,
   onToggleCategories,
@@ -46,6 +53,8 @@ export function FabSpeedDial({
   onReserveTable,
   isCategoriesOpen = false,
   isSearchOpen = false,
+  languageDisabled = true,
+  reserveDisabled = true,
   placement = "bottom-right",
   offsetBottom = 16,
   offsetRight = 16,
@@ -108,12 +117,12 @@ export function FabSpeedDial({
           <div
             className="fixed inset-0"
             style={{ zIndex: FAB_Z }}
-            aria-hidden="true"
           >
             <button
               type="button"
               className="absolute inset-0 bg-black/30 cursor-default"
               aria-label={labels.closeMenu}
+              aria-hidden="true"
               onClick={close}
             />
             {/* Actions stacked above FAB: first in DOM (Sections) is closest to FAB via flex-col-reverse */}
@@ -132,7 +141,7 @@ export function FabSpeedDial({
                 role="menuitem"
                 aria-label={labels.sections}
                 onClick={() => handleAction(onOpenSections)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 rounded-full shadow-lg text-white text-sm font-medium px-4 py-2 hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50"
+                className={`${actionBtnBase} ${actionBtnActive}`}
                 style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
               >
                 <SectionsIcon className="w-5 h-5 shrink-0" />
@@ -143,7 +152,7 @@ export function FabSpeedDial({
                 role="menuitem"
                 aria-label={labels.filters}
                 onClick={() => handleAction(onToggleCategories)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 rounded-full shadow-lg text-white text-sm font-medium px-4 py-2 hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50"
+                className={`${actionBtnBase} ${actionBtnActive}`}
                 style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
               >
                 <FiltersIcon className="w-5 h-5 shrink-0" />
@@ -154,7 +163,7 @@ export function FabSpeedDial({
                 role="menuitem"
                 aria-label={labels.search}
                 onClick={() => handleAction(onOpenSearch)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 rounded-full shadow-lg text-white text-sm font-medium px-4 py-2 hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50"
+                className={`${actionBtnBase} ${actionBtnActive}`}
                 style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
               >
                 <SearchIcon className="w-5 h-5 shrink-0" />
@@ -164,8 +173,9 @@ export function FabSpeedDial({
                 type="button"
                 role="menuitem"
                 aria-label={labels.language}
+                aria-disabled={languageDisabled}
                 onClick={() => handleAction(onOpenLanguage)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 rounded-full shadow-lg text-white text-sm font-medium px-4 py-2 hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50"
+                className={`${actionBtnBase} ${languageDisabled ? actionBtnDisabled : actionBtnActive}`}
                 style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
               >
                 <LanguageIcon className="w-5 h-5 shrink-0" />
@@ -175,8 +185,9 @@ export function FabSpeedDial({
                 type="button"
                 role="menuitem"
                 aria-label={labels.reserve}
+                aria-disabled={reserveDisabled}
                 onClick={() => handleAction(onReserveTable)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 rounded-full shadow-lg text-white text-sm font-medium px-4 py-2 hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50"
+                className={`${actionBtnBase} ${reserveDisabled ? actionBtnDisabled : actionBtnActive}`}
                 style={{ backgroundColor: "var(--menu-primary, #8b6914)" }}
               >
                 <ReserveIcon className="w-5 h-5 shrink-0" />

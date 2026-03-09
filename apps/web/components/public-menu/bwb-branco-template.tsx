@@ -160,8 +160,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const handleOpenSections = () => setSectionsSheetOpen(true);
   const handleSelectSection = (sectionId: string | null) => {
     const id = sectionId ?? "none";
-    scrollToSection(`section-${id}`);
     setSectionsSheetOpen(false);
+    setTimeout(() => scrollToSection(`section-${id}`), 0);
   };
   const handleOpenLanguage = () => setLanguageSheetOpen(true);
   // TODO: idioma — funcionalidade futura; por agora só UI "Em breve".
@@ -354,7 +354,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         )}
       </footer>
 
-      {/* FAB Speed Dial: secções, filtros, pesquisa, idioma, reservar */}
+      {/* FAB Speed Dial: menus, filtros, pesquisa, idioma, reservar */}
       <FabSpeedDial
         onOpenSections={handleOpenSections}
         onToggleCategories={() => setIsCategoriesPanelOpen((prev) => !prev)}
@@ -363,12 +363,14 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         onReserveTable={handleReserveTable}
         isCategoriesOpen={isCategoriesPanelOpen}
         isSearchOpen={isSearchOpen}
+        languageDisabled
+        reserveDisabled
       />
 
       <BottomSheet
         open={sectionsSheetOpen}
         onClose={() => setSectionsSheetOpen(false)}
-        title="Secções"
+        title="Menus"
         ariaLabel="Escolher secção do menu"
       >
         <ul className="list-none p-4 m-0 space-y-1">
