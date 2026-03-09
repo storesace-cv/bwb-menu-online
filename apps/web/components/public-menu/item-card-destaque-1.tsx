@@ -38,6 +38,9 @@ const SEVERITY_CLASSES: Record<number, string> = {
   5: "bg-red-700/25 text-red-900 border border-red-600/50",
 };
 
+/** Nos Destaques, texto dos alergénios a branco sobre o overlay. */
+const ALLERGEN_BADGE_DESTAQUE = "text-xs px-1.5 py-0.5 rounded text-white bg-white/15 border border-white/25";
+
 const ZONE_HEIGHT_MIN = 12;
 const ZONE_HEIGHT_MAX = 600;
 const CONTENT_PADDING_MIN = 4;
@@ -238,11 +241,9 @@ export function ItemCardDestaque1({
         return item.allergens && item.allergens.length > 0 ? (
           <div className="mt-1 flex flex-wrap gap-1 items-center">
             {item.allergens.map((a) => {
-              const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
               const label = getAllergenLabel(a);
-              const badgeClass = SEVERITY_CLASSES[severity] ?? SEVERITY_CLASSES[2];
               return (
-                <span key={a.code} className={`text-xs px-1.5 py-0.5 rounded ${badgeClass}`}>
+                <span key={a.code} className={ALLERGEN_BADGE_DESTAQUE}>
                   {label}
                 </span>
               );
@@ -370,11 +371,9 @@ export function ItemCardDestaque1({
               {item.allergens && item.allergens.length > 0 && (
                 <div className="flex flex-wrap gap-1 items-center">
                   {item.allergens.map((a) => {
-                    const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
                     const label = getAllergenLabel(a);
-                    const badgeClass = SEVERITY_CLASSES[severity] ?? SEVERITY_CLASSES[2];
                     return (
-                      <span key={a.code} className={`text-xs px-1.5 py-0.5 rounded ${badgeClass}`}>
+                      <span key={a.code} className={ALLERGEN_BADGE_DESTAQUE}>
                         {label}
                       </span>
                     );

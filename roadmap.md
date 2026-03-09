@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: layout do Modelo Destaque 1 refletido no menu; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: alergénios a branco; edição de item: código do artigo; deploy e verificação no container).
 
 ---
 
@@ -97,6 +97,8 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Imagem do artigo em Destaques + overlay:** Nos modelos de apresentação de Destaques (carrossel no topo do menu), o card usa duas divs: uma com a imagem do artigo em "cover" (centralizada) e uma com overlay em gradiente por cima (`from-black/80 via-black/40 to-transparent`) para legibilidade do texto. Em `item-card-destaque-1.tsx` a imagem fica numa div própria e o overlay noutra (evita o problema de múltiplos backgrounds em que a imagem não aparecia); independente da config em Modelos de apresentação de Destaques.
 - **Destaques: remoção do modal ao clicar:** Nos cards do carrossel de destaques foi removida a abertura de janela/modal com imagem e ingredientes ao clicar no card. Removidos o componente `ImageIngredientsModal`, o estado `imageModalOpen`, o botão overlay que cobria o card e abria o modal; os ingredientes continuam a expandir-se inline com "Ingredientes +".
 - **Destaques: layout do Modelo Destaque 1 no menu público:** A ordem das zonas e a altura do card definidas em Definições → Modelos de apresentação → Modelo Destaque 1 → Editar layout passam a ser aplicadas no carrossel de destaques. `FeaturedCarouselSection` envia `featured_layout_definition` ao card; `ItemCardDestaque1` usa `layoutDefinition` quando presente (canvasHeight, zoneOrder sem "image", zoneWidths, contentPaddingPx, rowSpacingPx, etc.) e mantém fallback com estrutura fixa quando não há layout guardado.
+- **Destaques: texto dos alergénios a branco:** Nos cards do carrossel de destaques (Modelo Destaque 1), apenas o texto dos alergénios passou a ser exibido a branco (`ALLERGEN_BADGE_DESTAQUE`: texto branco e fundo discreto sobre o overlay); os restantes modelos de card mantêm as cores por severidade.
+- **Edição de item: código do artigo:** Na página de edição de item (`/portal-admin/settings/items/[id]/edit`) é exibido o código do artigo (`item_code`) em modo só leitura no topo do formulário; a query inclui `item_code` e o tipo `MenuItem` no formulário foi alargado.
 
 ---
 

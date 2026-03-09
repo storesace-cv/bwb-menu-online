@@ -24,7 +24,7 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
 
   const { data: itemRaw, error } = await supabase
     .from("menu_items")
-    .select("id, menu_name, menu_description, menu_price, sort_order, article_type_id, is_promotion, price_old, take_away, menu_ingredients, prep_minutes, is_visible, is_featured, image_url, image_path, image_base_path, has_image, catalog_item_id, catalog_items(name_original)")
+    .select("id, menu_name, menu_description, menu_price, sort_order, article_type_id, is_promotion, price_old, take_away, menu_ingredients, prep_minutes, is_visible, is_featured, image_url, image_path, image_base_path, has_image, catalog_item_id, item_code, catalog_items(name_original)")
     .eq("id", id)
     .eq("store_id", storeId)
     .single();

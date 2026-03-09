@@ -33,6 +33,7 @@ type MenuItem = {
   image_path?: string | null;
   image_base_path?: string | null;
   has_image?: boolean;
+  item_code?: string | null;
 };
 
 const MENU_IMAGES_BUCKET = "menu-images";
@@ -86,6 +87,14 @@ export function EditItemForm({
   return (
     <form action={formAction} className="flex flex-col gap-4 max-w-2xl">
       <input type="hidden" name="id" value={item.id} />
+
+      {/* 0. Código do artigo (somente leitura) */}
+      <div className="w-full">
+        <label className="block text-sm font-medium text-slate-300 mb-1">
+          Código do artigo
+        </label>
+        <p className="text-slate-200 text-sm py-1.5">{item.item_code ?? "—"}</p>
+      </div>
 
       {/* 1. Imagem */}
       <div className="w-full">
