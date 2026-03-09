@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaque: só imagem como background, overlay removido para validação; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: remoção do modal ao clicar; deploy e verificação no container).
 
 ---
 
@@ -95,6 +95,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Preço como texto pré-formatado (hidratação #418/#423):** Para eliminar erros de hidratação no menu público, o preço passou a ser tratado como um único texto (valor + moeda) gerado no servidor. Em `getPublicMenuByHostname` o payload é enriquecido com `menu_price_display` e `price_old_display` por item (via `formatPrice` no servidor); tipo `PublicMenuItem` com estes campos opcionais. Os três cards (ItemCardRestaurante1, ItemCardFromLayout, ItemCardDestaque1) usam essas strings quando existem, com fallback para `formatPrice` no cliente; o cliente deixa de formatar preços na renderização inicial, evitando mismatch servidor/cliente.
 - **URL da imagem no menu público (bucket menu-images):** O URL do Supabase Storage para imagens importadas omitia o nome do bucket; o formato correto é `.../storage/v1/object/public/menu-images/{path}`. Em `getImageSrc` (item-card-restaurante-1.tsx) passou a usar a constante `MENU_IMAGES_BUCKET` e a função `storageUrl(path, suffix)` para incluir `menu-images/` no URL; o editor de item (edit-item-form.tsx) usa o mesmo formato no thumbnail. A imagem do artigo carrega correctamente e o fallback por `onError` deixa de alterar o DOM no cliente, eliminando o mismatch de hidratação #418/#423 causado pela imagem.
 - **Imagem do artigo em Destaques (fase validação):** Nos modelos de apresentação de Destaques (carrossel no topo do menu), o fundo do card é apenas a imagem do artigo em "cover" (centralizada); o overlay em gradiente foi removido temporariamente para validar que a imagem aparece. Em `item-card-destaque-1.tsx` uma única div usa `backgroundImage: url(effectiveSrc)`, `backgroundSize: "cover"`, `backgroundPosition: "center"`. Fase seguinte: reativar overlay (segunda div com gradiente) para legibilidade do texto.
+- **Destaques: remoção do modal ao clicar:** Nos cards do carrossel de destaques foi removida a abertura de janela/modal com imagem e ingredientes ao clicar no card. Removidos o componente `ImageIngredientsModal`, o estado `imageModalOpen`, o botão overlay que cobria o card e abria o modal; os ingredientes continuam a expandir-se inline com "Ingredientes +".
 
 ---
 

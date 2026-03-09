@@ -24,70 +24,6 @@ const SEVERITY_CLASSES: Record<number, string> = {
   5: "bg-red-700/25 text-red-900 border border-red-600/50",
 };
 
-function ImageIngredientsModal({
-  open,
-  onClose,
-  imageSrc,
-  imageAlt,
-  ingredientsText,
-}: {
-  open: boolean;
-  onClose: () => void;
-  imageSrc: string | null;
-  imageAlt: string;
-  ingredientsText: string | null;
-}) {
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
-
-  if (!open) return null;
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Imagem e ingredientes do artigo"
-    >
-      <div
-        className="bg-white rounded-xl shadow-xl max-h-[90vh] w-full max-w-lg overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {imageSrc && (
-          <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100 shrink-0">
-            <img src={imageSrc} alt={imageAlt} className="h-full w-full object-cover" />
-          </div>
-        )}
-        <div className="p-4 overflow-y-auto shrink-0">
-          {ingredientsText && ingredientsText.trim() !== "" ? (
-            <>
-              <h4 className="font-semibold text-gray-900 mb-2">Ingredientes</h4>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap">{ingredientsText}</p>
-            </>
-          ) : (
-            <p className="text-sm text-gray-500">Sem lista de ingredientes.</p>
-          )}
-        </div>
-        <div className="p-4 border-t border-gray-200 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full py-2 px-4 rounded-lg bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
-          >
-            Fechar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const DEFAULT_CANVAS_HEIGHT = 560;
 
 /** Card de destaque "Modelo Destaque 1" — imagem de fundo em cover + overlay em gradiente por cima para legibilidade do texto (nome, ingredientes, badges, preço). Imagem e overlay são uma única camada de fundo; independente da config em Modelos de apresentação de Destaques. */
@@ -103,7 +39,6 @@ export function ItemCardDestaque1({
   imageSource?: string;
 }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
-  const [imageModalOpen, setImageModalOpen] = useState(false);
   const imageSrc = getImageSrc(item, imageSource);
   const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
   useEffect(() => {
@@ -133,12 +68,6 @@ export function ItemCardDestaque1({
             backgroundPosition: "center",
           }}
           aria-hidden
-        />
-        <button
-          type="button"
-          onClick={() => setImageModalOpen(true)}
-          className="absolute inset-0 z-0 cursor-pointer"
-          aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         />
         <div className="relative z-10 p-4 text-white flex flex-col gap-2">
           {categoryName && (
@@ -185,13 +114,6 @@ export function ItemCardDestaque1({
           )}
         </div>
       </article>
-      <ImageIngredientsModal
-        open={imageModalOpen}
-        onClose={() => setImageModalOpen(false)}
-        imageSrc={effectiveSrc}
-        imageAlt={item.menu_name ?? ""}
-        ingredientsText={item.menu_ingredients}
-      />
     </li>
   );
 }
