@@ -21,6 +21,9 @@ export function FeaturedCarouselSection({
   featuredLayoutDefinition,
   currencyCode,
   imageSource,
+  titleAlign = "center",
+  titleMarginBottom = "20",
+  titlePaddingTop = "20",
 }: {
   featuredItems: FeaturedItemWithCategory[];
   featuredSectionLabel: string;
@@ -28,6 +31,9 @@ export function FeaturedCarouselSection({
   featuredLayoutDefinition?: LayoutDefinition | null;
   currencyCode: string;
   imageSource?: string;
+  titleAlign?: string;
+  titleMarginBottom?: string;
+  titlePaddingTop?: string;
 }) {
   if (featuredItems.length === 0) return null;
 
@@ -128,11 +134,16 @@ export function FeaturedCarouselSection({
     );
   };
 
+  const alignClass = titleAlign === "left" ? "text-left" : titleAlign === "right" ? "text-right" : "text-center";
   return (
     <section className="relative z-10 mb-10" aria-label="Destaques">
       <h2
-        className="text-xl font-semibold mb-4 pb-2 border-b-2"
-        style={{ borderColor: "var(--menu-primary)", color: "var(--menu-primary)" }}
+        className={`mt-0 title ${alignClass}`}
+        style={{
+          marginBottom: `${titleMarginBottom}px`,
+          paddingTop: `${titlePaddingTop}px`,
+          color: "var(--menu-primary)",
+        }}
       >
         {featuredSectionLabel}
       </h2>

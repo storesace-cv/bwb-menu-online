@@ -161,6 +161,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const currencyCode = menu.store_settings?.currency_code ?? "€";
   const storeName = menu.store_settings?.store_display_name || menu.store_name || "Menu";
   const heroText = menu.store_settings?.hero_text;
+  const heroLogoUrl = menu.store_settings?.logo_url;
   const reservationUrl = menu.store_settings?.reservation_url;
   const contactUrl = menu.store_settings?.contact_url;
   const privacyUrl = menu.store_settings?.privacy_url;
@@ -326,22 +327,6 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
       }
       suppressHydrationWarning
     >
-      {/* Header */}
-      <header className="flex flex-wrap justify-between items-center gap-4 mb-8">
-        <div className="flex items-center gap-4">
-          <h1 className="m-0 text-2xl font-bold text-gray-900">{storeName}</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          {menu.store_settings?.logo_url ? (
-            <img
-              src={menu.store_settings.logo_url}
-              alt={storeName}
-              className="max-h-[50px] w-auto object-contain"
-            />
-          ) : null}
-        </div>
-      </header>
-
       {/* Reservation modal */}
       {reservationModalOpen && (
         <div
@@ -370,13 +355,18 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         </div>
       )}
 
-      {/* Hero (text banner) */}
-      {heroText && (
+      {/* Hero (logo + text banner) */}
+      {(heroLogoUrl || heroText) && (
         <section
-          className="mb-8 p-6 rounded-xl text-gray-800"
+          className="mb-8 p-6 rounded-xl text-gray-800 text-center flex flex-col items-center justify-center gap-4"
           style={{ backgroundColor: "color-mix(in srgb, var(--menu-primary) 12%, white)" }}
         >
-          <p className="m-0 text-lg leading-relaxed whitespace-pre-wrap">{heroText}</p>
+          {heroLogoUrl ? (
+            <img src={heroLogoUrl} alt={storeName} className="max-h-[50px] w-auto object-contain" />
+          ) : null}
+          {heroText ? (
+            <p className="m-0 text-lg leading-relaxed whitespace-pre-wrap">{heroText}</p>
+          ) : null}
         </section>
       )}
 
@@ -407,6 +397,9 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         featuredLayoutDefinition={featuredLayoutDefinition as LayoutDefinition | null}
         currencyCode={currencyCode}
         imageSource={imageSource}
+        titleAlign={sectionTitleAlign}
+        titleMarginBottom={sectionTitleMarginBottom}
+        titlePaddingTop={sectionTitlePaddingTop}
       />
 
       {/* Breadcrumb */}

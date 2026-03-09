@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Logo no canto superior direito; rodapé compacto e centrado; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Remoção header; Escolhas do Chef = Restaurante; hero logo+texto centrados; roadmap, commit, push, deploy).
 
 ---
 
@@ -125,6 +125,9 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Logotipo no menu público (upload em Parâmetros App):** Campo de upload no início do formulário em Definições → Parâmetros App (SVG preferido, PNG/JPG/WebP); validação: raster máx. 50×1322 px e 2 MB, SVG máx. 1 MB; armazenamento em `menu-images/store-logos/{storeId}/logo.{ext}`; header do menu público exibe o logo (max-h 50px, alinhado à esquerda) quando configurado; botão "Remover logótipo"; campo "Nome na loja (menu público)" mantido para uso futuro; utilitários em `lib/logo-upload-utils.ts`.
 - **Rodapé configurável do menu público:** Secção "Rodapé" em Parâmetros App com logo da empresa (upload, máx. 36×400 px, 2 MB), morada, email, telefone e cor de fundo (color picker + hex); persistência em `store_settings` (footer_logo_url, footer_address, footer_email, footer_phone, footer_background_color); migração suave de `footer_text` para `footer_address` ao carregar; validação de email; componente `MenuFooterSection` no menu público (pill card com fundo configurável, 3 linhas: logo, morada | email | telefone, © ano + "Business with Brains" mailto:suporte@bwb.pt sem estilo de link + "Todos os direitos reservados."); links Contacte-nos e Política de Privacidade mantidos abaixo do rodapé quando definidos.
 - **Menu público: logo no canto superior direito e rodapé compacto:** Header com nome da loja à esquerda e logotipo no canto superior direito (quando configurado). Rodapé com espaçamento entre linhas reduzido a zero; morada numa linha; email e telefone na linha seguinte com " | " apenas entre eles; copyright ("© ano Business with Brains. Todos os direitos reservados.") em fonte menor; todo o conteúdo do rodapé centrado.
+- **Menu público: remoção do header:** Removido o bloco completo do header (nome da loja + logotipo) do template BWB - Branco; o menu começa directamente no hero, carrossel de destaques, breadcrumb, secções e rodapé.
+- **Título "Escolhas do Chef" igual ao título de secção:** O título da secção de destaques passou a usar o mesmo estilo que o título da secção "Restaurante" (classe `title`, alinhamento e margens/padding configuráveis via Parâmetros App), mantendo a cor primária do menu; props `titleAlign`, `titleMarginBottom`, `titlePaddingTop` em `FeaturedCarouselSection`.
+- **Secção hero: logo e texto hero centrados:** A secção hero do menu público mostra por ordem o Logótipo (menu público) e o Texto hero (Parâmetros App), tudo centrado; visível quando pelo menos um dos dois está definido; fundo mantido (color-mix com primária).
 
 ---
 
