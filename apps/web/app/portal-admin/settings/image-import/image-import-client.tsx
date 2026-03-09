@@ -21,7 +21,14 @@ const IMAGE_SOURCE_OPTIONS = [
   { value: "legacy_path", label: "Path legado (image_path)" },
 ] as const;
 
-export function ImageImportClient({ storeId, initialImageSource }: { storeId: string; initialImageSource: string }) {
+const VALID_IMAGE_SOURCES = ["storage", "url", "legacy_path"] as const;
+function normalizeImageSource(value: string | undefined): (typeof VALID_IMAGE_SOURCES)[number] {
+  const v = (value ?? "storage").trim();
+  return VALID_IMAGE_SOURCES.includes(v as (typeof VALID_IMAGE_SOURCES)[number]) ? (v as (typeof VALID_IMAGE_SOURCES)[number]) : "storage";
+}
+
+export function ImageImportClient({ storeId, initialImageSource }: { storeId: string; initialImageSource?: string }) {
+  const effectiveImageSource = normalizeImageSource(initialImageSource ?? "storage");
   const [imageSourceState, formAction] = useFormState(updateImageSource, null);
   const [overwrite, setOverwrite] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -73,7 +80,7 @@ export function ImageImportClient({ storeId, initialImageSource }: { storeId: st
             id="image_source"
             name="image_source"
             label="Método de leitura de imagens"
-            defaultValue={initialImageSource}
+            defaultValue={effectiveImageSource}
           >
             {IMAGE_SOURCE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
