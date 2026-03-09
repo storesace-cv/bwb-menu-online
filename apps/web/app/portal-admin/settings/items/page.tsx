@@ -120,13 +120,10 @@ export default async function SettingsItemsPage() {
     }
   }
 
-  const { data: settingsRow } = await supabase
-    .from("store_settings")
-    .select("settings")
-    .eq("store_id", storeId)
-    .maybeSingle();
-  const settings = (settingsRow?.settings as Record<string, unknown>) ?? {};
-  const aiEnabled = !!settings.ai_enabled;
+  const { data: aiEnabledRpc } = await supabase.rpc("store_can_use_ai_description", {
+    p_store_id: storeId,
+  });
+  const aiEnabled = !!aiEnabledRpc;
 
   const { data: allergens } = await supabase
     .from("allergens")

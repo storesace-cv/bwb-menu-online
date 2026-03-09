@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (doc ENCRYPTION_MASTER_KEY; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Gerar descrição activo com platform AI; roadmap, commit, push, deploy).
 
 ---
 
@@ -109,6 +109,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Filtro apenas na secção activa:** Estado `searchQuery` ligado ao input de pesquisa; normalização de texto (lowercase, sem acentos) e match em `menu_name`/`menu_description`; `activeSectionFilteredCategories` filtra itens só dentro da secção ativa e oculta categorias vazias quando há query; pesquisa limpa ao mudar de secção.
 - **ChatGPT / Grok como serviço no superadmin:** Configuração de IA da plataforma em Definições (superadmin): card "ChatGPT / Grok" com formulário igual ao do tenant e secção para escolher em quais clientes (tenants) será usada; tabelas `platform_ai_settings` e `platform_ai_tenants` (migration 052), RPC `store_uses_platform_ai`; chaves cifradas com contexto "platform" em credentials-crypto; quando um tenant está seleccionado, a opção "ChatGPT / Grok" nas Definições do cliente fica inibida e "Gerar descrição" usa a configuração da plataforma; APIs GET/POST platform-ai, save e test (apenas superadmin).
 - **Doc ENCRYPTION_MASTER_KEY:** Documentação actualizada para que novos ambientes e quem configura apenas IA saibam que precisam de `ENCRYPTION_MASTER_KEY` (mín. 32 caracteres) em produção: comentário em `.env.example`, referência na secção de variáveis do README, e nota em [docs/CONNECTOR_NETBO.md](docs/CONNECTOR_NETBO.md) a indicar que a mesma variável é usada para chaves API ChatGPT/Grok (por loja e da plataforma).
+- **Gerar descrição activo com platform AI:** RPC `store_can_use_ai_description(p_store_id)` (migration 053) devolve se a loja pode usar "Gerar descrição" (IA própria ou plataforma); páginas de edição e de criação de artigos passam a usar este RPC para o prop `aiEnabled`, pelo que o botão fica activo quando o tenant usa IA da plataforma e esta está activa.
 
 ---
 
