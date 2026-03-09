@@ -69,6 +69,11 @@ export function ItemCardDestaque1({
           }}
           aria-hidden
         />
+        {/* Overlay em gradiente por cima da imagem para legibilidade do texto (independente da config em Modelos de apresentação de Destaques). */}
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+          aria-hidden
+        />
         <div className="relative z-10 p-4 text-white flex flex-col gap-2">
           {categoryName && (
             <p className="text-xs font-medium text-white/90 uppercase tracking-wide m-0">{categoryName}</p>
