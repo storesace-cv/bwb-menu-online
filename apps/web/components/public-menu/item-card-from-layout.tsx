@@ -313,13 +313,13 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           </div>
         ) : null;
       case "price_old":
-        return item.is_promotion && item.price_old != null ? (
+        return item.is_promotion && (item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)) != null ? (
           <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
-            {formatPrice(item.price_old, currencyCode)}
+            {item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)}
           </div>
         ) : null;
       case "price":
-        return item.menu_price != null ? (
+        return (item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null ? (
           <div
             className={[
               "font-bold text-right shrink-0",
@@ -330,7 +330,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
               .filter(Boolean)
               .join(" ")}
           >
-            {formatPrice(item.menu_price, currencyCode)}
+            {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
           </div>
         ) : null;
       default:

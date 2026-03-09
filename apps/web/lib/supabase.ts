@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { formatPrice } from "@/lib/format-price";
 
 function getSupabase(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -66,6 +67,10 @@ export type PublicMenuItem = {
   menu_ingredients: string | null;
   article_type: PublicArticleType | null;
   allergens: { code: string; name?: string; severity?: number; name_i18n?: Record<string, string> }[];
+  /** Preço atual pré-formatado (valor + moeda) para evitar hidratação #418/#423. */
+  menu_price_display?: string;
+  /** Preço antigo pré-formatado (valor + moeda). */
+  price_old_display?: string;
 };
 
 export type PublicMenuStoreSettings = {
@@ -143,7 +148,22 @@ export async function getPublicMenuByHostname(
       };
     }
     if (data?.categories) {
-      return data as PublicMenuPayload;
+      const payload = data as PublicMenuPayload;
+      const currencyCode = payload.store_settings?.currency_code ?? "€";
+      const categories = payload.categories.map((category) => ({
+        ...category,
+        items: category.items.map((item) => {
+          const enriched = { ...item };
+          if (item.menu_price != null) {
+            enriched.menu_price_display = formatPrice(item.menu_price, currencyCode);
+          }
+          if (item.price_old != null) {
+            enriched.price_old_display = formatPrice(item.price_old, currencyCode);
+          }
+          return enriched;
+        }),
+      }));
+      return { ...payload, categories };
     }
     return (data as PublicMenuPayload) ?? { store_id: null, store_name: null, store_settings: undefined, sections: [], categories: [] };
   } catch (e) {

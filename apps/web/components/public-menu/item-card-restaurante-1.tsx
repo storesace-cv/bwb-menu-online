@@ -190,14 +190,14 @@ export function ItemCardRestaurante1({ item, currencyCode, imageSource }: { item
             </div>
           )}
           <div className={`mt-2 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
-            {item.is_promotion && item.price_old != null && (
+            {item.is_promotion && (item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)) != null && (
               <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
-                {formatPrice(item.price_old, currencyCode)}
+                {item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)}
               </div>
             )}
-            {item.menu_price != null && (
+            {(item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null && (
               <div className={`font-bold text-right shrink-0 ${item.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}>
-                {formatPrice(item.menu_price, currencyCode)}
+                {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
               </div>
             )}
           </div>

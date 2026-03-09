@@ -177,9 +177,9 @@ export function ItemCardDestaque1({
               })}
             </div>
           )}
-          {item.menu_price != null && (
+          {(item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null && (
             <div className="font-bold text-lg text-white mt-1">
-              {formatPrice(item.menu_price, currencyCode)}
+              {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
             </div>
           )}
         </div>
