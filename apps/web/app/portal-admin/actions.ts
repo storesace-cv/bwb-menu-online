@@ -3,6 +3,18 @@
 import { createClient } from "@/lib/supabase-server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import sharp from "sharp";
+import {
+  isAllowedLogoMime,
+  logoMimeToExt,
+  MAX_LOGO_HEIGHT_PX,
+  MAX_LOGO_WIDTH_PX,
+  RASTER_MAX_FILE_SIZE_BYTES,
+  SVG_MAX_SIZE_BYTES,
+  FOOTER_LOGO_MAX_HEIGHT_PX,
+  FOOTER_LOGO_MAX_WIDTH_PX,
+  FOOTER_LOGO_MAX_SIZE_BYTES,
+} from "@/lib/logo-upload-utils";
 import { redirect } from "next/navigation";
 import { sendFirstStoreWelcomeEmail } from "@/lib/mailer";
 import { tenantsActionLog } from "@/lib/portal-debug-log";
@@ -1108,16 +1120,123 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
 
   const storeDisplayName = (formData.get("store_display_name") as string)?.trim() ?? "";
   const primaryColor = (formData.get("primary_color") as string)?.trim() ?? "";
-  const logoUrl = (formData.get("logo_url") as string)?.trim() ?? "";
+  let logoUrl = (formData.get("logo_url") as string)?.trim() ?? "";
+  const logoFile = formData.get("logo_file") instanceof File ? (formData.get("logo_file") as File) : null;
   const currencyCode = (formData.get("currency_code") as string)?.trim() ?? "";
   const menuTemplateKey = (formData.get("menu_template_key") as string)?.trim() || "bwb-branco";
   const heroText = (formData.get("hero_text") as string)?.trim() ?? "";
-  const footerText = (formData.get("footer_text") as string)?.trim() ?? "";
+  const footerText = (formData.get("footer_text") as string)?.trim() ?? (currentSettings.footer_text ?? "");
+  let footerLogoUrl = (formData.get("footer_logo_url") as string)?.trim() ?? "";
+  const footerLogoFile = formData.get("footer_logo_file") instanceof File ? (formData.get("footer_logo_file") as File) : null;
+  const footerAddress = (formData.get("footer_address") as string)?.trim() ?? "";
+  const footerEmail = (formData.get("footer_email") as string)?.trim() ?? "";
+  const footerPhone = (formData.get("footer_phone") as string)?.trim() ?? "";
+  const footerBackgroundColor = (formData.get("footer_background_color") as string)?.trim() ?? "";
   const contactUrl = (formData.get("contact_url") as string)?.trim() ?? "";
   const privacyUrl = (formData.get("privacy_url") as string)?.trim() ?? "";
   const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
   const featuredSectionLabel = (formData.get("featured_section_label") as string)?.trim() ?? "";
   const featuredTemplateKey = (formData.get("featured_template_key") as string)?.trim() || "modelo-destaque-1";
+
+  if (logoFile && logoFile.size > 0) {
+    const mime = (logoFile.type ?? "").toLowerCase();
+    if (!isAllowedLogoMime(mime)) {
+      return { error: "Formato não permitido. Use SVG, PNG, JPG ou WebP." };
+    }
+    if (mime === "image/svg+xml") {
+      if (logoFile.size > SVG_MAX_SIZE_BYTES) {
+        return { error: "SVG não pode exceder 1 MB." };
+      }
+    } else {
+      if (logoFile.size > RASTER_MAX_FILE_SIZE_BYTES) {
+        return { error: "Ficheiro de imagem demasiado grande." };
+      }
+      try {
+        const rasterBuffer = Buffer.from(await logoFile.arrayBuffer());
+        const meta = await sharp(rasterBuffer).metadata();
+        const height = meta.height ?? 0;
+        const width = meta.width ?? 0;
+        if (height > MAX_LOGO_HEIGHT_PX) {
+          return { error: "Altura do logótipo não pode exceder 50 px." };
+        }
+        if (width > MAX_LOGO_WIDTH_PX) {
+          return { error: "Largura do logótipo não pode exceder 1322 px." };
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return { error: `Imagem inválida: ${msg}` };
+      }
+    }
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !serviceKey) {
+      return { error: "Configuração do servidor em falta." };
+    }
+    const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+    const ext = logoMimeToExt(mime);
+    const path = `store-logos/${storeId}/logo.${ext}`;
+    const buffer = Buffer.from(await logoFile.arrayBuffer());
+    const { error: uploadErr } = await admin.storage
+      .from("menu-images")
+      .upload(path, buffer, { contentType: mime, upsert: true });
+    if (uploadErr) {
+      return { error: `Upload do logótipo falhou: ${uploadErr.message}` };
+    }
+    const base = url.replace(/\/$/, "");
+    logoUrl = `${base}/storage/v1/object/public/menu-images/${path}`;
+  }
+
+  if (footerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(footerEmail)) {
+    return { error: "Email do rodapé inválido." };
+  }
+
+  if (footerLogoFile && footerLogoFile.size > 0) {
+    const mime = (footerLogoFile.type ?? "").toLowerCase();
+    if (!isAllowedLogoMime(mime)) {
+      return { error: "Formato do logo do rodapé não permitido. Use SVG, PNG, JPG ou WebP." };
+    }
+    if (footerLogoFile.size > FOOTER_LOGO_MAX_SIZE_BYTES) {
+      return { error: "Logo do rodapé não pode exceder 2 MB." };
+    }
+    if (mime === "image/svg+xml") {
+      if (footerLogoFile.size > SVG_MAX_SIZE_BYTES) {
+        return { error: "SVG do rodapé não pode exceder 1 MB." };
+      }
+    } else {
+      try {
+        const rasterBuffer = Buffer.from(await footerLogoFile.arrayBuffer());
+        const meta = await sharp(rasterBuffer).metadata();
+        const height = meta.height ?? 0;
+        const width = meta.width ?? 0;
+        if (height > FOOTER_LOGO_MAX_HEIGHT_PX) {
+          return { error: "Altura do logo do rodapé não pode exceder 36 px." };
+        }
+        if (width > FOOTER_LOGO_MAX_WIDTH_PX) {
+          return { error: "Largura do logo do rodapé não pode exceder 400 px." };
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return { error: `Imagem do rodapé inválida: ${msg}` };
+      }
+    }
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !serviceKey) {
+      return { error: "Configuração do servidor em falta." };
+    }
+    const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+    const ext = logoMimeToExt(mime);
+    const path = `store-logos/${storeId}/footer_logo.${ext}`;
+    const buffer = Buffer.from(await footerLogoFile.arrayBuffer());
+    const { error: uploadErr } = await admin.storage
+      .from("menu-images")
+      .upload(path, buffer, { contentType: mime, upsert: true });
+    if (uploadErr) {
+      return { error: `Upload do logo do rodapé falhou: ${uploadErr.message}` };
+    }
+    const base = url.replace(/\/$/, "");
+    footerLogoUrl = `${base}/storage/v1/object/public/menu-images/${path}`;
+  }
 
   const merged: Record<string, string> = { ...currentSettings };
   merged.store_display_name = storeDisplayName;
@@ -1127,6 +1246,11 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   merged.menu_template_key = menuTemplateKey;
   merged.hero_text = heroText;
   merged.footer_text = footerText;
+  merged.footer_logo_url = footerLogoUrl;
+  merged.footer_address = footerAddress;
+  merged.footer_email = footerEmail;
+  merged.footer_phone = footerPhone;
+  merged.footer_background_color = footerBackgroundColor;
   merged.contact_url = contactUrl;
   merged.privacy_url = privacyUrl;
   merged.reservation_url = reservationUrl;

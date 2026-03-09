@@ -1,13 +1,132 @@
 "use client";
 
+import { useState } from "react";
 import { useFormState } from "react-dom";
 import { updateStoreSettings } from "../actions";
 import { Input, Button, Alert, Select } from "@/components/admin";
 import { DEFAULT_MENU_TEMPLATE_KEY } from "@/lib/menu-templates";
 
+const FORM_ID = "settings-app-form";
+const DEFAULT_FOOTER_BG = "#F2F2F2";
+
 const MENU_TEMPLATE_OPTIONS: { value: string; label: string }[] = [
   { value: "bwb-branco", label: "BWB - Branco" },
 ];
+
+function LogoUploadBlock({ logoUrl, formId }: { logoUrl?: string; formId: string }) {
+  const handleRemove = () => {
+    const input = document.getElementById("logo_url");
+    if (input && input instanceof HTMLInputElement) input.value = "";
+    (document.getElementById(formId) as HTMLFormElement | null)?.requestSubmit();
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor="logo_file" className="text-sm font-medium text-gray-700">
+        Logótipo (menu público)
+      </label>
+      <input
+        id="logo_file"
+        name="logo_file"
+        type="file"
+        accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
+        className="block w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-gray-800"
+      />
+      <p className="text-xs text-gray-500">
+        Formatos: SVG (preferido), PNG, JPG ou WebP. Imagens raster: máx. 50×1322 px. SVG: máx. 1 MB.
+      </p>
+      {logoUrl ? (
+        <div className="flex items-center gap-3 flex-wrap">
+          <img src={logoUrl} alt="Logo atual" className="max-h-[50px] w-auto object-contain" />
+          <Button type="button" variant="secondary" onClick={handleRemove}>
+            Remover logótipo
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FooterLogoUploadBlock({ logoUrl, formId }: { logoUrl?: string; formId: string }) {
+  const handleRemove = () => {
+    const input = document.getElementById("footer_logo_url");
+    if (input && input instanceof HTMLInputElement) input.value = "";
+    (document.getElementById(formId) as HTMLFormElement | null)?.requestSubmit();
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor="footer_logo_file" className="text-sm font-medium text-slate-300">
+        Logo da Empresa (rodapé)
+      </label>
+      <input
+        id="footer_logo_file"
+        name="footer_logo_file"
+        type="file"
+        accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
+        className="block w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-gray-800"
+      />
+      <p className="text-xs text-slate-500">
+        SVG, PNG, JPG ou WebP. Pequeno (altura máx. 36 px). Ficheiro máx. 2 MB.
+      </p>
+      {logoUrl ? (
+        <div className="flex items-center gap-3 flex-wrap">
+          <img src={logoUrl} alt="Logo rodapé" className="max-h-[32px] w-auto object-contain" />
+          <Button type="button" variant="secondary" onClick={handleRemove}>
+            Remover logo do rodapé
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FooterBackgroundColorPicker({ defaultValue }: { defaultValue?: string }) {
+  const [value, setValue] = useState(() => {
+    const v = (defaultValue ?? DEFAULT_FOOTER_BG).trim();
+    return /^#[0-9A-Fa-f]{6}$/.test(v) ? v : DEFAULT_FOOTER_BG;
+  });
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-slate-300">
+        Cor de fundo do rodapé
+      </label>
+      <div className="flex items-center gap-3 flex-wrap">
+        <input
+          type="hidden"
+          name="footer_background_color"
+          id="footer_background_color"
+          value={value}
+        />
+        <input
+          type="color"
+          aria-label="Cor de fundo"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="h-10 w-14 cursor-pointer rounded border border-slate-600 bg-slate-800"
+        />
+        <input
+          type="text"
+          aria-label="Cor em hex"
+          value={value}
+          onChange={(e) => {
+            const v = e.target.value.trim();
+            if (v === "" || /^#[0-9A-Fa-f]{0,6}$/.test(v) || /^[0-9A-Fa-f]{0,6}$/.test(v)) {
+              const hex = v.startsWith("#") ? v : v ? `#${v}` : DEFAULT_FOOTER_BG;
+              setValue(hex.length >= 7 ? hex.slice(0, 7) : hex || DEFAULT_FOOTER_BG);
+            }
+          }}
+          onBlur={(e) => {
+            const v = e.target.value.trim();
+            const hex = v.startsWith("#") ? v : v ? `#${v}` : "";
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) setValue(hex);
+            else if (!v) setValue(DEFAULT_FOOTER_BG);
+          }}
+          className="w-full max-w-[8rem] rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white"
+          placeholder="#F2F2F2"
+        />
+      </div>
+    </div>
+  );
+}
 
 export function SettingsForm({
   storeId,
@@ -23,7 +142,11 @@ export function SettingsForm({
     currency_code?: string;
     menu_template_key?: string;
     hero_text?: string;
-    footer_text?: string;
+    footer_logo_url?: string;
+    footer_address?: string;
+    footer_email?: string;
+    footer_phone?: string;
+    footer_background_color?: string;
     contact_url?: string;
     privacy_url?: string;
     reservation_url?: string;
@@ -33,8 +156,14 @@ export function SettingsForm({
 }) {
   const [state, formAction] = useFormState(updateStoreSettings, null);
   return (
-    <form action={formAction} className="flex flex-col gap-4 max-w-md">
+    <form
+      id={FORM_ID}
+      action={formAction}
+      className="flex flex-col gap-4 max-w-md"
+      encType="multipart/form-data"
+    >
       <input type="hidden" name="store_id" value={storeId} />
+      <LogoUploadBlock logoUrl={initial.logo_url} formId={FORM_ID} />
       <Select
         id="menu_template_key"
         name="menu_template_key"
@@ -110,14 +239,43 @@ export function SettingsForm({
         defaultValue={initial.hero_text ?? ""}
         placeholder="Texto introdutório opcional"
       />
-      <Input
-        id="footer_text"
-        name="footer_text"
-        label="Texto do rodapé"
-        type="text"
-        defaultValue={initial.footer_text ?? ""}
-        placeholder="ex: Morada, contacto"
-      />
+      <div className="border-t border-slate-700 pt-4 mt-2">
+        <h2 className="text-lg font-semibold text-slate-200 mb-3">Rodapé</h2>
+        <input
+          type="hidden"
+          name="footer_logo_url"
+          id="footer_logo_url"
+          defaultValue={initial.footer_logo_url ?? ""}
+        />
+        <div className="flex flex-col gap-4">
+          <FooterLogoUploadBlock logoUrl={initial.footer_logo_url} formId={FORM_ID} />
+          <Input
+            id="footer_address"
+            name="footer_address"
+            label="Morada"
+            type="text"
+            defaultValue={initial.footer_address ?? ""}
+            placeholder="ex: Rua Example, 123"
+          />
+          <Input
+            id="footer_email"
+            name="footer_email"
+            label="Email"
+            type="email"
+            defaultValue={initial.footer_email ?? ""}
+            placeholder="ex: contacto@exemplo.pt"
+          />
+          <Input
+            id="footer_phone"
+            name="footer_phone"
+            label="Telefone"
+            type="text"
+            defaultValue={initial.footer_phone ?? ""}
+            placeholder="ex: +351 123 456 789"
+          />
+          <FooterBackgroundColorPicker defaultValue={initial.footer_background_color} />
+        </div>
+      </div>
       <Input
         id="contact_url"
         name="contact_url"

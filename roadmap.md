@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Eliminar margem direita smartphone: box-sizing, width 100%, px-1; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Logotipo upload + Rodapé configurável; roadmap, commit, push, deploy).
 
 ---
 
@@ -122,6 +122,8 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público (smartphone): cards a largura disponível:** Reduzido o padding horizontal do `<main>` em viewports pequenos de `px-6` (24px) para `px-2` (8px); tablet/desktop mantém `md:px-8`. Os cards e o conteúdo passam a ocupar quase toda a largura do ecrã no smartphone.
 - **Menu público (smartphone): body sem margem:** Em `globals.css`, `body` passou a ter `margin: 0` e `padding: 0` para eliminar o espaço lateral por defeito do browser (preflight: false); em mobile os cards passam a usar `100vw - 16px`, alinhando ao modal de imagem/ingredientes.
 - **Menu público (smartphone): eliminar margem direita:** Em `globals.css`, `html` e `body` com `width: 100%`; `.menu-public` com `box-sizing: border-box`, `width: 100%` e `max-width: 100vw` para o padding ficar dentro da largura e evitar overflow/margem à direita. Main em mobile com `px-1` (4px de cada lado) para maximizar área dos cards.
+- **Logotipo no menu público (upload em Parâmetros App):** Campo de upload no início do formulário em Definições → Parâmetros App (SVG preferido, PNG/JPG/WebP); validação: raster máx. 50×1322 px e 2 MB, SVG máx. 1 MB; armazenamento em `menu-images/store-logos/{storeId}/logo.{ext}`; header do menu público exibe o logo (max-h 50px, alinhado à esquerda) quando configurado; botão "Remover logótipo"; campo "Nome na loja (menu público)" mantido para uso futuro; utilitários em `lib/logo-upload-utils.ts`.
+- **Rodapé configurável do menu público:** Secção "Rodapé" em Parâmetros App com logo da empresa (upload, máx. 36×400 px, 2 MB), morada, email, telefone e cor de fundo (color picker + hex); persistência em `store_settings` (footer_logo_url, footer_address, footer_email, footer_phone, footer_background_color); migração suave de `footer_text` para `footer_address` ao carregar; validação de email; componente `MenuFooterSection` no menu público (pill card com fundo configurável, 3 linhas: logo, morada | email | telefone, © ano + "Business with Brains" mailto:suporte@bwb.pt sem estilo de link + "Todos os direitos reservados."); links Contacte-nos e Política de Privacidade mantidos abaixo do rodapé quando definidos.
 
 ---
 

@@ -81,6 +81,12 @@ export type PublicMenuStoreSettings = {
   menu_template_key?: string;
   hero_text?: string;
   footer_text?: string;
+  /** Rodapé configurável (menu público). */
+  footer_logo_url?: string;
+  footer_address?: string;
+  footer_email?: string;
+  footer_phone?: string;
+  footer_background_color?: string;
   contact_url?: string;
   privacy_url?: string;
   reservation_url?: string;

@@ -9,6 +9,7 @@ import { ItemCardFromLayout } from "./item-card-from-layout";
 import { FeaturedCarouselSection } from "./featured-carousel-section";
 import { FabSpeedDial } from "./fab-speed-dial";
 import { BottomSheet } from "./bottom-sheet";
+import { MenuFooterSection } from "./menu-footer-section";
 import { scrollToSection } from "@/lib/scroll-to-section";
 
 const FALLBACK_PRIMARY = "#8b6914";
@@ -161,7 +162,6 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const storeName = menu.store_settings?.store_display_name || menu.store_name || "Menu";
   const heroText = menu.store_settings?.hero_text;
   const reservationUrl = menu.store_settings?.reservation_url;
-  const footerText = menu.store_settings?.footer_text;
   const contactUrl = menu.store_settings?.contact_url;
   const privacyUrl = menu.store_settings?.privacy_url;
   const primaryColor = (menu.store_settings?.primary_color?.trim() || FALLBACK_PRIMARY) as string;
@@ -333,7 +333,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
             <img
               src={menu.store_settings.logo_url}
               alt={storeName}
-              className="max-h-12 w-auto object-contain"
+              className="max-h-[50px] w-auto object-contain"
             />
           ) : (
             <h1 className="m-0 text-2xl font-bold text-gray-900">{storeName}</h1>
@@ -511,11 +511,17 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
       )}
 
       {/* Footer */}
-      <footer className="mt-10 pt-6 border-t border-gray-200 text-sm text-gray-600">
-        {footerText && (
-          <div className="mb-3 whitespace-pre-wrap">{footerText}</div>
-        )}
-        <div className="flex gap-4 flex-wrap">
+      <MenuFooterSection
+        footer={{
+          logo_url: menu.store_settings?.footer_logo_url,
+          address: menu.store_settings?.footer_address,
+          email: menu.store_settings?.footer_email,
+          phone: menu.store_settings?.footer_phone,
+          background_color: menu.store_settings?.footer_background_color,
+        }}
+      />
+      {(contactUrl || privacyUrl) && (
+        <div className="mt-3 flex gap-4 flex-wrap text-sm">
           {contactUrl && (
             <a href={contactUrl} className="font-medium hover:underline" style={{ color: "var(--menu-primary)" }}>
               Contacte-nos
@@ -527,10 +533,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
             </a>
           )}
         </div>
-        {!footerText && !contactUrl && !privacyUrl && (
-          <p className="m-0">© {storeName}</p>
-        )}
-      </footer>
+      )}
 
       {/* FAB Speed Dial: menus, filtros, pesquisa, idioma, reservar */}
       <FabSpeedDial
