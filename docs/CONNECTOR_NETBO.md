@@ -74,7 +74,7 @@ curl -s -H "Authorization: Bearer <TOKEN>" \
   Aumentar `timeout_sec` na config ou verificar conectividade de rede até `*.api.net-bo.com`.
 
 - **ENCRYPTION_MASTER_KEY not set**  
-  Definir no servidor a variável `ENCRYPTION_MASTER_KEY` (mín. 32 caracteres) para guardar e ler segredos.
+  Definir no servidor a variável `ENCRYPTION_MASTER_KEY` (mín. 32 caracteres) para guardar e ler segredos. A mesma variável é usada para cifrar as chaves API de ChatGPT/Grok (por loja e da plataforma); se configurar apenas IA e não NET-BO, também precisa dela.
 
 - **Sync não preenche menu**  
   O sync apenas actualiza `catalog_items` (PULL). Os itens do menu público vêm de `menu_items`; associar/criar itens de menu a partir do catálogo é um fluxo separado (portal-admin → Menu / Itens).
