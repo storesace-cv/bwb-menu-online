@@ -142,13 +142,13 @@ export function FeaturedCarouselSection({
           role="region"
           aria-label="Destaques"
           className="relative w-full flex justify-center overflow-visible px-4"
-          style={{ minHeight: "480px" }}
+          style={{ minHeight: "504px" }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           onKeyDown={handleKeyDown}
         >
-          <div className="relative" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "480px" }}>
+          <div className="relative" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "504px" }}>
             {n === 1 ? (
               renderSlot(0, "center")
             ) : (

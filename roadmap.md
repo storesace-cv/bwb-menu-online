@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Altura carrossel Destaques e margem; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Destaques +5% altura vertical; roadmap, commit, push, deploy).
 
 ---
 
@@ -118,6 +118,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Ajustes posição carrossel stacked:** Corrigida a assimetria do cartão da direita (estava mais "dentro" do central): slot direito passou a usar `translateX(OVERLAP_PX)` em vez de `calc(OVERLAP_PX - 50%)`, ficando simétrico ao esquerdo. Redução de `OVERLAP_PX` de 60px para 30px para afastar os laterais do centro (esquerda e direita à mesma distância).
 - **Carrossel Destaques: setas removidas e z-index:** Removidos os botões de setas (Anterior/Seguinte) à esquerda e direita do carrossel; navegação apenas por dots, swipe, wheel e teclado. Secção "Escolhas do Chefe" com `relative z-10` para que os destaques fiquem por cima do menu que segue (evitar que a secção/menu apareça por cima dos cartões do carrossel em desktop e mobile).
 - **Carrossel Destaques: altura reservada e margem:** Aumentado o `minHeight` do contentor do carrossel de 320px para 480px (em ambos os divs) para que o fluxo do documento reserve espaço suficiente para a altura real dos cartões; secção com `mb-10` em vez de `mb-8`. O breadcrumb e a secção/menu (ex. SALADAS) passam a começar abaixo dos cartões, sem sobreposição.
+- **Carrossel Destaques: +5% área vertical:** Aumentado o `minHeight` do contentor de 480px para 504px (5% a mais) para a secção "Escolhas do Chefe" ocupar mais espaço vertical; breadcrumb e menu seguinte descem ligeiramente.
 
 ---
 
