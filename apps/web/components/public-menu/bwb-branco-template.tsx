@@ -329,15 +329,16 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
       {/* Header */}
       <header className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
+          <h1 className="m-0 text-2xl font-bold text-gray-900">{storeName}</h1>
+        </div>
+        <div className="flex items-center gap-4">
           {menu.store_settings?.logo_url ? (
             <img
               src={menu.store_settings.logo_url}
               alt={storeName}
               className="max-h-[50px] w-auto object-contain"
             />
-          ) : (
-            <h1 className="m-0 text-2xl font-bold text-gray-900">{storeName}</h1>
-          )}
+          ) : null}
         </div>
       </header>
 
