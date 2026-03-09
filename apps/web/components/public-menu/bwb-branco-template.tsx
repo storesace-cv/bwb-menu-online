@@ -80,6 +80,23 @@ function collectFeaturedItemsWithCategory(menu: PublicMenuPayload): { item: Publ
   return out;
 }
 
+/** Normaliza texto para pesquisa: lowercase e remove acentos (compatível com target ES5). */
+function normalizeForSearch(s: string): string {
+  return (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+/** Indica se o item faz match na pesquisa (menu_name, menu_description). */
+function itemMatchesSearch(item: PublicMenuItem, queryNorm: string): boolean {
+  if (!queryNorm) return true;
+  const name = normalizeForSearch(item.menu_name ?? "");
+  const desc = normalizeForSearch(item.menu_description ?? "");
+  return name.includes(queryNorm) || desc.includes(queryNorm);
+}
+
 /** Lazy load de secções: extraSectionCategories guarda categorias carregadas por sectionId; ao escolher secção faz fetch e scroll quando o bloco existir. */
 export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | PublicMenuPayload }) {
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
@@ -89,6 +106,10 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
   const [extraSectionCategories, setExtraSectionCategories] = useState<Record<string, PublicMenuCategory[]>>({});
   const [pendingScrollSectionId, setPendingScrollSectionId] = useState<string | null>(null);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(() =>
+    (menu.sections?.length ? menu.sections[0].id : null)
+  );
+  const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const currencyCode = menu.store_settings?.currency_code ?? "€";
@@ -136,11 +157,6 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
     return result;
   }, [menu.sections, menu.categories, extraSectionCategories]);
 
-  const currentSectionName = useMemo(() => {
-    const first = filteredCategories[0];
-    return first?.section_name ?? null;
-  }, [filteredCategories]);
-
   const categoriesBySection = useMemo(() => {
     const sections = menu.sections ?? [];
     const result: { sectionId: string | null; sectionName: string; categories: typeof filteredCategories }[] = [];
@@ -162,6 +178,31 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
     }
     return result;
   }, [menu.sections, filteredCategories]);
+
+  const currentSectionName = useMemo(() => {
+    const norm = (id: string | null) => id ?? "none";
+    const activeNorm = norm(activeSectionId);
+    const group = categoriesBySection.find((g) => norm(g.sectionId) === activeNorm);
+    if (group) return group.sectionName;
+    const sec = (menu.sections ?? []).find((s) => s.id === activeSectionId);
+    return sec?.name ?? null;
+  }, [activeSectionId, categoriesBySection, menu.sections]);
+
+  /** Categorias da secção activa com itens filtrados por searchQuery; categorias vazias ocultas quando há query. */
+  const activeSectionFilteredCategories = useMemo(() => {
+    const norm = (id: string | null) => id ?? "none";
+    const activeNorm = norm(activeSectionId);
+    const activeGroup = categoriesBySection.find((g) => norm(g.sectionId) === activeNorm);
+    if (!activeGroup) return [];
+    const q = normalizeForSearch(searchQuery);
+    if (!q) return activeGroup.categories;
+    return activeGroup.categories
+      .map((cat) => ({
+        ...cat,
+        items: (cat.items ?? []).filter((item) => itemMatchesSearch(item, q)),
+      }))
+      .filter((cat) => (cat.items?.length ?? 0) > 0);
+  }, [categoriesBySection, activeSectionId, searchQuery]);
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -189,6 +230,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const handleSelectSection = async (sectionId: string | null) => {
     const id = sectionId ?? "none";
     setSectionsSheetOpen(false);
+    setActiveSectionId(sectionId);
+    setSearchQuery("");
 
     const sections = menu.sections ?? [];
     const initial = menu.categories ?? [];
@@ -301,6 +344,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
             ref={searchInputRef}
             id="menu-search-input"
             type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Pesquisar artigos…"
             className="w-full py-3 px-4 rounded-lg border border-gray-300 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
             aria-label="Pesquisar artigos"
@@ -325,11 +370,30 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         {currentSectionName && ` / ${currentSectionName}`}
       </nav>
 
-      {/* Sections & categories */}
+      {/* Sections & categories: mostrar apenas a secção ativa; filtro de pesquisa só na secção activa */}
       {filteredCategories.length === 0 ? (
         <p className="text-gray-600">Nenhum item corresponde aos filtros.</p>
       ) : (
-        categoriesBySection.map((group) => (
+        (() => {
+          const norm = (sid: string | null) => sid ?? "none";
+          const activeNorm = norm(activeSectionId);
+          const activeGroup = categoriesBySection.find((g) => norm(g.sectionId) === activeNorm);
+          if (!activeGroup) {
+            return (
+              <p className="text-gray-600" id={`section-${activeNorm}`}>
+                A carregar…
+              </p>
+            );
+          }
+          if (activeSectionFilteredCategories.length === 0) {
+            return (
+              <p className="text-gray-600" id={`section-${activeGroup.sectionId ?? "none"}`}>
+                Nenhum item corresponde aos filtros.
+              </p>
+            );
+          }
+          const group = activeGroup;
+          return (
           <div
             key={group.sectionId ?? "_none"}
             id={`section-${group.sectionId ?? "none"}`}
@@ -345,7 +409,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
             >
               {group.sectionName}
             </h1>
-            {group.categories.map((cat) => {
+            {activeSectionFilteredCategories.map((cat) => {
               const layoutDef = cat.presentation_layout_definition;
               const useLayout = layoutDef != null && Array.isArray(layoutDef.zoneOrder) && layoutDef.zoneOrder.length > 0;
               const CardComponent = getPresentationCardComponent(cat.presentation_component_key);
@@ -388,7 +452,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
               );
             })}
           </div>
-        ))
+          );
+        })()
       )}
 
       {/* Footer */}

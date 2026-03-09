@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (FAB: lazy load secções, API section-categories, ordem visual; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (FAB: uma secção de cada vez; filtro/pesquisa só na secção activa; roadmap, commit, push, deploy).
 
 ---
 
@@ -105,6 +105,8 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público: remoção de filtro visível e elementos do topo:** Removido o bloco de filtros que aparecia após o carrossel de Destaques (tabs de categorias, Base prato, toggles, Limpar). Removidos do header o texto “Nossos Menus” e o botão “Reservar uma mesa”; a reserva mantém-se via FAB. O menu lista sempre todas as categorias e itens (sem filtros); o FAB e as 5 ações mantêm-se.
 - **FAB: scroll à secção, Menus, ordem e itens desativados:** Ao escolher uma secção no FAB (Menus), o sheet fecha e o menu faz scroll para a secção escolhida (scroll agendado após fecho do BottomSheet). "Secções" renomeado para "Menus" no FAB e no título do sheet. Ordem das ações mantida (Menus, Filtros, Pesquisar, Idioma, Reservar Mesa). Idioma e Reservar Mesa com aspeto desativado (opacity, cursor) e props languageDisabled/reserveDisabled; continuam a abrir sheet/modal "Em breve". Aviso aria-hidden mitigado: aria-hidden apenas no backdrop do overlay do FAB, não no contentor dos botões.
 - **FAB: lazy load de secções e ordem visual:** API GET `/api/public-menu/section-categories` (host, sectionId, currencyCode) para o cliente obter categorias de uma secção; template BWB - Branco com estado `extraSectionCategories` e merge em `filteredCategories`; ao escolher secção no sheet, fetch das categorias se ainda não carregadas, depois scroll via useEffect quando o bloco existe no DOM. Ordem visual do FAB corrigida: no DOM os botões estão Reservar, Idioma, Pesquisar, Filtros, Menus (flex-col-reverse), resultando em 1 Menus 2 Filtros 3 Pesquisar 4 Idioma 5 Reservar de cima para baixo; firstActionRef no botão Menus.
+- **FAB: mostrar apenas a secção escolhida:** Estado `activeSectionId` no template BWB - Branco; ao escolher uma secção no FAB renderiza-se só essa secção (oculta a anterior). Breadcrumb derivado da secção ativa; mensagem "A carregar…" quando o grupo ainda não existe; "Nenhum item corresponde aos filtros" quando a secção ativa não tem resultados após filtro.
+- **Filtro apenas na secção activa:** Estado `searchQuery` ligado ao input de pesquisa; normalização de texto (lowercase, sem acentos) e match em `menu_name`/`menu_description`; `activeSectionFilteredCategories` filtra itens só dentro da secção ativa e oculta categorias vazias quando há query; pesquisa limpa ao mudar de secção.
 
 ---
 
