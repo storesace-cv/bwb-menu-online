@@ -129,8 +129,8 @@ export function ItemCardDestaque1({
           className="absolute inset-0"
           style={{
             backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent), url(${effectiveSrc})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: "cover, cover",
+            backgroundPosition: "center, center",
           }}
           aria-hidden
         />
