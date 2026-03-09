@@ -172,7 +172,7 @@ export function ItemCardRestaurante1({
           </button>
         </div>
         {/* Linha 2: ícones (A) */}
-        <div className={`px-3 pt-1 flex justify-end items-center gap-1.5 flex-wrap min-h-[22px] ${zoneRowClass}`}>
+        <div className={`px-3 pt-0 flex justify-end items-center gap-1.5 flex-wrap min-h-[16px] ${zoneRowClass}`}>
           {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
           {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
           {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
@@ -191,7 +191,7 @@ export function ItemCardRestaurante1({
         </div>
         {/* Linha 5: Ingredientes (C) */}
         <div className={`px-3 ${zoneRowClass}`}>
-          <div className="mt-0.5">
+          <div className="mt-0">
             <button
               type="button"
               onClick={() => setIngredientsOpen((o) => !o)}
@@ -209,18 +209,18 @@ export function ItemCardRestaurante1({
         {/* Linha 6: tempo de preparação (D) */}
         <div className={`px-3 ${zoneRowClass}`}>
           {item.prep_minutes != null ? (
-            <div className="mt-0.5 flex items-center gap-1.5 text-sm text-gray-500">
+            <div className="mt-0 flex items-center gap-1.5 text-sm text-gray-500">
               <MenuIcon code="prep-time" size={18} />
               <span>{item.prep_minutes}&apos;</span>
             </div>
           ) : (
-            <span className="block min-h-[1rem]" aria-hidden />
+            <span className="block min-h-0" aria-hidden />
           )}
         </div>
         {/* Linha 7: alergénios (E) */}
         <div className={`px-3 ${zoneRowClass}`}>
           {item.allergens && item.allergens.length > 0 ? (
-            <div className="mt-0.5 flex flex-wrap gap-1 items-center">
+            <div className="mt-0 flex flex-wrap gap-1 items-center">
               <span className="text-xs text-gray-500 mr-1">Alergénios:</span>
               {item.allergens.map((a) => {
                 const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
@@ -237,12 +237,12 @@ export function ItemCardRestaurante1({
               })}
             </div>
           ) : (
-            <span className="block min-h-[1rem]" aria-hidden />
+            <span className="block min-h-0" aria-hidden />
           )}
         </div>
         {/* Linha 8: preço antigo + preço (F+G) */}
-        <div className={`px-3 pb-2 ${zoneRowClass}`}>
-          <div className={`mt-1 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
+        <div className={`px-3 pb-0.5 ${zoneRowClass}`}>
+          <div className={`mt-0 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
             {item.is_promotion && (item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)) != null && (
               <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
                 {item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)}
