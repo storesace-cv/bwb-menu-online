@@ -268,7 +268,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
         featuredItems={featuredItemsWithCategory}
         featuredSectionLabel={featuredSectionLabel}
         featuredTemplateKey={featuredTemplateKey}
-        featuredLayoutDefinition={featuredLayoutDefinition}
+        featuredLayoutDefinition={featuredLayoutDefinition as LayoutDefinition | null}
         currencyCode={currencyCode}
         imageSource={imageSource}
       />

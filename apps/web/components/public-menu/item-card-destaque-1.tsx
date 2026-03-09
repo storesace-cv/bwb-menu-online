@@ -1,7 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
+import type {
+  LayoutDefinition,
+  ZoneWidth,
+  ContentFontSize,
+  ContentFontWeight,
+  ContentLineHeight,
+} from "@/lib/presentation-templates";
+import type { LayoutZoneType } from "@/lib/presentation-templates";
+import {
+  DEFAULT_ZONE_HEIGHTS,
+  DEFAULT_CANVAS_HEIGHT,
+  DEFAULT_CONTENT_PADDING_PX,
+  DEFAULT_CONTENT_ROW_GAP_PX as DEFAULT_ROW_GAP_PX,
+} from "@/lib/presentation-templates";
 import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
 import { getImageSrc, FALLBACK_IMAGE } from "./item-card-restaurante-1";
@@ -24,19 +38,91 @@ const SEVERITY_CLASSES: Record<number, string> = {
   5: "bg-red-700/25 text-red-900 border border-red-600/50",
 };
 
-const DEFAULT_CANVAS_HEIGHT = 560;
+const ZONE_HEIGHT_MIN = 12;
+const ZONE_HEIGHT_MAX = 600;
+const CONTENT_PADDING_MIN = 4;
+const CONTENT_PADDING_MAX = 24;
+const CONTENT_ROW_GAP_MIN = 2;
+const CONTENT_ROW_GAP_MAX = 24;
 
-/** Card de destaque "Modelo Destaque 1" — imagem de fundo em cover + overlay em gradiente por cima para legibilidade do texto (nome, ingredientes, badges, preço). Imagem e overlay são uma única camada de fundo; independente da config em Modelos de apresentação de Destaques. */
+const FONT_SIZE_CLASSES: Record<ContentFontSize, string> = {
+  sm: "text-sm",
+  base: "text-base",
+  lg: "text-lg",
+};
+const FONT_WEIGHT_CLASSES: Record<ContentFontWeight, string> = {
+  semibold: "font-semibold",
+  bold: "font-bold",
+};
+const LINE_HEIGHT_CLASSES: Record<ContentLineHeight, string> = {
+  none: "leading-none",
+  normal: "",
+};
+
+function getEffectiveZoneHeight(type: string, zoneHeights: Record<string, number> | undefined): number {
+  if (zoneHeights?.[type] != null && Number.isFinite(zoneHeights[type])) {
+    const n = Math.round(Number(zoneHeights[type]));
+    if (n === 0) return 0;
+    if (n >= ZONE_HEIGHT_MIN && n <= ZONE_HEIGHT_MAX) return n;
+  }
+  const d = DEFAULT_ZONE_HEIGHTS[type as LayoutZoneType];
+  return typeof d === "number" ? d : 32;
+}
+
+function getEffectiveWidth(type: string, zoneWidths: Record<string, ZoneWidth | string> | undefined): ZoneWidth {
+  const w = zoneWidths?.[type];
+  if (w === "full" || w === "half" || w === "quarter") return w;
+  return type === "price_old" || type === "price" ? "half" : "full";
+}
+
+function groupZonesIntoRows(
+  zoneOrder: string[],
+  zoneWidths: Record<string, ZoneWidth | string> | undefined
+): string[][] {
+  const rows: string[][] = [];
+  let i = 0;
+  while (i < zoneOrder.length) {
+    const type = zoneOrder[i];
+    const w = getEffectiveWidth(type, zoneWidths);
+    if (w === "full") {
+      rows.push([type]);
+      i += 1;
+    } else if (w === "half") {
+      const group = [type];
+      i += 1;
+      while (i < zoneOrder.length && getEffectiveWidth(zoneOrder[i], zoneWidths) === "half") {
+        group.push(zoneOrder[i]);
+        i += 1;
+        if (group.length >= 2) break;
+      }
+      rows.push(group);
+    } else {
+      const group = [type];
+      i += 1;
+      while (i < zoneOrder.length && getEffectiveWidth(zoneOrder[i], zoneWidths) === "quarter") {
+        group.push(zoneOrder[i]);
+        i += 1;
+        if (group.length >= 4) break;
+      }
+      rows.push(group);
+    }
+  }
+  return rows;
+}
+
+/** Card de destaque "Modelo Destaque 1" — imagem de fundo em cover + overlay em gradiente; conteúdo segue layoutDefinition quando fornecido (ordem e altura do admin). */
 export function ItemCardDestaque1({
   item,
   categoryName,
   currencyCode,
   imageSource,
+  layoutDefinition,
 }: {
   item: PublicMenuItem;
   categoryName?: string;
   currencyCode?: string;
   imageSource?: string;
+  layoutDefinition?: LayoutDefinition | null;
 }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const imageSrc = getImageSrc(item, imageSource);
@@ -46,11 +132,154 @@ export function ItemCardDestaque1({
   }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
 
+  const useLayout =
+    layoutDefinition != null &&
+    Array.isArray(layoutDefinition.zoneOrder) &&
+    layoutDefinition.zoneOrder.filter((z) => z !== "image").length > 0;
+
+  const contentZoneOrder = useMemo(
+    () => (useLayout ? layoutDefinition!.zoneOrder.filter((z) => z !== "image") : []),
+    [useLayout, layoutDefinition]
+  );
+  const zoneRows = useMemo(
+    () => (useLayout ? groupZonesIntoRows(contentZoneOrder, layoutDefinition!.zoneWidths) : []),
+    [useLayout, contentZoneOrder, layoutDefinition]
+  );
+  const minHeight =
+    useLayout &&
+    layoutDefinition!.canvasHeight != null &&
+    Number.isFinite(layoutDefinition!.canvasHeight) &&
+    layoutDefinition!.canvasHeight > 0
+      ? layoutDefinition!.canvasHeight
+      : DEFAULT_CANVAS_HEIGHT;
+  const contentPaddingPx =
+    useLayout && layoutDefinition!.contentPaddingPx != null && Number.isFinite(layoutDefinition!.contentPaddingPx)
+      ? Math.max(CONTENT_PADDING_MIN, Math.min(CONTENT_PADDING_MAX, Math.round(Number(layoutDefinition!.contentPaddingPx))))
+      : DEFAULT_CONTENT_PADDING_PX;
+  const rowSpacingPx =
+    useLayout && layoutDefinition!.rowSpacingPx != null && layoutDefinition!.rowSpacingPx >= 0 && layoutDefinition!.rowSpacingPx <= 48
+      ? layoutDefinition!.rowSpacingPx
+      : 8;
+  const contentRowGapPx =
+    useLayout && layoutDefinition!.contentRowGapPx != null && Number.isFinite(layoutDefinition!.contentRowGapPx)
+      ? Math.max(CONTENT_ROW_GAP_MIN, Math.min(CONTENT_ROW_GAP_MAX, Math.round(Number(layoutDefinition!.contentRowGapPx))))
+      : DEFAULT_ROW_GAP_PX;
+  const zoneHeights = useLayout ? layoutDefinition!.zoneHeights : undefined;
+  const nameFontSize: ContentFontSize =
+    useLayout && (layoutDefinition!.nameFontSize === "sm" || layoutDefinition!.nameFontSize === "base" || layoutDefinition!.nameFontSize === "lg")
+      ? layoutDefinition!.nameFontSize
+      : "lg";
+  const nameFontWeight: ContentFontWeight =
+    useLayout && (layoutDefinition!.nameFontWeight === "semibold" || layoutDefinition!.nameFontWeight === "bold")
+      ? layoutDefinition!.nameFontWeight
+      : "bold";
+  const priceFontSize: ContentFontSize =
+    useLayout && (layoutDefinition!.priceFontSize === "sm" || layoutDefinition!.priceFontSize === "base" || layoutDefinition!.priceFontSize === "lg")
+      ? layoutDefinition!.priceFontSize
+      : "base";
+  const priceLineHeight: ContentLineHeight =
+    useLayout && (layoutDefinition!.priceLineHeight === "none" || layoutDefinition!.priceLineHeight === "normal")
+      ? layoutDefinition!.priceLineHeight
+      : "normal";
+
+  const nameClassName = [
+    FONT_WEIGHT_CLASSES[nameFontWeight],
+    FONT_SIZE_CLASSES[nameFontSize],
+    "leading-snug m-0 text-white text-left",
+  ].join(" ");
+  const priceSizeClass = FONT_SIZE_CLASSES[priceFontSize];
+  const priceLeadClass = LINE_HEIGHT_CLASSES[priceLineHeight];
+
+  const renderZoneDestaque = (type: string) => {
+    switch (type) {
+      case "image":
+        return null;
+      case "icons":
+        return (
+          <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">
+            {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0 opacity-90" />}
+            {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
+            {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
+          </div>
+        );
+      case "name":
+        return <h3 className={nameClassName}>{item.menu_name}</h3>;
+      case "description":
+        return item.menu_description ? (
+          <p className="mt-0.5 text-white/90 text-sm leading-relaxed text-left">{item.menu_description}</p>
+        ) : null;
+      case "ingredients":
+        return (
+          <div className="mt-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIngredientsOpen((o) => !o);
+              }}
+              className="w-fit text-sm text-white/95 hover:text-white font-medium py-0.5"
+              aria-expanded={ingredientsOpen}
+            >
+              Ingredientes {ingredientsOpen ? "−" : "+"}
+            </button>
+            {ingredientsOpen && (
+              <div className="mt-0.5 text-sm text-white/90 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
+            )}
+          </div>
+        );
+      case "prep_time":
+        return item.prep_minutes != null ? (
+          <div className="mt-1 flex items-center gap-1.5 text-sm text-white/80">
+            <MenuIcon code="prep-time" size={18} />
+            <span>{item.prep_minutes}&apos;</span>
+          </div>
+        ) : null;
+      case "allergens":
+        return item.allergens && item.allergens.length > 0 ? (
+          <div className="mt-1 flex flex-wrap gap-1 items-center">
+            {item.allergens.map((a) => {
+              const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
+              const label = getAllergenLabel(a);
+              const badgeClass = SEVERITY_CLASSES[severity] ?? SEVERITY_CLASSES[2];
+              return (
+                <span key={a.code} className={`text-xs px-1.5 py-0.5 rounded ${badgeClass}`}>
+                  {label}
+                </span>
+              );
+            })}
+          </div>
+        ) : null;
+      case "price_old":
+        return item.is_promotion && (item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)) != null ? (
+          <div className="flex-1 min-w-0 text-center text-sm text-white/70 line-through" aria-label="Preço antigo">
+            {item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)}
+          </div>
+        ) : null;
+      case "price":
+        return (item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null ? (
+          <div
+            className={[
+              "font-bold text-right shrink-0 text-white",
+              item.is_promotion ? "text-amber-200" : "",
+              item.is_promotion ? "text-lg" : priceSizeClass,
+              priceLeadClass,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
+          </div>
+        ) : null;
+      default:
+        return null;
+    }
+  };
+
   return (
     <li className="list-none h-full flex shrink-0">
       <article
         className="relative rounded-xl overflow-hidden w-full flex flex-col justify-end min-h-[280px]"
-        style={{ minHeight: DEFAULT_CANVAS_HEIGHT }}
+        style={{ minHeight }}
       >
         <img
           src={imageSrc}
@@ -59,7 +288,6 @@ export function ItemCardDestaque1({
           className="absolute w-0 h-0 opacity-0 pointer-events-none"
           onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
         />
-        {/* Fundo: apenas imagem do artigo em cover (overlay removido para validação). */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -69,52 +297,95 @@ export function ItemCardDestaque1({
           }}
           aria-hidden
         />
-        {/* Overlay em gradiente por cima da imagem para legibilidade do texto (independente da config em Modelos de apresentação de Destaques). */}
         <div
           className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
           aria-hidden
         />
-        <div className="relative z-10 p-4 text-white flex flex-col gap-2">
+        <div
+          className="relative z-10 text-white flex flex-col justify-end"
+          style={{ padding: `${contentPaddingPx}px` }}
+        >
           {categoryName && (
-            <p className="text-xs font-medium text-white/90 uppercase tracking-wide m-0">{categoryName}</p>
+            <p className="text-xs font-medium text-white/90 uppercase tracking-wide m-0 mb-1">{categoryName}</p>
           )}
-          <h3 className="font-bold text-lg text-white m-0">{item.menu_name}</h3>
-          <div className="flex justify-end items-center gap-1.5 flex-wrap">
-            {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0 opacity-90" />}
-            {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
-            {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
-          </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIngredientsOpen((o) => !o);
-            }}
-            className="w-fit text-sm text-white/95 hover:text-white font-medium py-0.5"
-            aria-expanded={ingredientsOpen}
-          >
-            Ingredientes {ingredientsOpen ? "−" : "+"}
-          </button>
-          {ingredientsOpen && (
-            <div className="text-sm text-white/90 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
-          )}
-          {item.allergens && item.allergens.length > 0 && (
-            <div className="flex flex-wrap gap-1 items-center">
-              {item.allergens.map((a) => {
-                const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
-                const label = getAllergenLabel(a);
-                const badgeClass = SEVERITY_CLASSES[severity] ?? SEVERITY_CLASSES[2];
+          {useLayout ? (
+            <>
+              {zoneRows.map((row, rowIdx) => {
+                const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
+                if (row.length === 1) {
+                  const type = row[0];
+                  const el = renderZoneDestaque(type);
+                  const minH = getEffectiveZoneHeight(type, zoneHeights);
+                  const wrapperStyle: React.CSSProperties = { ...rowStyle };
+                  if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
+                  return el != null ? (
+                    <div key={`r-${rowIdx}`} style={wrapperStyle}>
+                      {el}
+                    </div>
+                  ) : null;
+                }
                 return (
-                  <span key={a.code} className={`text-xs px-1.5 py-0.5 rounded ${badgeClass}`}>
-                    {label}
-                  </span>
+                  <div
+                    key={`r-${rowIdx}`}
+                    className={`flex items-center ${row.length === 2 ? "" : "flex-wrap"}`}
+                    style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
+                  >
+                    {row.map((type) => {
+                      const el = renderZoneDestaque(type);
+                      const minH = getEffectiveZoneHeight(type, zoneHeights);
+                      const wrapperStyle: React.CSSProperties = {};
+                      if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
+                      return el != null ? (
+                        <div key={type} className="flex-1 min-w-0" style={wrapperStyle}>
+                          {el}
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
                 );
               })}
-            </div>
-          )}
-          {(item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null && (
-            <div className="font-bold text-lg text-white mt-1">
-              {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
+            </>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <h3 className="font-bold text-lg text-white m-0">{item.menu_name}</h3>
+              <div className="flex justify-end items-center gap-1.5 flex-wrap">
+                {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0 opacity-90" />}
+                {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
+                {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIngredientsOpen((o) => !o);
+                }}
+                className="w-fit text-sm text-white/95 hover:text-white font-medium py-0.5"
+                aria-expanded={ingredientsOpen}
+              >
+                Ingredientes {ingredientsOpen ? "−" : "+"}
+              </button>
+              {ingredientsOpen && (
+                <div className="text-sm text-white/90 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
+              )}
+              {item.allergens && item.allergens.length > 0 && (
+                <div className="flex flex-wrap gap-1 items-center">
+                  {item.allergens.map((a) => {
+                    const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
+                    const label = getAllergenLabel(a);
+                    const badgeClass = SEVERITY_CLASSES[severity] ?? SEVERITY_CLASSES[2];
+                    return (
+                      <span key={a.code} className={`text-xs px-1.5 py-0.5 rounded ${badgeClass}`}>
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              {(item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null && (
+                <div className="font-bold text-lg text-white mt-1">
+                  {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
+                </div>
+              )}
             </div>
           )}
         </div>

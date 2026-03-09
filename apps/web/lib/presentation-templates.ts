@@ -134,6 +134,7 @@ export type FeaturedCardProps = {
   currencyCode?: string;
   categoryName?: string;
   imageSource?: string;
+  layoutDefinition?: LayoutDefinition | null;
 };
 
 type PresentationCardComponent = ComponentType<PresentationCardProps>;

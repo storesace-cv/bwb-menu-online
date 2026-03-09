@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: overlay reativado; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: layout do Modelo Destaque 1 refletido no menu; deploy e verificação no container).
 
 ---
 
@@ -96,6 +96,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **URL da imagem no menu público (bucket menu-images):** O URL do Supabase Storage para imagens importadas omitia o nome do bucket; o formato correto é `.../storage/v1/object/public/menu-images/{path}`. Em `getImageSrc` (item-card-restaurante-1.tsx) passou a usar a constante `MENU_IMAGES_BUCKET` e a função `storageUrl(path, suffix)` para incluir `menu-images/` no URL; o editor de item (edit-item-form.tsx) usa o mesmo formato no thumbnail. A imagem do artigo carrega correctamente e o fallback por `onError` deixa de alterar o DOM no cliente, eliminando o mismatch de hidratação #418/#423 causado pela imagem.
 - **Imagem do artigo em Destaques + overlay:** Nos modelos de apresentação de Destaques (carrossel no topo do menu), o card usa duas divs: uma com a imagem do artigo em "cover" (centralizada) e uma com overlay em gradiente por cima (`from-black/80 via-black/40 to-transparent`) para legibilidade do texto. Em `item-card-destaque-1.tsx` a imagem fica numa div própria e o overlay noutra (evita o problema de múltiplos backgrounds em que a imagem não aparecia); independente da config em Modelos de apresentação de Destaques.
 - **Destaques: remoção do modal ao clicar:** Nos cards do carrossel de destaques foi removida a abertura de janela/modal com imagem e ingredientes ao clicar no card. Removidos o componente `ImageIngredientsModal`, o estado `imageModalOpen`, o botão overlay que cobria o card e abria o modal; os ingredientes continuam a expandir-se inline com "Ingredientes +".
+- **Destaques: layout do Modelo Destaque 1 no menu público:** A ordem das zonas e a altura do card definidas em Definições → Modelos de apresentação → Modelo Destaque 1 → Editar layout passam a ser aplicadas no carrossel de destaques. `FeaturedCarouselSection` envia `featured_layout_definition` ao card; `ItemCardDestaque1` usa `layoutDefinition` quando presente (canvasHeight, zoneOrder sem "image", zoneWidths, contentPaddingPx, rowSpacingPx, etc.) e mantém fallback com estrutura fixa quando não há layout guardado.
 
 ---
 

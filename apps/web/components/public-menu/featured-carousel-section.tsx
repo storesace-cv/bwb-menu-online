@@ -1,6 +1,7 @@
 "use client";
 
 import type { PublicMenuItem } from "@/lib/supabase";
+import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getFeaturedPresentationCardComponent } from "@/lib/presentation-templates";
 
 export type FeaturedItemWithCategory = {
@@ -12,13 +13,14 @@ export function FeaturedCarouselSection({
   featuredItems,
   featuredSectionLabel,
   featuredTemplateKey,
+  featuredLayoutDefinition,
   currencyCode,
   imageSource,
 }: {
   featuredItems: FeaturedItemWithCategory[];
   featuredSectionLabel: string;
   featuredTemplateKey: string;
-  featuredLayoutDefinition?: unknown;
+  featuredLayoutDefinition?: LayoutDefinition | null;
   currencyCode: string;
   imageSource?: string;
 }) {
@@ -48,6 +50,7 @@ export function FeaturedCarouselSection({
               categoryName={categoryName}
               currencyCode={currencyCode}
               imageSource={imageSource}
+              layoutDefinition={featuredLayoutDefinition ?? null}
             />
           </div>
         ))}
