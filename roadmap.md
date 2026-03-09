@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Body margin 0 para cards largura smartphone; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Eliminar margem direita smartphone: box-sizing, width 100%, px-1; roadmap, commit, push, deploy).
 
 ---
 
@@ -121,6 +121,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Carrossel Destaques: +5% área vertical:** Aumentado o `minHeight` do contentor de 480px para 504px (5% a mais) para a secção "Escolhas do Chefe" ocupar mais espaço vertical; breadcrumb e menu seguinte descem ligeiramente.
 - **Menu público (smartphone): cards a largura disponível:** Reduzido o padding horizontal do `<main>` em viewports pequenos de `px-6` (24px) para `px-2` (8px); tablet/desktop mantém `md:px-8`. Os cards e o conteúdo passam a ocupar quase toda a largura do ecrã no smartphone.
 - **Menu público (smartphone): body sem margem:** Em `globals.css`, `body` passou a ter `margin: 0` e `padding: 0` para eliminar o espaço lateral por defeito do browser (preflight: false); em mobile os cards passam a usar `100vw - 16px`, alinhando ao modal de imagem/ingredientes.
+- **Menu público (smartphone): eliminar margem direita:** Em `globals.css`, `html` e `body` com `width: 100%`; `.menu-public` com `box-sizing: border-box`, `width: 100%` e `max-width: 100vw` para o padding ficar dentro da largura e evitar overflow/margem à direita. Main em mobile com `px-1` (4px de cada lado) para maximizar área dos cards.
 
 ---
 
