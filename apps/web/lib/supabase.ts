@@ -129,6 +129,11 @@ export type PublicMenuPayload = {
   error?: string;
 };
 
+/** Payload da carga inicial: inclui featured_items no topo (todos os is_featured da loja). */
+export type PublicMenuInitialPayload = PublicMenuPayload & {
+  featured_items?: { item: PublicMenuItem; categoryName: string }[];
+};
+
 export async function getPublicMenuByHostname(
   host: string
 ): Promise<PublicMenuPayload> {
@@ -169,5 +174,90 @@ export async function getPublicMenuByHostname(
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Configuração Supabase em falta";
     return { store_id: null, store_name: null, store_settings: undefined, sections: [], categories: [], error: msg };
+  }
+}
+
+function enrichMenuItems(items: PublicMenuItem[], currencyCode: string): PublicMenuItem[] {
+  return items.map((item) => {
+    const enriched = { ...item };
+    if (item.menu_price != null) {
+      enriched.menu_price_display = formatPrice(item.menu_price, currencyCode);
+    }
+    if (item.price_old != null) {
+      enriched.price_old_display = formatPrice(item.price_old, currencyCode);
+    }
+    return enriched;
+  });
+}
+
+export async function getPublicMenuInitialByHostname(
+  host: string
+): Promise<PublicMenuInitialPayload> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.rpc("public_menu_initial_by_hostname", {
+      host: host ?? "",
+    });
+    if (error) {
+      return {
+        store_id: null,
+        store_name: null,
+        store_settings: undefined,
+        sections: [],
+        categories: [],
+        featured_items: [],
+        error: error.message,
+      };
+    }
+    const raw = data as PublicMenuInitialPayload;
+    const currencyCode = raw.store_settings?.currency_code ?? "€";
+    const categories = (raw.categories ?? []).map((category) => ({
+      ...category,
+      items: enrichMenuItems(category.items ?? [], currencyCode),
+    }));
+    const featured_items = (raw.featured_items ?? []).map(({ item, categoryName }) => ({
+      item: enrichMenuItems([item], currencyCode)[0],
+      categoryName,
+    }));
+    return {
+      ...raw,
+      categories,
+      featured_items,
+    };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Configuração Supabase em falta";
+    return {
+      store_id: null,
+      store_name: null,
+      store_settings: undefined,
+      sections: [],
+      categories: [],
+      featured_items: [],
+      error: msg,
+    };
+  }
+}
+
+/** Categorias (com items) de uma secção; para uso futuro na alternância de secções (lazy load). Passar currencyCode (ex.: menu.store_settings?.currency_code) para enriquecer preços. */
+export async function getPublicMenuSectionCategories(
+  host: string,
+  sectionId: string,
+  currencyCode?: string
+): Promise<PublicMenuCategory[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.rpc("public_menu_section_categories_by_hostname", {
+      host: host ?? "",
+      p_section_id: sectionId,
+    });
+    if (error) return [];
+    const categories = (data ?? []) as PublicMenuCategory[];
+    const code = currencyCode ?? "€";
+    return categories.map((category) => ({
+      ...category,
+      items: enrichMenuItems(category.items ?? [], code),
+    }));
+  } catch {
+    return [];
   }
 }

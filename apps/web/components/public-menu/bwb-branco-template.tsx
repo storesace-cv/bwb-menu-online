@@ -2,7 +2,7 @@
 
 import type { ComponentType } from "react";
 import { useState, useMemo } from "react";
-import type { PublicMenuPayload, PublicMenuItem } from "@/lib/supabase";
+import type { PublicMenuPayload, PublicMenuInitialPayload, PublicMenuItem } from "@/lib/supabase";
 import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getPresentationCardComponent, DEFAULT_PRESENTATION_KEY } from "@/lib/presentation-templates";
 import { ItemCardFromLayout } from "./item-card-from-layout";
@@ -66,7 +66,7 @@ function collectFeaturedItems(menu: PublicMenuPayload): PublicMenuItem[] {
   return out;
 }
 
-/** Featured items with category name for the carousel (order preserved from menu). */
+/** Featured items with category name for the carousel (order preserved from menu). Fallback when payload has no top-level featured_items. */
 function collectFeaturedItemsWithCategory(menu: PublicMenuPayload): { item: PublicMenuItem; categoryName: string }[] {
   const out: { item: PublicMenuItem; categoryName: string }[] = [];
   (menu.categories ?? []).forEach((cat) => {
@@ -77,7 +77,8 @@ function collectFeaturedItemsWithCategory(menu: PublicMenuPayload): { item: Publ
   return out;
 }
 
-export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
+/** Quando existir alternância de secções, usar getPublicMenuSectionCategories(host, sectionId, currencyCode) para lazy load das categorias da secção e merge em estado (ex.: Map<sectionId, categories>). */
+export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | PublicMenuPayload }) {
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [togglePromo, setTogglePromo] = useState(false);
@@ -106,7 +107,10 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
   const categoryTitleColor = menu.store_settings?.category_title_color?.trim() || "rgb(167, 143, 57)";
 
   const featuredItems = useMemo(() => collectFeaturedItems(menu), [menu]);
-  const featuredItemsWithCategory = useMemo(() => collectFeaturedItemsWithCategory(menu), [menu]);
+  const featuredItemsWithCategory = useMemo(
+    () => ("featured_items" in menu && menu.featured_items?.length) ? menu.featured_items : collectFeaturedItemsWithCategory(menu),
+    [menu]
+  );
   const featuredSectionLabel = menu.store_settings?.featured_section_label?.trim() || "Escolhas do Chefe";
   const featuredTemplateKey = menu.store_settings?.featured_template_key?.trim() || "modelo-destaque-1";
   const featuredLayoutDefinition = menu.featured_layout_definition ?? null;

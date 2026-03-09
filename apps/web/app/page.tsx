@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { getPublicMenuByHostname } from "@/lib/supabase";
+import { getPublicMenuInitialByHostname } from "@/lib/supabase";
 import { PublicMenuClient } from "@/components/public-menu-client";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export default async function Home() {
   const headersList = await headers();
   const host = headersList.get("host") ?? headersList.get("x-forwarded-host") ?? "";
 
-  const menu = await getPublicMenuByHostname(host);
+  const menu = await getPublicMenuInitialByHostname(host);
 
   if (menu.error) {
     return (

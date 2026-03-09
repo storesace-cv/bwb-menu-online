@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques: carrossel estilo Apple; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (destaques sempre + secção 1 inicial + lazy load; roadmap, commit, push, deploy).
 
 ---
 
@@ -100,6 +100,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Destaques: texto dos alergénios a branco:** Nos cards do carrossel de destaques (Modelo Destaque 1), apenas o texto dos alergénios passou a ser exibido a branco (`ALLERGEN_BADGE_DESTAQUE`: texto branco e fundo discreto sobre o overlay); os restantes modelos de card mantêm as cores por severidade.
 - **Edição de item: código do artigo:** Na página de edição de item (`/portal-admin/settings/items/[id]/edit`) é exibido o código do artigo (`item_code`) em modo só leitura no topo do formulário; a query inclui `item_code` e o tipo `MenuItem` no formulário foi alargado.
 - **Destaques: carrossel estilo Apple:** A secção Destaques passou a ser um carrossel horizontal (shelf) com scroll suave, snap por item, peek do próximo card (~78vw/280px), indicador de progresso (barra fina), setas Anterior/Seguinte apenas em desktop (visíveis ao hover/focus), wheel-to-horizontal sobre o carrossel com edge handling, teclado (setas esquerda/direita) e `prefers-reduced-motion`; acessibilidade (region focável, ARIA). Implementado em `FeaturedCarouselSection` e classe `.featured-carousel-scroll` em globals.css para esconder a scrollbar.
+- **Destaques sempre + Secção 1 por defeito + Lazy load (migration 051):** Carga inicial do menu optimizada: apenas destaques e secção 1 (menor `sort_order`) são carregados; as outras secções ficam para alternância futura (lazy). Nova RPC `public_menu_initial_by_hostname(host)` devolve `store`, `sections` (todas), `featured_items` (todos os `is_featured` da loja, com nome da categoria), `categories` (só da secção 1) e `featured_layout_definition`. Nova RPC `public_menu_section_categories_by_hostname(host, section_id)` para lazy load das categorias de uma secção. Frontend: `getPublicMenuInitialByHostname(host)` e tipo `PublicMenuInitialPayload` em `lib/supabase.ts`; página inicial usa esta função; template BWB - Branco usa `menu.featured_items` para o carrossel quando existir (fallback `collectFeaturedItemsWithCategory`); `getPublicMenuSectionCategories(host, sectionId, currencyCode?)` pronta para a futura UI de alternância de secções.
 
 ---
 
