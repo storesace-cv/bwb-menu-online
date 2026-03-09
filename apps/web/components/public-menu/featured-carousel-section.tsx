@@ -129,7 +129,7 @@ export function FeaturedCarouselSection({
   };
 
   return (
-    <section className="relative z-10 mb-8" aria-label="Destaques">
+    <section className="relative z-10 mb-10" aria-label="Destaques">
       <h2
         className="text-xl font-semibold mb-4 pb-2 border-b-2"
         style={{ borderColor: "var(--menu-primary)", color: "var(--menu-primary)" }}
@@ -142,13 +142,13 @@ export function FeaturedCarouselSection({
           role="region"
           aria-label="Destaques"
           className="relative w-full flex justify-center overflow-visible px-4"
-          style={{ minHeight: "320px" }}
+          style={{ minHeight: "480px" }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           onKeyDown={handleKeyDown}
         >
-          <div className="relative" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "320px" }}>
+          <div className="relative" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "480px" }}>
             {n === 1 ? (
               renderSlot(0, "center")
             ) : (
