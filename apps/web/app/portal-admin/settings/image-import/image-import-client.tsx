@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, BwbTable } from "@/components/admin";
+import { useFormState } from "react-dom";
+import { Button, Card, BwbTable, Select, Alert } from "@/components/admin";
 import type { ColumnDef } from "@/lib/admin/bwbTableSort";
+import { updateImageSource } from "../../actions";
 
 type FileResult = {
   filename: string;
@@ -13,7 +15,14 @@ type FileResult = {
   message?: string;
 };
 
-export function ImageImportClient({ storeId }: { storeId: string }) {
+const IMAGE_SOURCE_OPTIONS = [
+  { value: "storage", label: "Supabase Storage (upload por código)" },
+  { value: "url", label: "URL por artigo (image_url)" },
+  { value: "legacy_path", label: "Path legado (image_path)" },
+] as const;
+
+export function ImageImportClient({ storeId, initialImageSource }: { storeId: string; initialImageSource: string }) {
+  const [imageSourceState, formAction] = useFormState(updateImageSource, null);
   const [overwrite, setOverwrite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<FileResult[] | null>(null);
@@ -56,6 +65,27 @@ export function ImageImportClient({ storeId }: { storeId: string }) {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <Card className="p-5 bg-slate-800/50 border-slate-700">
+        <h2 className="text-lg font-medium text-slate-200 mb-3">Método de leitura de imagens</h2>
+        <form action={formAction} className="flex flex-col gap-4 max-w-md mb-0">
+          <input type="hidden" name="store_id" value={storeId} />
+          <Select
+            id="image_source"
+            name="image_source"
+            label="Método de leitura de imagens"
+            defaultValue={initialImageSource}
+          >
+            {IMAGE_SOURCE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+          <Button type="submit" variant="primary">Guardar método</Button>
+          {imageSourceState?.error && <Alert variant="error">{imageSourceState.error}</Alert>}
+        </form>
+      </Card>
+
       <Card className="p-5 bg-slate-800/50 border-slate-700">
         <h2 className="text-lg font-medium text-slate-200 mb-3">Como funciona</h2>
         <ul className="text-sm text-slate-300 space-y-2 list-disc list-inside">

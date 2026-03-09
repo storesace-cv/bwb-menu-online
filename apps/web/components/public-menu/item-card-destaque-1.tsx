@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
 import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
-import { getImageSrc } from "./item-card-restaurante-1";
+import { getImageSrc, FALLBACK_IMAGE } from "./item-card-restaurante-1";
 
 function getAllergenLabel(a: { name_i18n?: Record<string, string>; code: string; name?: string }): string {
   const i18n = a.name_i18n;
@@ -95,14 +95,20 @@ export function ItemCardDestaque1({
   item,
   categoryName,
   currencyCode,
+  imageSource,
 }: {
   item: PublicMenuItem;
   categoryName?: string;
   currencyCode?: string;
+  imageSource?: string;
 }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const imageSrc = getImageSrc(item);
+  const imageSrc = getImageSrc(item, imageSource);
+  const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
+  useEffect(() => {
+    setEffectiveSrc(imageSrc);
+  }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
 
   return (
@@ -111,9 +117,16 @@ export function ItemCardDestaque1({
         className="relative rounded-xl overflow-hidden w-full flex flex-col justify-end min-h-[280px]"
         style={{ minHeight: DEFAULT_CANVAS_HEIGHT }}
       >
+        <img
+          src={imageSrc}
+          alt=""
+          aria-hidden
+          className="absolute w-0 h-0 opacity-0 pointer-events-none"
+          onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
+        />
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${imageSrc})` }}
+          style={{ backgroundImage: `url(${effectiveSrc})` }}
           aria-hidden
         />
         <div
@@ -174,7 +187,7 @@ export function ItemCardDestaque1({
       <ImageIngredientsModal
         open={imageModalOpen}
         onClose={() => setImageModalOpen(false)}
-        imageSrc={imageSrc}
+        imageSrc={effectiveSrc}
         imageAlt={item.menu_name ?? ""}
         ingredientsText={item.menu_ingredients}
       />

@@ -30,15 +30,30 @@ const SEVERITY_CLASSES: Record<number, string> = {
   5: "bg-red-700/25 text-red-900 border border-red-600/50",
 };
 
-export function getImageSrc(item: PublicMenuItem): string {
+export function getImageSrc(item: PublicMenuItem, imageSource?: string): string {
+  const mode = imageSource === "url" || imageSource === "legacy_path" ? imageSource : "storage";
+  if (mode === "url") {
+    if (item.image_url != null && item.image_url !== "") return item.image_url;
+    if (item.image_base_path != null && item.image_base_path !== "") return STORAGE_BASE + item.image_base_path + "640.webp";
+    if (item.image_path != null && item.image_path !== "") return STORAGE_BASE + item.image_path;
+    return FALLBACK_IMAGE;
+  }
+  if (mode === "legacy_path") {
+    if (item.image_path != null && item.image_path !== "") return STORAGE_BASE + item.image_path;
+    if (item.image_base_path != null && item.image_base_path !== "") return STORAGE_BASE + item.image_base_path + "640.webp";
+    if (item.image_url != null && item.image_url !== "") return item.image_url;
+    return FALLBACK_IMAGE;
+  }
   if (item.image_base_path != null && item.image_base_path !== "") {
     return STORAGE_BASE + item.image_base_path + "640.webp";
   }
   if (item.image_path != null && item.image_path !== "") {
     return STORAGE_BASE + item.image_path;
   }
-  return (item.image_url && item.image_url !== "") ? item.image_url : "/images/no_image_product.jpg";
+  return (item.image_url && item.image_url !== "") ? item.image_url : FALLBACK_IMAGE;
 }
+
+export const FALLBACK_IMAGE = "/images/no_image_product.jpg";
 
 function ImageIngredientsModal({
   open,
@@ -105,10 +120,14 @@ function ImageIngredientsModal({
 }
 
 /** Card de artigo "Modelo Restaurante 1" — usado no registo de presentation templates. */
-export function ItemCardRestaurante1({ item, currencyCode }: { item: PublicMenuItem; currencyCode?: string }) {
+export function ItemCardRestaurante1({ item, currencyCode, imageSource }: { item: PublicMenuItem; currencyCode?: string; imageSource?: string }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const imageSrc = getImageSrc(item);
+  const imageSrc = getImageSrc(item, imageSource);
+  const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
+  useEffect(() => {
+    setEffectiveSrc(imageSrc);
+  }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
 
   return (
@@ -120,7 +139,7 @@ export function ItemCardRestaurante1({ item, currencyCode }: { item: PublicMenuI
           className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
-          <img src={imageSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" />
+          <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
         </button>
         <div className="p-3 flex flex-col flex-1 min-h-0">
           <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">
@@ -187,7 +206,7 @@ export function ItemCardRestaurante1({ item, currencyCode }: { item: PublicMenuI
       <ImageIngredientsModal
         open={imageModalOpen}
         onClose={() => setImageModalOpen(false)}
-        imageSrc={imageSrc}
+        imageSrc={effectiveSrc}
         imageAlt={item.menu_name ?? ""}
         ingredientsText={item.menu_ingredients}
       />

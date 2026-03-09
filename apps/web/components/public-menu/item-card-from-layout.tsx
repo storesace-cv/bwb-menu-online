@@ -17,7 +17,7 @@ import {
 } from "@/lib/presentation-templates";
 import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
-import { getImageSrc } from "./item-card-restaurante-1";
+import { getImageSrc, FALLBACK_IMAGE } from "./item-card-restaurante-1";
 
 const ZONE_HEIGHT_MIN = 12;
 const ZONE_HEIGHT_MAX = 600;
@@ -182,13 +182,18 @@ type ItemCardFromLayoutProps = {
   item: PublicMenuItem;
   layoutDefinition: LayoutDefinition;
   currencyCode?: string;
+  imageSource?: string;
 };
 
 /** Card de artigo renderizado conforme layout_definition (ordem e visibilidade das zonas). */
-export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: ItemCardFromLayoutProps) {
+export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, imageSource }: ItemCardFromLayoutProps) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const imageSrc = getImageSrc(item);
+  const imageSrc = getImageSrc(item, imageSource);
+  const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
+  useEffect(() => {
+    setEffectiveSrc(imageSrc);
+  }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
   const zoneOrder = layoutDefinition.zoneOrder ?? [];
   const minHeight = layoutDefinition.canvasHeight != null && layoutDefinition.canvasHeight > 0
@@ -248,7 +253,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
             style={imageHeightPx != null ? { height: `${imageHeightPx}px`, minHeight: `${imageHeightPx}px` } : undefined}
             aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
           >
-            <img src={imageSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" />
+            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
           </button>
         );
       case "icons":
@@ -394,7 +399,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode }: Ite
       <ImageIngredientsModal
         open={imageModalOpen}
         onClose={() => setImageModalOpen(false)}
-        imageSrc={imageSrc}
+        imageSrc={effectiveSrc}
         imageAlt={item.menu_name ?? ""}
         ingredientsText={item.menu_ingredients}
       />

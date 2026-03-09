@@ -94,6 +94,8 @@ export type PublicMenuStoreSettings = {
   featured_section_label?: string;
   /** Chave do modelo de apresentação de destaques (ex.: modelo-destaque-1). */
   featured_template_key?: string;
+  /** Método de leitura de imagens: "storage" | "url" | "legacy_path". Default: "storage". */
+  image_source?: string;
 };
 
 /** Layout definition for featured carousel cards (same shape as presentation-templates LayoutDefinition). */

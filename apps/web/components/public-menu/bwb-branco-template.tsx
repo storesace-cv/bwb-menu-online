@@ -16,26 +16,28 @@ function RowCards({
   currencyCode,
   CardComponent,
   layoutDefinition,
+  imageSource,
 }: {
   items: [PublicMenuItem, PublicMenuItem | null];
   currencyCode?: string;
-  CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string }>;
+  CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string; imageSource?: string }>;
   layoutDefinition?: LayoutDefinition | null;
+  imageSource?: string;
 }) {
   const [left, right] = items;
   const useLayout = layoutDefinition != null && Array.isArray(layoutDefinition.zoneOrder) && layoutDefinition.zoneOrder.length > 0;
   return (
     <div className="grid grid-cols-2 gap-6">
       {useLayout ? (
-        <ItemCardFromLayout item={left} layoutDefinition={layoutDefinition} currencyCode={currencyCode} />
+        <ItemCardFromLayout item={left} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
       ) : (
-        <CardComponent item={left} currencyCode={currencyCode} />
+        <CardComponent item={left} currencyCode={currencyCode} imageSource={imageSource} />
       )}
       {right ? (
         useLayout ? (
-          <ItemCardFromLayout item={right} layoutDefinition={layoutDefinition} currencyCode={currencyCode} />
+          <ItemCardFromLayout item={right} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
         ) : (
-          <CardComponent item={right} currencyCode={currencyCode} />
+          <CardComponent item={right} currencyCode={currencyCode} imageSource={imageSource} />
         )
       ) : (
         <div className="rounded-xl border border-gray-200 bg-gray-50 min-h-[200px]" aria-hidden />
@@ -108,6 +110,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
   const featuredSectionLabel = menu.store_settings?.featured_section_label?.trim() || "Escolhas do Chefe";
   const featuredTemplateKey = menu.store_settings?.featured_template_key?.trim() || "modelo-destaque-1";
   const featuredLayoutDefinition = menu.featured_layout_definition ?? null;
+  const imageSource = menu.store_settings?.image_source?.trim() || undefined;
 
   const categoryOptions = useMemo(() => {
     const cats = menu.categories ?? [];
@@ -267,6 +270,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
         featuredTemplateKey={featuredTemplateKey}
         featuredLayoutDefinition={featuredLayoutDefinition}
         currencyCode={currencyCode}
+        imageSource={imageSource}
       />
 
       {/* Filters: category tabs + chips */}
@@ -403,9 +407,9 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
                     <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
                       {cat.items?.map((item) =>
                         useLayout ? (
-                          <ItemCardFromLayout key={item.id} item={item} layoutDefinition={layoutDef as LayoutDefinition} currencyCode={currencyCode} />
+                          <ItemCardFromLayout key={item.id} item={item} layoutDefinition={layoutDef as LayoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
                         ) : (
-                          <CardComponent key={item.id} item={item} currencyCode={currencyCode} />
+                          <CardComponent key={item.id} item={item} currencyCode={currencyCode} imageSource={imageSource} />
                         )
                       )}
                     </ul>
@@ -414,7 +418,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuPayload }) {
                     <ul className="p-0 m-0 list-none flex flex-col gap-6">
                       {cat.items && pairs(cat.items).map((pair) => (
                         <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
-                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} layoutDefinition={layoutDef as LayoutDefinition} />
+                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} layoutDefinition={layoutDef as LayoutDefinition} imageSource={imageSource} />
                         </li>
                       ))}
                     </ul>

@@ -126,12 +126,14 @@ export function getDefaultLayoutDefinition(): LayoutDefinition {
 export type PresentationCardProps = {
   item: PublicMenuItem;
   currencyCode?: string;
+  imageSource?: string;
 };
 
 export type FeaturedCardProps = {
   item: PublicMenuItem;
   currencyCode?: string;
   categoryName?: string;
+  imageSource?: string;
 };
 
 type PresentationCardComponent = ComponentType<PresentationCardProps>;

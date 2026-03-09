@@ -10,6 +10,13 @@ export default async function ImageImportPage() {
   const supabase = await createClient();
   const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
 
+  let imageSource = "storage";
+  if (storeId) {
+    const { data: row } = await supabase.from("store_settings").select("settings").eq("store_id", storeId).maybeSingle();
+    const settings = (row?.settings as Record<string, string> | null) ?? {};
+    imageSource = settings.image_source === "url" || settings.image_source === "legacy_path" ? settings.image_source : "storage";
+  }
+
   if (!storeId) {
     return (
       <div>
@@ -33,12 +40,12 @@ export default async function ImageImportPage() {
             <Link href="/portal-admin/settings" className="hover:text-slate-200 transition-colors">Definições</Link>
           </li>
           <li aria-hidden="true">/</li>
-          <li className="text-slate-100" aria-current="page">Importação de Imagens</li>
+          <li className="text-slate-100" aria-current="page">Gestão de Imagens</li>
         </ol>
       </nav>
-      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Importação de Imagens</h1>
-      <p className="text-slate-400 mb-6">Importe imagens em lote associadas aos artigos pelo código no nome do ficheiro.</p>
-      <ImageImportClient storeId={storeId} />
+      <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Imagens</h1>
+      <p className="text-slate-400 mb-6">Defina o método de leitura de imagens no menu e importe imagens em lote associadas aos artigos pelo código no nome do ficheiro.</p>
+      <ImageImportClient storeId={storeId} initialImageSource={imageSource} />
     </div>
   );
 }

@@ -13,12 +13,14 @@ export function FeaturedCarouselSection({
   featuredSectionLabel,
   featuredTemplateKey,
   currencyCode,
+  imageSource,
 }: {
   featuredItems: FeaturedItemWithCategory[];
   featuredSectionLabel: string;
   featuredTemplateKey: string;
   featuredLayoutDefinition?: unknown;
   currencyCode: string;
+  imageSource?: string;
 }) {
   if (featuredItems.length === 0) return null;
 
@@ -45,6 +47,7 @@ export function FeaturedCarouselSection({
               item={item}
               categoryName={categoryName}
               currencyCode={currencyCode}
+              imageSource={imageSource}
             />
           </div>
         ))}
