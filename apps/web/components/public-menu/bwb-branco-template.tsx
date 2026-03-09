@@ -82,11 +82,6 @@ function collectFeaturedItemsWithCategory(menu: PublicMenuPayload): { item: Publ
 
 /** Quando existir alternância de secções, usar getPublicMenuSectionCategories(host, sectionId, currencyCode) para lazy load das categorias da secção e merge em estado (ex.: Map<sectionId, categories>). */
 export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | PublicMenuPayload }) {
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("");
-  const [togglePromo, setTogglePromo] = useState(false);
-  const [toggleTakeAway, setToggleTakeAway] = useState(false);
-  const [toggleFeatured, setToggleFeatured] = useState(false);
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
   const [isCategoriesPanelOpen, setIsCategoriesPanelOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -124,47 +119,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const featuredLayoutDefinition = menu.featured_layout_definition ?? null;
   const imageSource = menu.store_settings?.image_source?.trim() || undefined;
 
-  const categoryOptions = useMemo(() => {
-    const cats = menu.categories ?? [];
-    return Array.from(new Map(cats.map((c) => [c.id, c])).values());
-  }, [menu.categories]);
-
-  const typeOptions = useMemo(() => {
-    const seen = new Map<string, { id: string; name: string; icon_code: string }>();
-    (menu.categories ?? []).forEach((cat) => {
-      cat.items?.forEach((item) => {
-        if (item.article_type && !seen.has(item.article_type.id)) {
-          seen.set(item.article_type.id, item.article_type);
-        }
-      });
-    });
-    return Array.from(seen.values());
-  }, [menu.categories]);
-
-  const filteredCategories = useMemo(() => {
-    let list = menu.categories ?? [];
-    if (categoryFilter) {
-      list = list.filter((c) => c.id === categoryFilter);
-    }
-    if (typeFilter) {
-      list = list.map((cat) => ({
-        ...cat,
-        items: cat.items?.filter((i) => i.article_type?.id === typeFilter) ?? [],
-      })).filter((cat) => (cat.items?.length ?? 0) > 0);
-    }
-    if (togglePromo || toggleTakeAway || toggleFeatured) {
-      list = list.map((cat) => ({
-        ...cat,
-        items: cat.items?.filter((i) => {
-          if (togglePromo && !i.is_promotion) return false;
-          if (toggleTakeAway && !i.take_away) return false;
-          if (toggleFeatured && !i.is_featured) return false;
-          return true;
-        }) ?? [],
-      })).filter((cat) => (cat.items?.length ?? 0) > 0);
-    }
-    return list;
-  }, [menu.categories, categoryFilter, typeFilter, togglePromo, toggleTakeAway, toggleFeatured]);
+  const filteredCategories = menu.categories ?? [];
 
   const currentSectionName = useMemo(() => {
     const first = filteredCategories[0];
@@ -192,14 +147,6 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
     }
     return result;
   }, [menu.sections, filteredCategories]);
-
-  const clearFilters = () => {
-    setCategoryFilter("");
-    setTypeFilter("");
-    setTogglePromo(false);
-    setToggleTakeAway(false);
-    setToggleFeatured(false);
-  };
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -244,16 +191,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           ) : (
             <h1 className="m-0 text-2xl font-bold text-gray-900">{storeName}</h1>
           )}
-          <h2 className="m-0 text-xl font-semibold text-gray-700">Nossos Menus</h2>
         </div>
-        <button
-          type="button"
-          onClick={() => (reservationUrl ? window.open(reservationUrl, "_blank") : setReservationModalOpen(true))}
-          className="px-5 py-2.5 rounded-lg font-semibold text-white cursor-pointer transition-opacity hover:opacity-90 shadow-md"
-          style={{ backgroundColor: "var(--menu-primary)" }}
-        >
-          Reservar uma mesa
-        </button>
       </header>
 
       {/* Reservation modal */}
@@ -320,96 +258,6 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         currencyCode={currencyCode}
         imageSource={imageSource}
       />
-
-      {/* Filters: category tabs + chips (collapsible via FAB "Filtros") */}
-      {isCategoriesPanelOpen && (
-      <section className="mb-6">
-        <div className="mb-3 p-2 rounded-lg bg-gray-50 border border-gray-200">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Categorias</p>
-          <div className="overflow-x-auto flex gap-2 flex-nowrap pb-1">
-            <button
-              type="button"
-              onClick={() => setCategoryFilter("")}
-              className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shrink-0 cursor-pointer border transition-colors"
-              style={
-                categoryFilter === ""
-                  ? { backgroundColor: "var(--menu-primary)", color: "var(--menu-primary-foreground)", borderColor: "var(--menu-primary)" }
-                  : { backgroundColor: "#fff", color: "#374151", borderColor: "#d1d5db" }
-              }
-            >
-              TUDO
-            </button>
-            {categoryOptions.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setCategoryFilter(c.id)}
-                className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shrink-0 cursor-pointer border transition-colors"
-                style={
-                  categoryFilter === c.id
-                    ? { backgroundColor: "var(--menu-primary)", color: "var(--menu-primary-foreground)", borderColor: "var(--menu-primary)" }
-                    : { backgroundColor: "#fff", color: "#374151", borderColor: "#d1d5db" }
-                }
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            Base prato
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="py-2 pl-3 pr-8 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
-            >
-              <option value="">TUDO</option>
-              {typeOptions.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={() => setTogglePromo(!togglePromo)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
-              togglePromo ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-300"
-            }`}
-            style={togglePromo ? { backgroundColor: "var(--menu-primary)" } : undefined}
-          >
-            Promoções
-          </button>
-          <button
-            type="button"
-            onClick={() => setToggleTakeAway(!toggleTakeAway)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
-              toggleTakeAway ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-300"
-            }`}
-            style={toggleTakeAway ? { backgroundColor: "var(--menu-primary)" } : undefined}
-          >
-            Take-away
-          </button>
-          <button
-            type="button"
-            onClick={() => setToggleFeatured(!toggleFeatured)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
-              toggleFeatured ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-300"
-            }`}
-            style={toggleFeatured ? { backgroundColor: "var(--menu-primary)" } : undefined}
-          >
-            Em destaque
-          </button>
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 cursor-pointer"
-          >
-            Limpar
-          </button>
-        </div>
-      </section>
-      )}
 
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
