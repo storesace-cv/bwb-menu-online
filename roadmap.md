@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Espaço entre zonas subgrid reduzido em ≥2/3; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Menu a largura total com N colunas dinâmicas; roadmap, commit, push, deploy).
 
 ---
 
@@ -113,6 +113,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público: alinhamento por zonas em 2 colunas (subgrid) restaurado:** Em vista de 2 colunas (tablet/desktop), as zonas dos cards na mesma linha (Ingredientes, tempo, alergénios, preço) voltaram a alinhar entre si via CSS Grid com `subgrid`: `RowCards` define 8 linhas e cada card (ItemCardRestaurante1 com prop `inRowCards`) contribui com 8 zonas; a altura de cada linha é o máximo dos dois cards. Categorias com layout definido (ItemCardFromLayout) mantêm grid simples sem subgrid.
 - **Menu público: espaçamento vertical reduzido nos cards (modo subgrid):** Margens, padding e alturas mínimas nas 8 zonas do card em 2 colunas foram reduzidos (pt-2→pt-1, min-h 28px→22px nos ícones; mt-1→mt-0.5 ou mt-0 nas zonas de conteúdo; pb-3→pb-2 e mt-2→mt-1 no preço; zonas vazias com min-h-0 ou min-h-[1rem]) para aproximar as linhas e diminuir a altura total do cartão.
 - **Menu público: espaço entre zonas subgrid reduzido em ≥2/3:** No modo subgrid, o intervalo entre Ingredientes, tempo, alergénios e preço foi reduzido em pelo menos dois terços: pt-0 e min-h-[16px] nos ícones; mt-0 em todas as zonas de conteúdo; pb-0.5 e mt-0 no preço; zonas vazias (tempo/alergénios) com min-h-0. Cartões em 2 colunas mais compactos.
+- **Menu público: largura total e N colunas dinâmicas:** Em tablet e computador o menu deixa de estar limitado a uma faixa central (removido `max-w-4xl` do `<main>` em `page.tsx`); ocupa toda a largura do ecrã. A grelha de artigos por categoria usa `repeat(auto-fill, minmax(360px, 1fr))`, colocando na mesma linha tantos cards quantos couberem (largura modelo 360px); mobile mantém 1 coluna. Implementação sem subgrid (alturas por card independentes por linha).
 
 ---
 

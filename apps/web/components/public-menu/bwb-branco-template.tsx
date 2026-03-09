@@ -15,6 +15,9 @@ const FALLBACK_PRIMARY = "#8b6914";
 
 const ROW_CARDS_SUBGRID_ROWS = 8;
 
+/** Largura mínima por card em tablet/desktop (base do layout em 2 colunas). Usada em repeat(auto-fill, minmax(…, 1fr)) para colocar tantos cards por linha quantos couberem. */
+const CARD_MIN_WIDTH_PX = 360;
+
 /** Uma linha de 2 cards usando o componente de apresentação escolhido ou layout. Em 2 colunas usa subgrid para alinhar as zonas (Ingredientes, tempo, alergénios, preço) entre os dois cartões. */
 function RowCards({
   items,
@@ -482,12 +485,21 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
                     </ul>
                   </div>
                   <div className="hidden sm:block">
-                    <ul className="p-0 m-0 list-none flex flex-col gap-6">
-                      {cat.items && pairs(cat.items).map((pair) => (
-                        <li key={pair[0].id + (pair[1]?.id ?? "solo")} className="list-none">
-                          <RowCards items={pair} currencyCode={currencyCode} CardComponent={CardComponent} layoutDefinition={layoutDef as LayoutDefinition} imageSource={imageSource} />
-                        </li>
-                      ))}
+                    <ul
+                      className="p-0 m-0 list-none grid gap-6"
+                      style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${CARD_MIN_WIDTH_PX}px, 1fr))` }}
+                    >
+                      {cat.items?.map((item) =>
+                        useLayout ? (
+                          <li key={item.id} className="list-none">
+                            <ItemCardFromLayout item={item} layoutDefinition={layoutDef as LayoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
+                          </li>
+                        ) : (
+                          <li key={item.id} className="list-none">
+                            <CardComponent item={item} currencyCode={currencyCode} imageSource={imageSource} />
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
                 </section>

@@ -30,7 +30,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="menu-public px-6 py-8 max-w-4xl mx-auto md:px-8">
+    <main className="menu-public px-6 py-8 md:px-8 w-full">
       <PublicMenuClient menu={menu} />
     </main>
   );
