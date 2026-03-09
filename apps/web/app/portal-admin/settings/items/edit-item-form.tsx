@@ -35,16 +35,19 @@ type MenuItem = {
   has_image?: boolean;
 };
 
+const MENU_IMAGES_BUCKET = "menu-images";
+
 function imagePreviewUrl(item: MenuItem): string | null {
   const base = typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string"
     ? process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/, "")
     : "";
-  if (item.has_image && item.image_base_path && base) {
-    return `${base}/storage/v1/object/public/${item.image_base_path}640.webp`;
+  if (!base) return null;
+  if (item.has_image && item.image_base_path) {
+    return `${base}/storage/v1/object/public/${MENU_IMAGES_BUCKET}/${item.image_base_path}640.webp`;
   }
   if (item.image_url) return item.image_url;
-  if (item.image_path && base) {
-    return `${base}/storage/v1/object/public/${item.image_path}`;
+  if (item.image_path) {
+    return `${base}/storage/v1/object/public/${MENU_IMAGES_BUCKET}/${item.image_path}`;
   }
   return null;
 }

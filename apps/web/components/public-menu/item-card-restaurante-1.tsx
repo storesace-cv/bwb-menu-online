@@ -6,6 +6,7 @@ import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
 
 const STORAGE_BASE = (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "") + "/storage/v1/object/public/";
+const MENU_IMAGES_BUCKET = "menu-images";
 
 /** Label do alergénio: locale → pt → en → code */
 function getAllergenLabel(
@@ -30,25 +31,29 @@ const SEVERITY_CLASSES: Record<number, string> = {
   5: "bg-red-700/25 text-red-900 border border-red-600/50",
 };
 
+function storageUrl(path: string, suffix?: string): string {
+  return STORAGE_BASE + MENU_IMAGES_BUCKET + "/" + path + (suffix ?? "");
+}
+
 export function getImageSrc(item: PublicMenuItem, imageSource?: string): string {
   const mode = imageSource === "url" || imageSource === "legacy_path" ? imageSource : "storage";
   if (mode === "url") {
     if (item.image_url != null && item.image_url !== "") return item.image_url;
-    if (item.image_base_path != null && item.image_base_path !== "") return STORAGE_BASE + item.image_base_path + "640.webp";
-    if (item.image_path != null && item.image_path !== "") return STORAGE_BASE + item.image_path;
+    if (item.image_base_path != null && item.image_base_path !== "") return storageUrl(item.image_base_path, "640.webp");
+    if (item.image_path != null && item.image_path !== "") return storageUrl(item.image_path);
     return FALLBACK_IMAGE;
   }
   if (mode === "legacy_path") {
-    if (item.image_path != null && item.image_path !== "") return STORAGE_BASE + item.image_path;
-    if (item.image_base_path != null && item.image_base_path !== "") return STORAGE_BASE + item.image_base_path + "640.webp";
+    if (item.image_path != null && item.image_path !== "") return storageUrl(item.image_path);
+    if (item.image_base_path != null && item.image_base_path !== "") return storageUrl(item.image_base_path, "640.webp");
     if (item.image_url != null && item.image_url !== "") return item.image_url;
     return FALLBACK_IMAGE;
   }
   if (item.image_base_path != null && item.image_base_path !== "") {
-    return STORAGE_BASE + item.image_base_path + "640.webp";
+    return storageUrl(item.image_base_path, "640.webp");
   }
   if (item.image_path != null && item.image_path !== "") {
-    return STORAGE_BASE + item.image_path;
+    return storageUrl(item.image_path);
   }
   return (item.image_url && item.image_url !== "") ? item.image_url : FALLBACK_IMAGE;
 }
