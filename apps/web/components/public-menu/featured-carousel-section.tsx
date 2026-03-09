@@ -10,8 +10,9 @@ export type FeaturedItemWithCategory = {
   categoryName?: string;
 };
 
-const GAP_PX = 14;
-const CARD_WIDTH_PEEK = "min(280px, 78vw)";
+const CENTER_WIDTH = "min(320px, 85vw)";
+const SIDE_SCALE = 0.88;
+const OVERLAP_PX = 60;
 
 function ChevronLeft({ className }: { className?: string }) {
   return (
@@ -46,10 +47,10 @@ export function FeaturedCarouselSection({
   if (featuredItems.length === 0) return null;
 
   const CardComponent = getFeaturedPresentationCardComponent(featuredTemplateKey);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const n = featuredItems.length;
   const [activeIndex, setActiveIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -59,52 +60,41 @@ export function FeaturedCarouselSection({
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  // Active index a partir do scroll: item alinhado ao snap
-  useEffect(() => {
-    const el = carouselRef.current;
-    if (!el || featuredItems.length === 0) return;
-    const onScroll = () => {
-      const first = cardRefs.current[0];
-      const step = first ? first.offsetWidth + GAP_PX : 280 + GAP_PX;
-      const index = Math.round(el.scrollLeft / step);
-      setActiveIndex(Math.min(Math.max(0, index), featuredItems.length - 1));
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [featuredItems.length]);
-
-  const scrollBehavior = prefersReducedMotion ? "auto" : "smooth";
-
   const goPrev = useCallback(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const first = cardRefs.current[0];
-    const step = first ? first.offsetWidth + GAP_PX : 320 + GAP_PX;
-    el.scrollBy({ left: -step, behavior: scrollBehavior });
-  }, [scrollBehavior]);
+    setActiveIndex((i) => (i - 1 + n) % n);
+  }, [n]);
 
   const goNext = useCallback(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const first = cardRefs.current[0];
-    const step = first ? first.offsetWidth + GAP_PX : 320 + GAP_PX;
-    el.scrollBy({ left: step, behavior: scrollBehavior });
-  }, [scrollBehavior]);
+    setActiveIndex((i) => (i + 1) % n);
+  }, [n]);
 
-  // Converte wheel vertical em scroll horizontal; nas bordas não previne default para permitir scroll da página
+  const prevIndex = (activeIndex - 1 + n) % n;
+  const nextIndex = (activeIndex + 1) % n;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (touchStartX.current == null) return;
+      const endX = e.changedTouches[0].clientX;
+      const deltaX = endX - touchStartX.current;
+      touchStartX.current = null;
+      if (deltaX < -40) goNext();
+      else if (deltaX > 40) goPrev();
+    },
+    [goPrev, goNext]
+  );
+
   const handleWheel = useCallback(
     (e: React.WheelEvent<HTMLDivElement>) => {
-      const el = carouselRef.current;
-      if (!el || e.deltaY === 0) return;
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      const atStart = scrollLeft <= 0;
-      const atEnd = scrollLeft >= scrollWidth - clientWidth - 1;
-      if ((atStart && e.deltaY < 0) || (atEnd && e.deltaY > 0)) return;
+      if (e.deltaY === 0) return;
+      if (e.deltaY > 0) goNext();
+      else goPrev();
       e.preventDefault();
-      el.scrollBy({ left: e.deltaY, behavior: "auto" });
     },
-    []
+    [goPrev, goNext]
   );
 
   const handleKeyDown = useCallback(
@@ -120,8 +110,38 @@ export function FeaturedCarouselSection({
     [goPrev, goNext]
   );
 
-  const total = featuredItems.length;
-  const progressPercent = total <= 1 ? 100 : (activeIndex / (total - 1)) * 100;
+  const renderSlot = (index: number, slot: "left" | "center" | "right") => {
+    const { item, categoryName } = featuredItems[index];
+    const isCenter = slot === "center";
+    return (
+      <div
+        key={`${slot}-${index}`}
+        className="flex-shrink-0 rounded-2xl overflow-hidden"
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          width: CENTER_WIDTH,
+          maxWidth: "85vw",
+          transform: isCenter
+            ? "translateX(-50%)"
+            : slot === "left"
+              ? `translateX(calc(-100% + ${OVERLAP_PX}px)) scale(${SIDE_SCALE})`
+              : `translateX(calc(${OVERLAP_PX}px - 50%)) scale(${SIDE_SCALE})`,
+          transformOrigin: slot === "left" ? "right center" : slot === "right" ? "left center" : "center center",
+          zIndex: isCenter ? 2 : 1,
+        }}
+      >
+        <CardComponent
+          item={item}
+          categoryName={categoryName}
+          currencyCode={currencyCode}
+          imageSource={imageSource}
+          layoutDefinition={featuredLayoutDefinition ?? null}
+        />
+      </div>
+    );
+  };
 
   return (
     <section className="mb-8" aria-label="Destaques">
@@ -131,8 +151,7 @@ export function FeaturedCarouselSection({
       >
         {featuredSectionLabel}
       </h2>
-      <div className="relative group/carousel">
-        {/* Setas: desktop only, discretas (opacity no hover/focus-within) */}
+      <div className="relative group/carousel flex justify-center">
         <button
           type="button"
           onClick={goPrev}
@@ -151,52 +170,52 @@ export function FeaturedCarouselSection({
         </button>
 
         <div
-          ref={carouselRef}
           tabIndex={0}
           role="region"
           aria-label="Destaques"
-          className="flex gap-3.5 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth pb-3 px-4 featured-carousel-scroll"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          className="relative w-full flex justify-center overflow-visible px-4"
+          style={{ minHeight: "320px" }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           onKeyDown={handleKeyDown}
         >
-          {featuredItems.map(({ item, categoryName }, index) => (
-            <div
-              key={item.id}
-              ref={(r) => {
-                cardRefs.current[index] = r;
-              }}
-              className="flex-shrink-0 flex-[0_0_auto] snap-start rounded-2xl"
-              style={{ width: CARD_WIDTH_PEEK }}
-            >
-              <CardComponent
-                item={item}
-                categoryName={categoryName}
-                currencyCode={currencyCode}
-                imageSource={imageSource}
-                layoutDefinition={featuredLayoutDefinition ?? null}
-              />
-            </div>
-          ))}
+          <div className="relative" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "320px" }}>
+            {n === 1 ? (
+              renderSlot(0, "center")
+            ) : (
+              <>
+                {renderSlot(prevIndex, "left")}
+                {renderSlot(activeIndex, "center")}
+                {renderSlot(nextIndex, "right")}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Indicador: progress bar fina estilo Apple */}
-      {total > 1 && (
-        <div className="mt-3 px-4">
-          <div
-            className="h-0.5 w-full rounded-full opacity-25"
-            style={{ backgroundColor: "var(--menu-primary)" }}
-            role="presentation"
-          >
-            <div
-              className="h-full rounded-full transition-[width] duration-300 ease-out"
+      {/* Indicadores: um círculo por registo, destacar o activo */}
+      {n >= 1 && (
+        <div className="flex justify-center gap-1.5 mt-3" role="tablist" aria-label="Posição no carrossel">
+          {featuredItems.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              role="tab"
+              aria-label={`Ir para destaque ${index + 1}`}
+              aria-selected={index === activeIndex}
+              onClick={() => setActiveIndex(index)}
+              className="rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
               style={{
-                width: `${progressPercent}%`,
-                backgroundColor: "var(--menu-primary)",
+                width: index === activeIndex ? 12 : 8,
+                height: index === activeIndex ? 12 : 8,
+                minWidth: index === activeIndex ? 12 : 8,
+                minHeight: index === activeIndex ? 12 : 8,
+                backgroundColor: index === activeIndex ? "var(--menu-primary)" : "transparent",
+                borderColor: index === activeIndex ? "var(--menu-primary)" : "rgba(0,0,0,0.2)",
               }}
             />
-          </div>
+          ))}
         </div>
       )}
     </section>
