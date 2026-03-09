@@ -127,6 +127,8 @@ export type PresentationCardProps = {
   item: PublicMenuItem;
   currencyCode?: string;
   imageSource?: string;
+  /** Quando true, o card renderiza 8 zonas como filhos para subgrid (alinhamento em 2 colunas). */
+  inRowCards?: boolean;
 };
 
 export type FeaturedCardProps = {

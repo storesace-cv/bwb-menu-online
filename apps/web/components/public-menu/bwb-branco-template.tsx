@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import type { PublicMenuPayload, PublicMenuInitialPayload, PublicMenuItem, PublicMenuCategory } from "@/lib/supabase";
 import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getPresentationCardComponent, DEFAULT_PRESENTATION_KEY } from "@/lib/presentation-templates";
@@ -13,7 +13,9 @@ import { scrollToSection } from "@/lib/scroll-to-section";
 
 const FALLBACK_PRIMARY = "#8b6914";
 
-/** Uma linha de 2 cards usando o componente de apresentação escolhido ou layout. */
+const ROW_CARDS_SUBGRID_ROWS = 8;
+
+/** Uma linha de 2 cards usando o componente de apresentação escolhido ou layout. Em 2 colunas usa subgrid para alinhar as zonas (Ingredientes, tempo, alergénios, preço) entre os dois cartões. */
 function RowCards({
   items,
   currencyCode,
@@ -23,29 +25,69 @@ function RowCards({
 }: {
   items: [PublicMenuItem, PublicMenuItem | null];
   currencyCode?: string;
-  CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string; imageSource?: string }>;
+  CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string; imageSource?: string; inRowCards?: boolean }>;
   layoutDefinition?: LayoutDefinition | null;
   imageSource?: string;
 }) {
   const [left, right] = items;
   const useLayout = layoutDefinition != null && Array.isArray(layoutDefinition.zoneOrder) && layoutDefinition.zoneOrder.length > 0;
-  return (
-    <div className="grid grid-cols-2 gap-6">
-      {useLayout ? (
+
+  if (useLayout) {
+    return (
+      <div className="grid grid-cols-2 gap-6">
         <ItemCardFromLayout item={left} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
-      ) : (
-        <CardComponent item={left} currencyCode={currencyCode} imageSource={imageSource} />
-      )}
-      {right ? (
-        useLayout ? (
+        {right ? (
           <ItemCardFromLayout item={right} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
         ) : (
-          <CardComponent item={right} currencyCode={currencyCode} imageSource={imageSource} />
-        )
-      ) : (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 min-h-[200px]" aria-hidden />
-      )}
-    </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 min-h-[200px]" aria-hidden />
+        )}
+      </div>
+    );
+  }
+
+  const leftResult = (
+    <CardComponent item={left} currencyCode={currencyCode} imageSource={imageSource} inRowCards />
+  );
+  const leftArr = React.Children.toArray(leftResult);
+  const leftZones = leftArr.slice(0, ROW_CARDS_SUBGRID_ROWS);
+  const leftModals = leftArr.slice(ROW_CARDS_SUBGRID_ROWS);
+
+  const rightResult = right ? (
+    <CardComponent item={right} currencyCode={currencyCode} imageSource={imageSource} inRowCards />
+  ) : null;
+  const rightArr = rightResult ? React.Children.toArray(rightResult) : [];
+  const rightZones = rightArr.slice(0, ROW_CARDS_SUBGRID_ROWS);
+  const rightModals = rightArr.slice(ROW_CARDS_SUBGRID_ROWS);
+
+  return (
+    <>
+      <div
+        className="grid gap-6"
+        style={{
+          gridTemplateColumns: "1fr 1fr",
+          gridTemplateRows: `repeat(${ROW_CARDS_SUBGRID_ROWS}, auto)`,
+        }}
+      >
+        <div
+          className="min-w-0 rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden"
+          style={{ gridRow: "1 / -1", display: "grid", gridTemplateRows: "subgrid" }}
+        >
+          {leftZones}
+        </div>
+        {right ? (
+          <div
+            className="min-w-0 rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden"
+            style={{ gridRow: "1 / -1", display: "grid", gridTemplateRows: "subgrid" }}
+          >
+            {rightZones}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-gray-200 bg-gray-50 min-h-[200px]" aria-hidden style={{ gridRow: "1 / -1" }} />
+        )}
+      </div>
+      {leftModals}
+      {rightModals}
+    </>
   );
 }
 

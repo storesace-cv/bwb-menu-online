@@ -124,8 +124,20 @@ function ImageIngredientsModal({
   );
 }
 
-/** Card de artigo "Modelo Restaurante 1" — usado no registo de presentation templates. */
-export function ItemCardRestaurante1({ item, currencyCode, imageSource }: { item: PublicMenuItem; currencyCode?: string; imageSource?: string }) {
+const zoneRowClass = "min-h-0";
+
+/** Card de artigo "Modelo Restaurante 1" — usado no registo de presentation templates. Quando inRowCards=true, devolve 8 elementos de zona (para subgrid) e o modal; caso contrário devolve o card completo em <li>. */
+export function ItemCardRestaurante1({
+  item,
+  currencyCode,
+  imageSource,
+  inRowCards,
+}: {
+  item: PublicMenuItem;
+  currencyCode?: string;
+  imageSource?: string;
+  inRowCards?: boolean;
+}) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const imageSrc = getImageSrc(item, imageSource);
@@ -134,6 +146,119 @@ export function ItemCardRestaurante1({ item, currencyCode, imageSource }: { item
     setEffectiveSrc(imageSrc);
   }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
+
+  const modal = (
+    <ImageIngredientsModal
+      open={imageModalOpen}
+      onClose={() => setImageModalOpen(false)}
+      imageSrc={effectiveSrc}
+      imageAlt={item.menu_name ?? ""}
+      ingredientsText={item.menu_ingredients}
+    />
+  );
+
+  if (inRowCards) {
+    return (
+      <>
+        {/* Linha 1: imagem (zona 1) */}
+        <div className={`overflow-hidden ${zoneRowClass}`}>
+          <button
+            type="button"
+            onClick={() => setImageModalOpen(true)}
+            className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
+            aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
+          >
+            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
+          </button>
+        </div>
+        {/* Linha 2: ícones (A) */}
+        <div className={`px-3 pt-2 flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] ${zoneRowClass}`}>
+          {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
+          {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
+          {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
+        </div>
+        {/* Linha 3: nome (B) */}
+        <div className={`px-3 ${zoneRowClass}`}>
+          <h3 className="font-bold text-lg text-gray-900 text-left mt-0.5 m-0">{item.menu_name}</h3>
+        </div>
+        {/* Linha 4: descrição */}
+        <div className={`px-3 ${zoneRowClass}`}>
+          {item.menu_description ? (
+            <p className="mt-0.5 text-gray-600 text-sm leading-relaxed text-left m-0">{item.menu_description}</p>
+          ) : (
+            <span className="block min-h-[1em]" aria-hidden />
+          )}
+        </div>
+        {/* Linha 5: Ingredientes (C) */}
+        <div className={`px-3 ${zoneRowClass}`}>
+          <div className="mt-1">
+            <button
+              type="button"
+              onClick={() => setIngredientsOpen((o) => !o)}
+              className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+              aria-expanded={ingredientsOpen}
+            >
+              <span>Ingredientes</span>
+              <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
+            </button>
+            {ingredientsOpen && (
+              <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
+            )}
+          </div>
+        </div>
+        {/* Linha 6: tempo de preparação (D) */}
+        <div className={`px-3 ${zoneRowClass}`}>
+          {item.prep_minutes != null ? (
+            <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+              <MenuIcon code="prep-time" size={18} />
+              <span>{item.prep_minutes}&apos;</span>
+            </div>
+          ) : (
+            <span className="block min-h-[1.5rem]" aria-hidden />
+          )}
+        </div>
+        {/* Linha 7: alergénios (E) */}
+        <div className={`px-3 ${zoneRowClass}`}>
+          {item.allergens && item.allergens.length > 0 ? (
+            <div className="mt-1 flex flex-wrap gap-1 items-center">
+              <span className="text-xs text-gray-500 mr-1">Alergénios:</span>
+              {item.allergens.map((a) => {
+                const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
+                const label = getAllergenLabel(a);
+                const badgeClass = SEVERITY_CLASSES[severity] ?? SEVERITY_CLASSES[2];
+                return (
+                  <span
+                    key={a.code}
+                    className={`text-xs px-1.5 py-0.5 rounded ${badgeClass}`}
+                  >
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <span className="block min-h-[1.5rem]" aria-hidden />
+          )}
+        </div>
+        {/* Linha 8: preço antigo + preço (F+G) */}
+        <div className={`px-3 pb-3 ${zoneRowClass}`}>
+          <div className={`mt-2 flex items-center gap-4 ${item.is_promotion && item.price_old != null ? "" : "justify-end"}`}>
+            {item.is_promotion && (item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)) != null && (
+              <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
+                {item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)}
+              </div>
+            )}
+            {(item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null && (
+              <div className={`font-bold text-right shrink-0 ${item.is_promotion ? "text-lg text-amber-700" : "text-base text-gray-900"}`}>
+                {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
+              </div>
+            )}
+          </div>
+        </div>
+        {modal}
+      </>
+    );
+  }
 
   return (
     <li className="list-none h-full flex">
@@ -208,13 +333,7 @@ export function ItemCardRestaurante1({ item, currencyCode, imageSource }: { item
           </div>
         </div>
       </article>
-      <ImageIngredientsModal
-        open={imageModalOpen}
-        onClose={() => setImageModalOpen(false)}
-        imageSrc={effectiveSrc}
-        imageAlt={item.menu_name ?? ""}
-        ingredientsText={item.menu_ingredients}
-      />
+      {modal}
     </li>
   );
 }
