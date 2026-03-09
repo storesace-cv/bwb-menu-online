@@ -124,13 +124,13 @@ export function ItemCardDestaque1({
           className="absolute w-0 h-0 opacity-0 pointer-events-none"
           onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
         />
-        {/* Fundo: imagem do artigo em cover + overlay em gradiente por cima para escurecer e garantir legibilidade do texto (independente da config em Modelos de apresentação de Destaques). */}
+        {/* Fundo: apenas imagem do artigo em cover (overlay removido para validação). */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent), url(${effectiveSrc})`,
-            backgroundSize: "cover, cover",
-            backgroundPosition: "center, center",
+            backgroundImage: `url(${effectiveSrc})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
           aria-hidden
         />
