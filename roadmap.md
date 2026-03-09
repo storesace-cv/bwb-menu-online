@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (URL imagem Storage com bucket; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (imagem destaque sempre cover; deploy e verificação no container).
 
 ---
 
@@ -94,6 +94,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Resiliência página Gestão de Imagens:** A página `/portal-admin/settings/image-import` passou a ser resiliente a falhas de fetch e dados inesperados: try/catch em volta de todo o corpo da página (com fallback "Não foi possível carregar" e link Voltar às Definições); normalização de `storeId` via `normalizeStoreId` (string, array ou null do RPC); query a `store_settings` com `maybeSingle()` e verificação de erro antes de usar `settings.image_source`; no cliente, `initialImageSource` opcional e `normalizeImageSource` com fallback `"storage"`, evitando error boundary e "Fetch failed" em pedidos RSC.
 - **Preço como texto pré-formatado (hidratação #418/#423):** Para eliminar erros de hidratação no menu público, o preço passou a ser tratado como um único texto (valor + moeda) gerado no servidor. Em `getPublicMenuByHostname` o payload é enriquecido com `menu_price_display` e `price_old_display` por item (via `formatPrice` no servidor); tipo `PublicMenuItem` com estes campos opcionais. Os três cards (ItemCardRestaurante1, ItemCardFromLayout, ItemCardDestaque1) usam essas strings quando existem, com fallback para `formatPrice` no cliente; o cliente deixa de formatar preços na renderização inicial, evitando mismatch servidor/cliente.
 - **URL da imagem no menu público (bucket menu-images):** O URL do Supabase Storage para imagens importadas omitia o nome do bucket; o formato correto é `.../storage/v1/object/public/menu-images/{path}`. Em `getImageSrc` (item-card-restaurante-1.tsx) passou a usar a constante `MENU_IMAGES_BUCKET` e a função `storageUrl(path, suffix)` para incluir `menu-images/` no URL; o editor de item (edit-item-form.tsx) usa o mesmo formato no thumbnail. A imagem do artigo carrega correctamente e o fallback por `onError` deixa de alterar o DOM no cliente, eliminando o mismatch de hidratação #418/#423 causado pela imagem.
+- **Imagem do artigo em Destaques sempre em estilo cover:** Nos modelos de apresentação de Destaques (carrossel no topo do menu), a imagem do artigo é sempre apresentada como background em estilo "cover" (e centralizada), independentemente da configuração em Definições → Modelos de apresentação de Destaques. Em `item-card-destaque-1.tsx` o estilo foi fixado com inline `backgroundSize: "cover"` e `backgroundPosition: "center"` na div do background, e documentado em comentário e JSDoc.
 
 ---
 

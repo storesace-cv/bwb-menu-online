@@ -90,7 +90,7 @@ function ImageIngredientsModal({
 
 const DEFAULT_CANVAS_HEIGHT = 560;
 
-/** Card de destaque "Modelo Destaque 1" — imagem de fundo + overlay (nome, ingredientes, badges, preço). */
+/** Card de destaque "Modelo Destaque 1" — imagem de fundo + overlay (nome, ingredientes, badges, preço). A imagem do artigo é sempre apresentada como background em estilo cover (e centralizada), independentemente da configuração em Modelos de apresentação de Destaques. */
 export function ItemCardDestaque1({
   item,
   categoryName,
@@ -124,9 +124,14 @@ export function ItemCardDestaque1({
           className="absolute w-0 h-0 opacity-0 pointer-events-none"
           onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
         />
+        {/* Imagem sempre como background em estilo cover, independentemente do layout configurado no portal. */}
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${effectiveSrc})` }}
+          style={{
+            backgroundImage: `url(${effectiveSrc})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
           aria-hidden
         />
         <div
