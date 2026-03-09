@@ -24,6 +24,26 @@ export default async function AISettingsPage() {
     );
   }
 
+  const { data: usesPlatformAi } = await supabase.rpc("store_uses_platform_ai", {
+    p_store_id: storeId,
+  });
+
+  if (usesPlatformAi) {
+    return (
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-100 mb-2">ChatGPT / Grok</h1>
+        <p className="text-slate-400 mb-6">
+          A configuração de ChatGPT / Grok é gerida pelo gestor da aplicação.
+        </p>
+        <p>
+          <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">
+            ← Voltar a Definições
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">ChatGPT / Grok</h1>

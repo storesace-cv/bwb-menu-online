@@ -1,6 +1,6 @@
 /**
- * Server-only: encrypt/decrypt secrets per store (e.g. NET-BO password, api_token).
- * Uses AES-256-GCM with key derived from ENCRYPTION_MASTER_KEY + storeId.
+ * Server-only: encrypt/decrypt secrets per store (e.g. NET-BO password, api_token) or platform context.
+ * Uses AES-256-GCM with key derived from ENCRYPTION_MASTER_KEY + context (storeId or platform constant).
  * Never import this module in client code.
  */
 
@@ -13,6 +13,9 @@ const TAG_LEN = 16;
 const SALT_PREFIX = "bwb-store:";
 const ITERATIONS = 100000;
 
+/** Context for platform-level secrets (e.g. platform AI API keys). Use this instead of storeId when encrypting/decrypting platform_ai_settings keys. */
+export const PLATFORM_AI_CONTEXT = "platform";
+
 function getMasterKey(): Buffer {
   const key = process.env.ENCRYPTION_MASTER_KEY;
   if (!key || key.length < 32) {
@@ -21,17 +24,17 @@ function getMasterKey(): Buffer {
   return Buffer.from(key, "utf8");
 }
 
-function deriveKey(storeId: string): Buffer {
+function deriveKey(context: string): Buffer {
   const master = getMasterKey();
-  const salt = Buffer.from(SALT_PREFIX + storeId, "utf8");
+  const salt = Buffer.from(SALT_PREFIX + context, "utf8");
   return pbkdf2Sync(master, salt, ITERATIONS, KEY_LEN, "sha256");
 }
 
 /**
- * Encrypt plaintext for the given store. Returns base64 string (iv + ciphertext + tag).
+ * Encrypt plaintext for the given context (storeId or PLATFORM_AI_CONTEXT). Returns base64 string (iv + ciphertext + tag).
  */
-export function encryptSecret(plaintext: string, storeId: string): string {
-  const key = deriveKey(storeId);
+export function encryptSecret(plaintext: string, context: string): string {
+  const key = deriveKey(context);
   const iv = randomBytes(IV_LEN);
   const cipher = createCipheriv(ALG, key, iv);
   const enc = Buffer.concat([
@@ -43,10 +46,10 @@ export function encryptSecret(plaintext: string, storeId: string): string {
 }
 
 /**
- * Decrypt ciphertext (base64: iv + ciphertext + tag) for the given store.
+ * Decrypt ciphertext (base64: iv + ciphertext + tag) for the given context (storeId or PLATFORM_AI_CONTEXT).
  */
-export function decryptSecret(ciphertext: string, storeId: string): string {
-  const key = deriveKey(storeId);
+export function decryptSecret(ciphertext: string, context: string): string {
+  const key = deriveKey(context);
   const buf = Buffer.from(ciphertext, "base64");
   if (buf.length < IV_LEN + TAG_LEN + 1) {
     throw new Error("Invalid ciphertext");

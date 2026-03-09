@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase-server";
-import { decryptSecret } from "@/lib/credentials-crypto";
+import { decryptSecret, PLATFORM_AI_CONTEXT } from "@/lib/credentials-crypto";
 import { generateDescription } from "@/lib/server/ai";
 
 export const dynamic = "force-dynamic";
@@ -66,23 +66,54 @@ export async function POST(request: NextRequest) {
     serviceKey
   );
 
-  const { data: settingsRow } = await supabase
-    .from("store_settings")
-    .select("settings")
-    .eq("store_id", storeId)
-    .maybeSingle();
+  const { data: usesPlatformAi } = await supabase.rpc("store_uses_platform_ai", {
+    p_store_id: storeId,
+  });
 
-  const { data: secretsRow } = await supabase
-    .from("store_secrets")
-    .select("openai_api_key_enc, xai_api_key_enc")
-    .eq("store_id", storeId)
-    .maybeSingle();
+  let aiEnabled: boolean;
+  let provider: "openai" | "xai" | null;
+  let encryptedKey: string | null | undefined;
+  let settings: Record<string, unknown>;
 
-  const settings = (settingsRow?.settings as Record<string, unknown>) ?? {};
-  const aiEnabled = !!settings.ai_enabled;
-  const provider = (settings.ai_provider === "openai" || settings.ai_provider === "xai")
-    ? settings.ai_provider
-    : null;
+  if (usesPlatformAi) {
+    const { data: platformRow } = await supabase
+      .from("platform_ai_settings")
+      .select("ai_enabled, ai_provider, ai_model, ai_temperature, ai_max_chars, ai_tone, openai_api_key_enc, xai_api_key_enc")
+      .eq("id", 1)
+      .maybeSingle();
+    aiEnabled = !!platformRow?.ai_enabled;
+    provider = (platformRow?.ai_provider === "openai" || platformRow?.ai_provider === "xai")
+      ? platformRow.ai_provider
+      : null;
+    encryptedKey = provider === "openai" ? platformRow?.openai_api_key_enc : platformRow?.xai_api_key_enc;
+    settings = {
+      ai_model: platformRow?.ai_model,
+      ai_tone: platformRow?.ai_tone,
+      ai_max_chars: platformRow?.ai_max_chars,
+    };
+  } else {
+    const { data: settingsRow } = await supabase
+      .from("store_settings")
+      .select("settings")
+      .eq("store_id", storeId)
+      .maybeSingle();
+
+    const { data: secretsRow } = await supabase
+      .from("store_secrets")
+      .select("openai_api_key_enc, xai_api_key_enc")
+      .eq("store_id", storeId)
+      .maybeSingle();
+
+    settings = (settingsRow?.settings as Record<string, unknown>) ?? {};
+    aiEnabled = !!settings.ai_enabled;
+    provider = (settings.ai_provider === "openai" || settings.ai_provider === "xai")
+      ? settings.ai_provider
+      : null;
+    encryptedKey =
+      provider === "openai"
+        ? secretsRow?.openai_api_key_enc
+        : secretsRow?.xai_api_key_enc;
+  }
 
   if (!aiEnabled || !provider) {
     return NextResponse.json(
@@ -91,10 +122,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const encryptedKey =
-    provider === "openai"
-      ? secretsRow?.openai_api_key_enc
-      : secretsRow?.xai_api_key_enc;
   if (!encryptedKey) {
     return NextResponse.json(
       { error: "Chave API não configurada para o provider selecionado." },
@@ -120,9 +147,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const decryptContext = usesPlatformAi ? PLATFORM_AI_CONTEXT : storeId;
   let apiKey: string;
   try {
-    apiKey = decryptSecret(encryptedKey, storeId);
+    apiKey = decryptSecret(encryptedKey, decryptContext);
   } catch {
     return NextResponse.json(
       { error: "Não foi possível usar a chave API (configuração de cifragem)." },
