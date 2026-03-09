@@ -358,7 +358,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
       {/* Hero (logo + text banner) */}
       {(heroLogoUrl || heroText) && (
         <section
-          className="mb-8 p-6 rounded-xl text-gray-800 text-center flex flex-col items-center justify-center gap-4"
+          className="p-4 rounded-xl text-gray-800 text-center flex flex-col items-center justify-center"
           style={{ backgroundColor: "color-mix(in srgb, var(--menu-primary) 12%, white)" }}
         >
           {heroLogoUrl ? (
