@@ -12,7 +12,7 @@ export type FeaturedItemWithCategory = {
 
 const CENTER_WIDTH = "min(320px, 85vw)";
 const SIDE_SCALE = 0.88;
-const OVERLAP_PX = 60;
+const OVERLAP_PX = 30;
 
 function ChevronLeft({ className }: { className?: string }) {
   return (
@@ -127,7 +127,7 @@ export function FeaturedCarouselSection({
             ? "translateX(-50%)"
             : slot === "left"
               ? `translateX(calc(-100% + ${OVERLAP_PX}px)) scale(${SIDE_SCALE})`
-              : `translateX(calc(${OVERLAP_PX}px - 50%)) scale(${SIDE_SCALE})`,
+              : `translateX(${OVERLAP_PX}px) scale(${SIDE_SCALE})`,
           transformOrigin: slot === "left" ? "right center" : slot === "right" ? "left center" : "center center",
           zIndex: isCenter ? 2 : 1,
         }}
