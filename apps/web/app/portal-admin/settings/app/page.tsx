@@ -4,7 +4,6 @@ import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
 import { SettingsForm } from "../settings-form";
 import { IntegrationForm } from "../integration-form";
-import { Card } from "@/components/admin";
 
 export default async function ParamsAppPage() {
   const headersList = await headers();
@@ -42,7 +41,7 @@ export default async function ParamsAppPage() {
   const lastRun = lastRunRow ?? null;
 
   return (
-    <div>
+    <div className="max-w-6xl">
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Parâmetros App</h1>
       <p className="text-slate-400 mb-2">Tema e branding para o menu público desta loja. {store?.name && `Loja: ${store.name}`}</p>
       <p className="mb-6">
@@ -52,11 +51,10 @@ export default async function ParamsAppPage() {
         {" · "}
         <Link href="/portal-admin/sync" className="text-emerald-400 hover:text-emerald-300">Sync</Link>
       </p>
-      <Card>
-        <SettingsForm
-          storeId={storeId}
-          featuredTemplates={featuredTemplates ?? []}
-          initial={{
+      <SettingsForm
+        storeId={storeId}
+        featuredTemplates={featuredTemplates ?? []}
+        initial={{
             store_display_name: settings.store_display_name ?? "",
             primary_color: settings.primary_color ?? "",
             logo_url: settings.logo_url ?? "",
@@ -82,8 +80,7 @@ export default async function ParamsAppPage() {
             featured_section_label: settings.featured_section_label ?? "",
             featured_template_key: settings.featured_template_key ?? "modelo-destaque-1",
           }}
-        />
-      </Card>
+      />
 
       <div className="mt-6">
         <IntegrationForm storeId={storeId} lastRun={lastRun} />

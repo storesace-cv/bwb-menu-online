@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
 import { ItemActions } from "./item-actions";
 import { MenuIcon } from "@/components/menu-icons";
 import { BwbTable, Button } from "@/components/admin";
@@ -243,6 +244,7 @@ export function ItemsListClient({
     }
   };
 
+  const router = useRouter();
   const [batchState, batchFormAction] = useFormState(batchUpdateItemsSectionCategory, null);
 
   useEffect(() => {
@@ -251,8 +253,9 @@ export function ItemsListClient({
       setSelectedIds(new Set());
       setBatchSectionId("");
       setBatchCategoryId("");
+      router.refresh();
     }
-  }, [batchState?.success]);
+  }, [batchState?.success, router]);
 
   const columns: ColumnDef<Item>[] = useMemo(
     () => [

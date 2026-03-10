@@ -210,25 +210,42 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
 
   const categoriesBySection = useMemo(() => {
     const sections = menu.sections ?? [];
+    const withItems = (c: PublicMenuCategory) => (c.items?.length ?? 0) > 0;
     const result: { sectionId: string | null; sectionName: string; categories: typeof filteredCategories }[] = [];
     if (sections.length === 0) {
-      if (filteredCategories.length > 0) {
-        result.push({ sectionId: null, sectionName: "Menu", categories: filteredCategories });
+      const cats = filteredCategories.filter(withItems);
+      if (cats.length > 0) {
+        result.push({ sectionId: null, sectionName: "Menu", categories: cats });
       }
       return result;
     }
     for (const sec of sections) {
-      const cats = filteredCategories.filter((c) => c.section_id === sec.id);
+      const cats = filteredCategories.filter((c) => c.section_id === sec.id && withItems(c));
       if (cats.length > 0) {
         result.push({ sectionId: sec.id, sectionName: sec.name, categories: cats });
       }
     }
-    const uncategorized = filteredCategories.filter((c) => !c.section_id);
+    const uncategorized = filteredCategories.filter((c) => !c.section_id && withItems(c));
     if (uncategorized.length > 0) {
       result.push({ sectionId: null, sectionName: "Outros", categories: uncategorized });
     }
     return result;
   }, [menu.sections, filteredCategories]);
+
+  const firstSectionId = (menu.sections ?? [])[0]?.id ?? null;
+  const sectionHasItems = useMemo(() => {
+    const out: Record<string, boolean> = {};
+    const initial = menu.categories ?? [];
+    for (const sec of menu.sections ?? []) {
+      const cats =
+        sec.id === firstSectionId
+          ? initial.filter((c) => c.section_id === sec.id)
+          : extraSectionCategories[sec.id] ?? [];
+      const hasData = sec.id === firstSectionId || sec.id in extraSectionCategories;
+      out[sec.id] = hasData ? cats.some((c) => (c.items?.length ?? 0) > 0) : true;
+    }
+    return out;
+  }, [menu.sections, menu.categories, firstSectionId, extraSectionCategories]);
 
   const currentSectionName = useMemo(() => {
     const norm = (id: string | null) => id ?? "none";
@@ -342,7 +359,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           onClick={() => setReservationModalOpen(false)}
         >
           <div
-            className="bg-white p-6 rounded-xl max-w-sm w-[90%] shadow-xl"
+            className="bg-white p-6 rounded-xl w-[90%] md:max-w-[25vw] shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="reservation-modal-title" className="mt-0 text-lg font-semibold">Reservar uma mesa</h3>
@@ -579,17 +596,22 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         ariaLabel="Escolher secção do menu"
       >
         <ul className="list-none p-4 m-0 space-y-1">
-          {(menu.sections ?? []).map((sec) => (
-            <li key={sec.id}>
-              <button
-                type="button"
-                className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 min-h-[44px]"
-                onClick={() => handleSelectSection(sec.id)}
-              >
-                {sec.name}
-              </button>
-            </li>
-          ))}
+          {(menu.sections ?? []).map((sec) => {
+            const disabled = sectionHasItems[sec.id] === false;
+            return (
+              <li key={sec.id}>
+                <button
+                  type="button"
+                  disabled={disabled}
+                  aria-disabled={disabled}
+                  className={`w-full text-left py-3 px-4 rounded-lg min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-400 ${disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-100 focus:bg-gray-100"}`}
+                  onClick={() => !disabled && handleSelectSection(sec.id)}
+                >
+                  {sec.name}
+                </button>
+              </li>
+            );
+          })}
           {(!menu.sections || menu.sections.length === 0) && (
             <li className="py-3 text-gray-500 text-sm">Nenhuma secção disponível.</li>
           )}

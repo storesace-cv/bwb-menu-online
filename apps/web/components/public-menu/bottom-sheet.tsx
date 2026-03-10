@@ -57,7 +57,7 @@ export function BottomSheet({ open, onClose, title, children, ariaLabel }: Botto
 
   const content = (
     <div
-      className="fixed inset-0 flex flex-col justify-end"
+      className="fixed inset-0 flex flex-col justify-end md:items-end"
       style={{ zIndex: BOTTOM_SHEET_Z }}
       aria-modal="true"
       aria-label={ariaLabel ?? title}
@@ -70,16 +70,19 @@ export function BottomSheet({ open, onClose, title, children, ariaLabel }: Botto
         onClick={onClose}
       />
       <div
-        ref={panelRef}
-        className={`relative bg-white rounded-t-2xl shadow-xl max-h-[85vh] flex flex-col overflow-hidden ${
-          prefersReducedMotion ? "" : "transition-transform duration-200 ease-out"
-        }`}
-        style={{
-          paddingBottom: "env(safe-area-inset-bottom, 0)",
-          transform: prefersReducedMotion ? undefined : mounted ? "translateY(0)" : "translateY(100%)",
-        }}
-        onClick={(e) => e.stopPropagation()}
+        className="w-full md:w-[25vw] md:max-w-[25vw]"
       >
+        <div
+          ref={panelRef}
+          className={`relative bg-white rounded-t-2xl shadow-xl max-h-[85vh] flex flex-col overflow-hidden w-full ${
+            prefersReducedMotion ? "" : "transition-transform duration-200 ease-out"
+          }`}
+          style={{
+            paddingBottom: "env(safe-area-inset-bottom, 0)",
+            transform: prefersReducedMotion ? undefined : mounted ? "translateY(0)" : "translateY(100%)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
         <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 m-0">{title}</h2>
           <button
@@ -92,6 +95,7 @@ export function BottomSheet({ open, onClose, title, children, ariaLabel }: Botto
           </button>
         </div>
         <div className="overflow-y-auto flex-1 overscroll-contain">{children}</div>
+        </div>
       </div>
     </div>
   );
