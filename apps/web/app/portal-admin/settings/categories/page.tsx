@@ -34,6 +34,20 @@ export default async function CategoriesPage() {
     .eq("store_id", storeId)
     .order("sort_order");
 
+  type CategoryItem = { id: string; name: string; sort_order: number; section_id: string | null; presentation_template_id?: string | null };
+  const categoriesBySectionId = new Map<string, CategoryItem[]>();
+  for (const c of categories ?? []) {
+    if (c.section_id) {
+      const list = categoriesBySectionId.get(c.section_id) ?? [];
+      list.push(c);
+      categoriesBySectionId.set(c.section_id, list);
+    }
+  }
+  for (const list of categoriesBySectionId.values()) {
+    list.sort((a, b) => a.sort_order - b.sort_order);
+  }
+  const uncategorized = (categories ?? []).filter((c) => !c.section_id);
+
   const { data: presentationTemplates } = await supabase
     .from("menu_presentation_templates")
     .select("id, name")
@@ -84,11 +98,48 @@ export default async function CategoriesPage() {
         <h2 className="text-lg font-medium text-slate-200 mb-4">Lista de categorias</h2>
         <Card>
           {categories && categories.length > 0 ? (
-            <ul className="list-none pl-0">
-              {categories.map((c) => (
-                <CategoryRow key={c.id} category={c} sections={sections ?? []} presentationTemplates={presentationTemplates ?? []} />
-              ))}
-            </ul>
+            <div className="list-none pl-0" aria-label="Categorias agrupadas por secção">
+              {sections?.map((s) => {
+                const sectionCategories = categoriesBySectionId.get(s.id) ?? [];
+                if (sectionCategories.length === 0) return null;
+                return (
+                  <div key={s.id} className="pb-4 last:pb-0">
+                    <div className="font-medium text-slate-200 pt-4 first:pt-0">{s.name}</div>
+                    <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
+                    <ul className="list-none pl-0">
+                      {sectionCategories.map((c) => (
+                        <CategoryRow
+                          key={c.id}
+                          category={c}
+                          sections={sections ?? []}
+                          presentationTemplates={presentationTemplates ?? []}
+                          showTreePrefix
+                        />
+                      ))}
+                    </ul>
+                    <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
+                  </div>
+                );
+              })}
+              {uncategorized.length > 0 && (
+                <div className="pb-4 last:pb-0 pt-4">
+                  <div className="font-medium text-slate-200">Sem secção</div>
+                  <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
+                  <ul className="list-none pl-0">
+                    {uncategorized.map((c) => (
+                      <CategoryRow
+                        key={c.id}
+                        category={c}
+                        sections={sections ?? []}
+                        presentationTemplates={presentationTemplates ?? []}
+                        showTreePrefix
+                      />
+                    ))}
+                  </ul>
+                  <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
+                </div>
+              )}
+            </div>
           ) : (
             <p className="text-slate-500 py-4">Nenhuma categoria. Crie uma acima.</p>
           )}

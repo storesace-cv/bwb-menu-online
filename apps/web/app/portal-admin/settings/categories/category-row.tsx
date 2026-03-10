@@ -13,10 +13,12 @@ export function CategoryRow({
   category,
   sections,
   presentationTemplates,
+  showTreePrefix = false,
 }: {
   category: Category;
   sections: Section[];
   presentationTemplates: PresentationTemplate[];
+  showTreePrefix?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateCategory, null);
@@ -66,6 +68,9 @@ export function CategoryRow({
 
   return (
     <li className="flex items-center gap-3 py-4 border-b border-slate-700 last:border-b-0">
+      {showTreePrefix && (
+        <span className="font-mono text-sm whitespace-pre text-slate-500">      |-----→    </span>
+      )}
       <span className="text-slate-200 font-medium">{category.name}</span>
       <span className="text-slate-500 text-sm">secção: {sectionName}</span>
       <span className="text-slate-500 text-sm">modelo: {templateName}</span>
