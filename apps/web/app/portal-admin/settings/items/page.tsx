@@ -76,12 +76,18 @@ export default async function SettingsItemsPage() {
     .order("sort_order");
 
   const itemIds = (items ?? []).map((i) => i.id);
-  const { data: mciRows } = itemIds.length > 0
-    ? await supabase
+  const MCI_BATCH_SIZE = 200;
+  let mciRows: { menu_item_id: string; category_id: string }[] = [];
+  if (itemIds.length > 0) {
+    for (let i = 0; i < itemIds.length; i += MCI_BATCH_SIZE) {
+      const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
+      const { data: batch } = await supabase
         .from("menu_category_items")
         .select("menu_item_id, category_id")
-        .in("menu_item_id", itemIds)
-    : { data: [] as { menu_item_id: string; category_id: string }[] };
+        .in("menu_item_id", chunk);
+      mciRows = mciRows.concat(batch ?? []);
+    }
+  }
 
   const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
   const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
