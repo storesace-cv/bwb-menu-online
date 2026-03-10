@@ -419,6 +419,50 @@ export async function createCategory(_prev: { error?: string } | null, formData:
   return null;
 }
 
+export async function createCategoryAndReturnId(params: {
+  storeId: string;
+  sectionId: string;
+  name: string;
+}): Promise<{ categoryId?: string; error?: string }> {
+  const supabase = await createClient();
+  const storeId = (params.storeId ?? "").trim();
+  const sectionId = (params.sectionId ?? "").trim();
+  const name = (params.name ?? "").trim();
+  if (!storeId || !sectionId || !name) return { error: "Loja, secção e nome são obrigatórios." };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+  if (!hasAccess) return { error: "Sem acesso a esta loja." };
+  const { data: sectionRow } = await supabase
+    .from("menu_sections")
+    .select("store_id")
+    .eq("id", sectionId)
+    .eq("store_id", storeId)
+    .single();
+  if (!sectionRow) return { error: "Secção não encontrada ou não pertence à loja." };
+  const { data: maxOrder } = await supabase
+    .from("menu_categories")
+    .select("sort_order")
+    .eq("section_id", sectionId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const sortOrder = (maxOrder?.sort_order ?? -1) + 1;
+  const { data: newCat, error } = await supabase
+    .from("menu_categories")
+    .insert({
+      store_id: storeId,
+      section_id: sectionId,
+      name,
+      sort_order: sortOrder,
+    })
+    .select("id")
+    .single();
+  if (error || !newCat) return { error: error?.message ?? "Não foi possível criar a categoria." };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/items");
+  revalidatePath("/portal-admin/settings/categories");
+  return { categoryId: newCat.id };
+}
+
 export async function updateSection(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const id = (formData.get("id") as string)?.trim() ?? "";

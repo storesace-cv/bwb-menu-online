@@ -5,8 +5,18 @@ import Link from "next/link";
 import { EditItemForm } from "../../edit-item-form";
 import { Card } from "@/components/admin";
 
-export default async function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditItemPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const highlightCategoryId = typeof resolvedSearchParams?.highlightCategory === "string"
+    ? resolvedSearchParams.highlightCategory
+    : null;
   const headersList = await headers();
   const host = getPortalHost(headersList);
   const supabase = await createClient();
@@ -81,6 +91,15 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
   const currentSectionId = firstCategory?.section_id ?? null;
   const currentCategoryId = firstCategoryId;
 
+  const { data: familiaRows } = await supabase.rpc("get_import_familia_for_store", { p_store_id: storeId });
+  let familia: string | null = null;
+  let subFamilia: string | null = null;
+  const itemFamiliaRow = (familiaRows ?? []).find((r: { menu_item_id: string }) => r.menu_item_id === id);
+  if (itemFamiliaRow) {
+    familia = (itemFamiliaRow as { familia: string | null }).familia ?? null;
+    subFamilia = (itemFamiliaRow as { sub_familia: string | null }).sub_familia ?? null;
+  }
+
   const { data: aiEnabledRpc } = await supabase.rpc("store_can_use_ai_description", {
     p_store_id: storeId,
   });
@@ -113,6 +132,9 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
           aiEnabled={aiEnabled}
           allergens={allergens ?? []}
           selectedAllergenIds={selectedAllergenIds}
+          familia={familia}
+          subFamilia={subFamilia}
+          highlightCategoryId={highlightCategoryId}
         />
       </Card>
     </div>

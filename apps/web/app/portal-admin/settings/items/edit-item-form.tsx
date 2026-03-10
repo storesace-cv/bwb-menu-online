@@ -3,7 +3,8 @@
 import { useFormState } from "react-dom";
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { updateMenuItem } from "../../actions";
+import { useRouter } from "next/navigation";
+import { updateMenuItem, createCategoryAndReturnId } from "../../actions";
 import { Input, Select, Button, Alert } from "@/components/admin";
 import { GenerateDescriptionBlock } from "./generate-description-block";
 import { AllergenChecklist, type AllergenOption } from "./allergen-checklist";
@@ -64,6 +65,9 @@ export function EditItemForm({
   aiEnabled,
   allergens,
   selectedAllergenIds,
+  familia,
+  subFamilia,
+  highlightCategoryId,
 }: {
   item: MenuItem;
   articleTypes: ArticleType[];
@@ -75,14 +79,71 @@ export function EditItemForm({
   aiEnabled: boolean;
   allergens: AllergenOption[];
   selectedAllergenIds: string[];
+  familia: string | null;
+  subFamilia: string | null;
+  highlightCategoryId: string | null;
 }) {
+  const router = useRouter();
   const [state, formAction] = useFormState(updateMenuItem, null);
   const [isPromotion, setIsPromotion] = useState(item.is_promotion);
+  const [sectionId, setSectionId] = useState<string>(currentSectionId ?? "");
+  const [categoryId, setCategoryId] = useState<string>(highlightCategoryId ?? currentCategoryId ?? "");
+  const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
+  const [createCategoryName, setCreateCategoryName] = useState(subFamilia ?? "");
+  const [createCategoryError, setCreateCategoryError] = useState<string | null>(null);
+  const [createCategoryPending, setCreateCategoryPending] = useState(false);
   const nameRef = useRef<HTMLTextAreaElement>(null);
   const ingredientsRef = useRef<HTMLTextAreaElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
 
   const previewUrl = imagePreviewUrl(item);
+
+  function handleFamiliaClick() {
+    if (!sectionId) {
+      alert("Seleccione primeiro uma secção.");
+      return;
+    }
+    const familiaNorm = (familia ?? "").trim().toLowerCase();
+    if (!familiaNorm) {
+      alert("Este artigo não tem família definida na importação.");
+      return;
+    }
+    const exists = categories.some(
+      (c) => c.section_id === sectionId && (c.name ?? "").trim().toLowerCase() === familiaNorm
+    );
+    if (exists) {
+      alert("Já existe uma categoria com o mesmo nome.");
+      return;
+    }
+    setCreateCategoryName(subFamilia ?? "");
+    setCreateCategoryError(null);
+    setCreateCategoryModalOpen(true);
+  }
+
+  async function handleCreateCategoryConfirm() {
+    const name = createCategoryName.trim();
+    if (!name) {
+      setCreateCategoryError("O nome da categoria é obrigatório.");
+      return;
+    }
+    setCreateCategoryPending(true);
+    setCreateCategoryError(null);
+    try {
+      const result = await createCategoryAndReturnId({ storeId, sectionId, name });
+      if (result.error) {
+        setCreateCategoryError(result.error);
+        setCreateCategoryPending(false);
+        return;
+      }
+      if (result.categoryId) {
+        setCreateCategoryModalOpen(false);
+        router.replace(`/portal-admin/settings/items/${item.id}/edit?highlightCategory=${result.categoryId}`);
+      }
+    } catch (e) {
+      setCreateCategoryError("Erro ao criar a categoria. Tente novamente.");
+    }
+    setCreateCategoryPending(false);
+  }
 
   return (
     <form action={formAction} className="flex flex-col gap-4 max-w-2xl">
@@ -183,13 +244,30 @@ export function EditItemForm({
       {/* 4a. Alergénios */}
       <AllergenChecklist allergens={allergens} selectedIds={selectedAllergenIds} />
 
-      {/* 4b. Secção + Categoria (mesma linha) */}
+      {/* 4b. Familia + Secção, Sub familia + Categoria */}
       <div className="flex flex-wrap gap-4 items-end">
+        <div className="w-full sm:w-auto">
+          <label className="block text-sm font-medium text-slate-300 mb-1">Familia</label>
+          <p className="text-slate-200 text-sm py-1.5">
+            {(familia ?? "").trim() ? (
+              <button
+                type="button"
+                onClick={handleFamiliaClick}
+                className="underline cursor-pointer hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded"
+              >
+                {familia}
+              </button>
+            ) : (
+              "—"
+            )}
+          </p>
+        </div>
         <Select
           id="edit-section"
           name="section_id"
           label="Secção"
-          defaultValue={currentSectionId ?? ""}
+          value={sectionId}
+          onChange={(e) => setSectionId(e.target.value)}
         >
           <option value="">— Nenhuma —</option>
           {sections.map((s) => (
@@ -198,11 +276,18 @@ export function EditItemForm({
             </option>
           ))}
         </Select>
+      </div>
+      <div className="flex flex-wrap gap-4 items-end">
+        <div className="w-full sm:w-auto">
+          <label className="block text-sm font-medium text-slate-300 mb-1">Sub familia</label>
+          <p className="text-slate-200 text-sm py-1.5">{(subFamilia ?? "").trim() || "—"}</p>
+        </div>
         <Select
           id="edit-category"
           name="category_id"
           label="Categoria"
-          defaultValue={currentCategoryId ?? ""}
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
         >
           <option value="">— Nenhuma —</option>
           {categories.map((c) => (
@@ -344,6 +429,59 @@ export function EditItemForm({
 
       {/* 10. Mensagem de erro */}
       {state?.error && <Alert variant="error">{state.error}</Alert>}
+
+      {/* Modal: Criar categoria a partir da sub familia */}
+      {createCategoryModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          onClick={() => !createCategoryPending && setCreateCategoryModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Criar categoria"
+        >
+          <div
+            className="bg-slate-800 border border-slate-600 rounded-xl shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-medium text-slate-100 mb-2">Criar nova categoria</h3>
+            <p className="text-slate-400 text-sm mb-4">
+              Será criada uma nova categoria na secção seleccionada. Pode corrigir o nome abaixo.
+            </p>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Nome da categoria
+            </label>
+            <input
+              type="text"
+              value={createCategoryName}
+              onChange={(e) => setCreateCategoryName(e.target.value)}
+              className={inputClass}
+              placeholder="ex: Entradas"
+              disabled={createCategoryPending}
+            />
+            {createCategoryError && (
+              <p className="mt-2 text-sm text-red-400">{createCategoryError}</p>
+            )}
+            <div className="flex gap-3 mt-4 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => !createCategoryPending && setCreateCategoryModalOpen(false)}
+                disabled={createCategoryPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleCreateCategoryConfirm}
+                disabled={createCategoryPending}
+              >
+                {createCategoryPending ? "A criar…" : "Criar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
