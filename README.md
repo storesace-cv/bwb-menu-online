@@ -67,4 +67,4 @@ Se a password tiver sido alterada depois (Supabase Dashboard ou API), usar a pas
 
 ## Diagnóstico do portal-admin
 
-Para problemas como ecrã branco após login ou redirects incorrectos, a app regista logs estruturados com prefixo `[portal-debug]`. No servidor: `docker compose logs web 2>&1 | grep '\[portal-debug\]'`. Opcionalmente define `PORTAL_DEBUG=1` no `.env` para incluir eventos do cliente. Ver [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md).
+Para problemas como ecrã branco após login ou redirects incorrectos, a app regista logs estruturados com prefixo `[portal-debug]`. No servidor: `docker compose logs web 2>&1 | grep '\[portal-debug\]'`. Opcionalmente define `PORTAL_DEBUG=1` no `.env` para incluir eventos do cliente. Ver [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md). **Testes no browser:** a app corre no servidor de deploy; use os URLs de produção (https://menu.bwb.pt, https://9999999991.menu.bwb.pt, etc.), não localhost.

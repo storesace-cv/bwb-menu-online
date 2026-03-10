@@ -1079,18 +1079,19 @@ export async function batchUpdateItemsSectionCategory(
   _prev: { error?: string; success?: boolean } | null,
   formData: FormData
 ) {
-  const supabase = await createClient();
-  const itemIdsRaw = getFormDataValue(formData, "item_ids");
-  const itemIds = (itemIdsRaw ? JSON.parse(itemIdsRaw) : []) as string[];
-  const sectionId = (getFormDataValue(formData, "section_id") ?? "")?.trim() || null;
-  const categoryId = (getFormDataValue(formData, "category_id") ?? "")?.trim() || null;
-  const batchArticleTypeId = (getFormDataValue(formData, "batch_article_type_id") ?? "")?.trim() || null;
-  const batchIsVisible = getFormDataValue(formData, "batch_is_visible") ?? "";
-  const batchIsFeatured = getFormDataValue(formData, "batch_is_featured") ?? "";
-  const batchTakeAway = getFormDataValue(formData, "batch_take_away") ?? "";
-  const batchIsPromotion = getFormDataValue(formData, "batch_is_promotion") ?? "";
+  try {
+    const supabase = await createClient();
+    const itemIdsRaw = getFormDataValue(formData, "item_ids");
+    const itemIds = (itemIdsRaw ? JSON.parse(itemIdsRaw) : []) as string[];
+    const sectionId = (getFormDataValue(formData, "section_id") ?? "")?.trim() || null;
+    const categoryId = (getFormDataValue(formData, "category_id") ?? "")?.trim() || null;
+    const batchArticleTypeId = (getFormDataValue(formData, "batch_article_type_id") ?? "")?.trim() || null;
+    const batchIsVisible = getFormDataValue(formData, "batch_is_visible") ?? "";
+    const batchIsFeatured = getFormDataValue(formData, "batch_is_featured") ?? "";
+    const batchTakeAway = getFormDataValue(formData, "batch_take_away") ?? "";
+    const batchIsPromotion = getFormDataValue(formData, "batch_is_promotion") ?? "";
 
-  portalDebugLog("batch_update_section_category", {
+    portalDebugLog("batch_update_section_category", {
     action: "batchUpdateItemsSectionCategory",
     itemCount: itemIds?.length ?? 0,
     hasSection: !!sectionId,
@@ -1193,6 +1194,10 @@ export async function batchUpdateItemsSectionCategory(
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/items");
   return { success: true };
+  } catch (e) {
+    portalDebugLog("batch_update_section_category", { action: "batchUpdateItemsSectionCategory", error: String(e) });
+    throw e;
+  }
 }
 
 export async function updateStoreSettings(_prev: { error?: string } | null, formData: FormData) {

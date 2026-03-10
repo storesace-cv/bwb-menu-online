@@ -31,3 +31,28 @@ Ficheiros que existem no servidor em `/etc/nginx/sites-available/` (e symlinks e
 - **SSL:** Let's Encrypt; certificados em `/etc/letsencrypt/live/<dominio>/` (ex.: `menu.bwb.pt`, `db-menu.bwb.pt`).
 
 Para detalhes da instância Supabase e variáveis de ambiente, ver [SUPABASE_INSTANCE.md](SUPABASE_INSTANCE.md).
+
+## Alterações à configuração Nginx
+
+Sempre que fores alterar a configuração Nginx gerida por este projeto, segue **por esta ordem**:
+
+### Passo 1 — Consultar o servidor
+
+Obtém a configuração actual do servidor (vhosts geridos por este repo) para comparar com o repositório e estar a par de alterações manuais no host:
+
+```bash
+ssh main-srv-01 'cat /etc/nginx/sites-available/menu.bwb.pt'
+ssh main-srv-01 'cat /etc/nginx/sites-available/db-menu.bwb.pt'
+```
+
+Compara com `deploy/nginx/sites-available/menu.bwb.pt` e `deploy/nginx/sites-available/db-menu.bwb.pt`. Se no servidor houver alterações manuais que devam ser preservadas, integra-as no repo antes de sobrescrever.
+
+### Passo 2 — Backup no servidor
+
+O script `deploy/nginx/apply.sh` faz **backup automático** antes de copiar: os ficheiros actuais em `/etc/nginx/sites-available/` (menu.bwb.pt, db-menu.bwb.pt) são copiados para `/opt/bwb-menu-online/nginx-backups/<timestamp>/` antes de serem substituídos. Basta correr o deploy ou o apply.sh no servidor.
+
+Se aplicares nginx manualmente (sem deploy), faz backup antes: copia os ficheiros de `/etc/nginx/sites-available/` para um diretório com data (ex.: `sudo cp -a /etc/nginx/sites-available/menu.bwb.pt /opt/bwb-menu-online/nginx-backups/menu.bwb.pt.$(date +%Y%m%d%H%M%S)`).
+
+### Passo 3 — Alterações
+
+Só depois de 1 e 2: edita os ficheiros em `deploy/nginx/sites-available/` e faz deploy (ou corre `deploy/nginx/apply.sh` no servidor). O apply fará o backup e a cópia.

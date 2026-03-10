@@ -2,6 +2,10 @@
 
 Para identificar a causa de problemas como ecrã branco após login ou redirects incorrectos, a app escreve logs estruturados com o prefixo `[portal-debug]`. Estes logs permitem ver exactamente que pedidos chegam ao middleware, que decisões o layout toma (pathname, isRsc, user, mustChange, redirect vs RedirectTo) e, se activado, eventos do cliente.
 
+## Nota sobre ambiente
+
+A app em produção corre **no servidor de deploy** (ex.: menu.bwb.pt, 9999999991.menu.bwb.pt), não no computador local. Para testar no browser ou reproduzir problemas, use os URLs do servidor (https://menu.bwb.pt/portal-admin, https://9999999991.menu.bwb.pt/portal-admin, etc.). Não use `http://localhost:3000` — aí a app não está a correr.
+
 ## Onde consultar os logs
 
 No servidor, os logs do container web vão para stdout e ficam disponíveis via Docker:

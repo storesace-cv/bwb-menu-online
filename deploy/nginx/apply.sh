@@ -16,6 +16,20 @@ if [[ ! -d "$NGINX_SITES_SRC" ]]; then
   exit 0
 fi
 
+# Backup: before overwriting, copy current server configs to timestamped dir
+NGINX_BACKUP_DIR="${NGINX_BACKUP_DIR:-$APP_DIR/nginx-backups}"
+BACKUP_SUBDIR="$NGINX_BACKUP_DIR/$(date +%Y%m%d%H%M%S)"
+for f in "$NGINX_SITES_SRC"/*; do
+  [[ -f "$f" ]] || continue
+  name=$(basename "$f")
+  dest="$NGINX_SITES_AVAILABLE/$name"
+  if [[ -f "$dest" ]]; then
+    mkdir -p "$BACKUP_SUBDIR"
+    sudo cp -a "$dest" "$BACKUP_SUBDIR/$name"
+    echo "Backed up $name to $BACKUP_SUBDIR/"
+  fi
+done
+
 for f in "$NGINX_SITES_SRC"/*; do
   [[ -f "$f" ]] || continue
   name=$(basename "$f")
