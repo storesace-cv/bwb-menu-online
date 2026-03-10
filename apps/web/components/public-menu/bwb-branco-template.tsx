@@ -11,6 +11,7 @@ import { FabSpeedDial } from "./fab-speed-dial";
 import { BottomSheet } from "./bottom-sheet";
 import { MenuFooterSection } from "./menu-footer-section";
 import { scrollToSection } from "@/lib/scroll-to-section";
+import { buildBackgroundStyle } from "@/lib/parse-css-declarations";
 
 const FALLBACK_PRIMARY = "#8b6914";
 
@@ -161,6 +162,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const currencyCode = menu.store_settings?.currency_code ?? "€";
   const storeName = menu.store_settings?.store_display_name || menu.store_name || "Menu";
   const heroText = menu.store_settings?.hero_text;
+  const heroBackgroundColor = menu.store_settings?.hero_background_color?.trim();
+  const heroBackgroundCss = menu.store_settings?.hero_background_css?.trim();
   const heroLogoUrl = menu.store_settings?.logo_url;
   const logoFillColor = menu.store_settings?.logo_fill_color?.trim();
   const logoStrokeColor = menu.store_settings?.logo_stroke_color?.trim();
@@ -361,7 +364,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
       {(heroLogoUrl || heroText) && (
         <section
           className="p-4 rounded-xl text-gray-800 text-center flex flex-col items-center justify-center"
-          style={{ backgroundColor: "color-mix(in srgb, var(--menu-primary) 12%, white)" }}
+          style={buildBackgroundStyle(heroBackgroundColor, heroBackgroundCss, { backgroundColor: "color-mix(in srgb, var(--menu-primary) 12%, white)" })}
         >
           {heroLogoUrl ? (
             <img
@@ -442,11 +445,16 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
             );
           }
           const group = activeGroup;
+          const section = (menu.sections ?? []).find((s) => s.id === group.sectionId);
+          const sectionStyle = section && (section.background_color || section.background_css)
+            ? buildBackgroundStyle(section.background_color, section.background_css)
+            : undefined;
           return (
           <div
             key={group.sectionId ?? "_none"}
             id={`section-${group.sectionId ?? "none"}`}
-            className="mb-10"
+            className={sectionStyle ? "mb-10 rounded-xl p-4" : "mb-10"}
+            style={sectionStyle}
           >
             <h1
               className={`mt-0 title ${sectionTitleAlign === "left" ? "text-left" : sectionTitleAlign === "right" ? "text-right" : "text-center"}`}

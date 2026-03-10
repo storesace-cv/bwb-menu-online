@@ -425,6 +425,8 @@ export async function updateSection(_prev: { error?: string } | null, formData: 
   const name = (formData.get("name") as string)?.trim() ?? "";
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
   const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
+  const backgroundColor = (formData.get("background_color") as string)?.trim() || null;
+  const backgroundCss = (formData.get("background_css") as string)?.trim() || null;
   if (!id || !name) return { error: "ID e nome obrigatórios" };
   const { data: row } = await supabase.from("menu_sections").select("store_id").eq("id", id).single();
   if (!row) return { error: "Secção não encontrada" };
@@ -432,7 +434,13 @@ export async function updateSection(_prev: { error?: string } | null, formData: 
   if (!hasAccess) return { error: "Sem acesso a esta loja" };
   const { error } = await supabase
     .from("menu_sections")
-    .update({ name, sort_order: sortOrder, presentation_template_id: presentationTemplateId || null })
+    .update({
+      name,
+      sort_order: sortOrder,
+      presentation_template_id: presentationTemplateId || null,
+      background_color: backgroundColor,
+      background_css: backgroundCss,
+    })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
@@ -1139,6 +1147,8 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
   const featuredSectionLabel = (formData.get("featured_section_label") as string)?.trim() ?? "";
   const featuredTemplateKey = (formData.get("featured_template_key") as string)?.trim() || "modelo-destaque-1";
+  const heroBackgroundColor = (formData.get("hero_background_color") as string)?.trim() ?? "";
+  const heroBackgroundCss = (formData.get("hero_background_css") as string)?.trim() ?? "";
   const logoFillColor = (formData.get("logo_fill_color") as string)?.trim() ?? "";
   const logoStrokeColor = (formData.get("logo_stroke_color") as string)?.trim() ?? "";
   const footerLogoFillColor = (formData.get("footer_logo_fill_color") as string)?.trim() ?? "";
@@ -1253,6 +1263,8 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   merged.currency_code = currencyCode;
   merged.menu_template_key = menuTemplateKey;
   merged.hero_text = heroText;
+  merged.hero_background_color = heroBackgroundColor;
+  merged.hero_background_css = heroBackgroundCss;
   merged.footer_text = footerText;
   merged.footer_logo_url = footerLogoUrl;
   merged.footer_logo_fill_color = footerLogoFillColor;

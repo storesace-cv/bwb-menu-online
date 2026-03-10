@@ -17,6 +17,10 @@ export type PublicMenuSection = {
   name: string;
   sort_order: number;
   presentation_component_key?: string;
+  /** Cor de fundo do bloco da secção no menu público. */
+  background_color?: string | null;
+  /** CSS de fundo (ex.: linear-gradient). Quando definido, substitui background_color. */
+  background_css?: string | null;
 };
 
 export type PublicMenuCategory = {
@@ -84,6 +88,10 @@ export type PublicMenuStoreSettings = {
   primary_color?: string;
   menu_template_key?: string;
   hero_text?: string;
+  /** Cor de fundo do hero (menu público). Opcional. */
+  hero_background_color?: string;
+  /** CSS de fundo do hero (ex.: linear-gradient). Quando definido, substitui hero_background_color. */
+  hero_background_css?: string;
   footer_text?: string;
   /** Rodapé configurável (menu público). */
   footer_logo_url?: string;

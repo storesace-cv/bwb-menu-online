@@ -94,6 +94,8 @@ export function SettingsForm({
     currency_code?: string;
     menu_template_key?: string;
     hero_text?: string;
+    hero_background_color?: string;
+    hero_background_css?: string;
     footer_logo_url?: string;
     footer_logo_fill_color?: string;
     footer_logo_stroke_color?: string;
@@ -214,6 +216,40 @@ export function SettingsForm({
         defaultValue={initial.hero_text ?? ""}
         placeholder="Texto introdutório opcional"
       />
+      <ColorPickerField
+        id="hero_background_color"
+        name="hero_background_color"
+        label="Cor de fundo do hero"
+        defaultValue={initial.hero_background_color ?? ""}
+        defaultHex="#F2F2F2"
+        placeholder="#F2F2F2"
+        allowEmpty
+      />
+      <div className="flex flex-col gap-2">
+        <label htmlFor="hero_background_css" className="text-sm font-medium text-slate-300">
+          CSS de fundo do hero (opcional)
+        </label>
+        <textarea
+          id="hero_background_css"
+          name="hero_background_css"
+          rows={3}
+          defaultValue={initial.hero_background_css ?? ""}
+          placeholder="ex: linear-gradient(90deg, rgba(42,123,155,1) 0%, rgba(87,199,133,1) 50%, rgba(237,221,83,1) 100%)"
+          className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
+        />
+        <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
+        <p className="text-xs text-slate-500">
+          Mais gradientes (copiar CSS):{" "}
+          <a
+            href="https://webgradients.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-400 hover:text-slate-300 underline"
+          >
+            webgradients.com
+          </a>
+        </p>
+      </div>
       <div className="border-t border-slate-700 pt-4 mt-2">
         <h2 className="text-lg font-semibold text-slate-200 mb-3">Rodapé</h2>
         <input

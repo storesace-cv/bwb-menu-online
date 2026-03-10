@@ -3,10 +3,17 @@
 import { useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { updateSection, deleteSection } from "../../actions";
-import { Input, Select, Button, Alert } from "@/components/admin";
+import { Input, Select, Button, Alert, ColorPickerField } from "@/components/admin";
 
 type PresentationTemplate = { id: string; name: string };
-type Section = { id: string; name: string; sort_order: number; presentation_template_id?: string | null };
+type Section = {
+  id: string;
+  name: string;
+  sort_order: number;
+  presentation_template_id?: string | null;
+  background_color?: string | null;
+  background_css?: string | null;
+};
 
 export function SectionRow({ section, presentationTemplates }: { section: Section; presentationTemplates: PresentationTemplate[] }) {
   const [editing, setEditing] = useState(false);
@@ -20,25 +27,48 @@ export function SectionRow({ section, presentationTemplates }: { section: Sectio
 
   if (editing) {
     return (
-      <li className="flex flex-wrap items-center gap-4 py-4 border-b border-slate-700 last:border-b-0">
-        <form action={updateFormAction} className="flex gap-4 flex-wrap items-center">
+      <li className="flex flex-wrap items-start gap-4 py-4 border-b border-slate-700 last:border-b-0">
+        <form action={updateFormAction} className="flex flex-col gap-4 flex-1 min-w-0">
           <input type="hidden" name="id" value={section.id} />
-          <Input id={`edit-sec-name-${section.id}`} name="name" label="Nome" type="text" required defaultValue={section.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
-          <Input id={`edit-sec-sort-${section.id}`} name="sort_order" label="Ordem" type="number" defaultValue={section.sort_order} className="w-24" wrapperClassName="mb-0" />
-          <Select id={`edit-sec-template-${section.id}`} name="presentation_template_id" label="Modelo de apresentação" wrapperClassName="mb-0" defaultValue={section.presentation_template_id ?? ""}>
-            <option value="">Nenhum</option>
-            {presentationTemplates.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </Select>
-          <Button type="submit" variant="primary">Guardar</Button>
-          <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
-        </form>
-        {updateState?.error && (
-          <div className="w-full mt-2">
-            <Alert variant="error">{updateState.error}</Alert>
+          <div className="flex gap-4 flex-wrap items-end">
+            <Input id={`edit-sec-name-${section.id}`} name="name" label="Nome" type="text" required defaultValue={section.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
+            <Input id={`edit-sec-sort-${section.id}`} name="sort_order" label="Ordem" type="number" defaultValue={section.sort_order} className="w-24" wrapperClassName="mb-0" />
+            <Select id={`edit-sec-template-${section.id}`} name="presentation_template_id" label="Modelo de apresentação" wrapperClassName="mb-0" defaultValue={section.presentation_template_id ?? ""}>
+              <option value="">Nenhum</option>
+              {presentationTemplates.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </Select>
+            <Button type="submit" variant="primary">Guardar</Button>
+            <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
           </div>
-        )}
+          <ColorPickerField
+            id={`edit-sec-bg-${section.id}`}
+            name="background_color"
+            label="Cor de fundo da secção"
+            defaultValue={section.background_color ?? ""}
+            defaultHex="#F2F2F2"
+            placeholder="#F2F2F2"
+            allowEmpty
+          />
+          <div className="flex flex-col gap-2">
+            <label htmlFor={`edit-sec-bg-css-${section.id}`} className="text-sm font-medium text-slate-300">
+              CSS de fundo (opcional)
+            </label>
+            <textarea
+              id={`edit-sec-bg-css-${section.id}`}
+              name="background_css"
+              rows={2}
+              defaultValue={section.background_css ?? ""}
+              placeholder="ex: linear-gradient(...)"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
+            />
+            <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima. Gradientes: <a href="https://webgradients.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-300 underline">webgradients.com</a></p>
+          </div>
+          {updateState?.error && (
+            <Alert variant="error">{updateState.error}</Alert>
+          )}
+        </form>
       </li>
     );
   }

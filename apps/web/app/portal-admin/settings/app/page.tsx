@@ -65,6 +65,8 @@ export default async function ParamsAppPage() {
             currency_code: settings.currency_code ?? "",
             menu_template_key: menuTemplateKey,
             hero_text: settings.hero_text ?? "",
+            hero_background_color: settings.hero_background_color ?? "",
+            hero_background_css: settings.hero_background_css ?? "",
             footer_logo_url: settings.footer_logo_url ?? "",
             footer_logo_fill_color: settings.footer_logo_fill_color ?? "",
             footer_logo_stroke_color: settings.footer_logo_stroke_color ?? "",

@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Cores fill/stroke para logotipos SVG; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Fundo configurável hero e secções; roadmap, commit, push, deploy).
 
 ---
 
@@ -133,6 +133,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Rodapé: múltiplas propriedades CSS e WebGradients:** O campo "CSS de fundo" do rodapé passou a aceitar um bloco de declarações (várias propriedades separadas por `;`), aplicadas ao style do contentor: parser em `menu-footer-section.tsx` (split por `;`, extração prop:value, kebab-to-camel); assim é possível colar CSS com `background` e `background-blend-mode` (ex.: gradientes do WebGradients). Em Parâmetros App, link "Mais gradientes (copiar CSS): webgradients.com" junto ao campo.
 - **UI cores: picker + hex unificado:** Componente reutilizável `ColorPickerField` em `components/admin/` (picker nativo `type="color"` + campo hex sincronizado com validação); usado em Parâmetros App (cor primária, cor de fundo do rodapé, cor do texto do rodapé), Definições → Secções (cor do texto opcional) e Definições → Categorias (cor do texto). Valores por defeito de categorias normalizados a hex (`#A78F39`). Regra documentada em [docs/GUI_PORTAL_ADMIN.md](docs/GUI_PORTAL_ADMIN.md): definição de cores no portal-admin deve usar sempre ColorPickerField.
 - **Cores fill/stroke para logotipos SVG:** Em Parâmetros App, campos opcionais para definir cor de fill e stroke dos logotipos em SVG (logótipo principal e logo do rodapé), evitando que o browser aplique `currentColor` e as cores alternem. Novas chaves em `store_settings.settings`: `logo_fill_color`, `logo_stroke_color`, `footer_logo_fill_color`, `footer_logo_stroke_color`. API GET `/api/public-menu/logo?url=...&fill=...&stroke=...` faz fetch do SVG no servidor, aplica as cores e devolve o SVG (anti-SSRF: apenas URLs do mesmo origin e Supabase/storage). Hero e rodapé do menu público usam esta API quando o logo é SVG e pelo menos uma cor está definida.
+- **Fundo configurável: hero e secções:** Em Parâmetros App, o fundo da secção hero (logo + texto) passou a ser configurável como o rodapé: ColorPickerField "Cor de fundo do hero" + campo opcional "CSS de fundo do hero" (`store_settings`: `hero_background_color`, `hero_background_css`); fallback mantém `color-mix(in srgb, var(--menu-primary) 12%, white)`. Em Definições → Secções, ao editar cada secção na lista: "Cor de fundo da secção" + "CSS de fundo (opcional)" por secção; migration 054 (`menu_sections.background_color`, `menu_sections.background_css`); RPC `public_menu_initial_by_hostname` devolve estes campos; template aplica o mesmo tipo de fundo ao bloco de cada secção. Util `lib/parse-css-declarations.ts` com `buildBackgroundStyle` partilhado por rodapé, hero e secções.
 
 ---
 
