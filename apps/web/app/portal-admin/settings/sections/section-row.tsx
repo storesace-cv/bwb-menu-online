@@ -15,7 +15,17 @@ type Section = {
   background_css?: string | null;
 };
 
-export function SectionRow({ section, presentationTemplates }: { section: Section; presentationTemplates: PresentationTemplate[] }) {
+type CategoryItem = { id: string; name: string };
+
+export function SectionRow({
+  section,
+  presentationTemplates,
+  categories = [],
+}: {
+  section: Section;
+  presentationTemplates: PresentationTemplate[];
+  categories?: CategoryItem[];
+}) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateSection, null);
   const deleteFormRef = useRef<HTMLFormElement>(null);
@@ -78,19 +88,29 @@ export function SectionRow({ section, presentationTemplates }: { section: Sectio
     : "—";
 
   return (
-    <li className="flex items-center gap-3 py-4 border-b border-slate-700 last:border-b-0">
-      <span className="text-slate-200 font-medium">{section.name}</span>
-      <span className="text-slate-500 text-sm">ordem {section.sort_order}</span>
-      <span className="text-slate-500 text-sm">modelo: {templateName}</span>
-      <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm ml-2">
-        Editar
-      </Button>
-      <form ref={deleteFormRef} action={(fd: FormData) => { void deleteSection(null, fd); }} className="inline">
-        <input type="hidden" name="id" value={section.id} />
-        <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
-          Apagar
+    <li className="py-4 border-b border-slate-700 last:border-b-0">
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-slate-200 font-medium">{section.name}</span>
+        <span className="text-slate-500 text-sm">ordem {section.sort_order}</span>
+        <span className="text-slate-500 text-sm">modelo: {templateName}</span>
+        <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm ml-2">
+          Editar
         </Button>
-      </form>
+        <form ref={deleteFormRef} action={(fd: FormData) => { void deleteSection(null, fd); }} className="inline">
+          <input type="hidden" name="id" value={section.id} />
+          <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
+            Apagar
+          </Button>
+        </form>
+      </div>
+      {categories.length > 0 && (
+        <div className="ml-4 mt-2 font-mono text-sm whitespace-pre text-slate-500" aria-label="Categorias desta secção">
+          <div className="text-slate-600">      |</div>
+          {categories.map((cat) => (
+            <div key={cat.id} className="text-slate-500">{`      |-----→    ${cat.name}`}</div>
+          ))}
+        </div>
+      )}
     </li>
   );
 }

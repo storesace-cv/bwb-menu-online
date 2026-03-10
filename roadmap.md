@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Categoria associada a uma única secção; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Lista de secções com categorias em hierarquia; roadmap, commit, push, deploy).
 
 ---
 
@@ -137,6 +137,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Fundo da secção só no título (h1):** No template BWB - Branco, o fundo configurável por secção (`background_color` / `background_css`) passou a aplicar-se apenas ao bloco do título da secção (h1), não ao contentor que inclui as categorias; o div da secção mantém apenas `mb-10` e `id`; quando existe `sectionStyle`, o h1 é envolvido num wrapper com `rounded-xl p-4` e o estilo de fundo.
 - **Familia e Sub familia na edição de artigo com criação de categoria:** Na página de edição de item (`/portal-admin/settings/items/[id]/edit`) passou a mostrar Familia (acima de Secção) e Sub familia (acima de Categoria), obtidas via RPC `get_import_familia_for_store`. Ao clicar em Familia com secção seleccionada: verificação se já existe categoria com o mesmo nome na secção (mensagem informativa); se não existir, modal para criar nova categoria com nome editável (sugerido pela sub familia); action `createCategoryAndReturnId` cria a categoria e devolve o id; redirect com `?highlightCategory=` para preencher automaticamente o campo Categoria.
 - **Categoria associada a uma única secção:** Migration 055 — `menu_categories.section_id` passou a NOT NULL e FK para `menu_sections` com ON DELETE RESTRICT; backfill atribui categorias sem secção à primeira secção da loja ou cria secção "Geral". Cada categoria pertence a uma e só uma secção (como sub-família a família); o mesmo nome pode existir em secções diferentes (registos distintos). UI: em Editar artigo e Alteração em lote o dropdown de Categoria mostra apenas categorias da secção seleccionada; ao mudar de secção a categoria é limpa se não pertencer à nova; Criar categoria e Editar categoria exigem secção obrigatória (sem opção "Nenhuma"). Texto em Definições → Categorias actualizado.
+- **Lista de secções com categorias em hierarquia:** Em Definições → Secções, na "Lista de secções", cada secção passou a mostrar por baixo as categorias associadas em disposição hierárquica (tronco `|` e linhas `|-----→ Nome da categoria`), a título informativo; categorias carregadas e agrupadas por `section_id` na página; componente `SectionRow` com prop `categories`.
 
 ---
 

@@ -29,6 +29,21 @@ export default async function SectionsPage() {
     .eq("store_id", storeId)
     .order("sort_order");
 
+  const { data: categories } = await supabase
+    .from("menu_categories")
+    .select("id, name, section_id, sort_order")
+    .eq("store_id", storeId)
+    .order("sort_order");
+
+  const categoriesBySectionId = new Map<string, { id: string; name: string }[]>();
+  for (const c of categories ?? []) {
+    if (c.section_id) {
+      const list = categoriesBySectionId.get(c.section_id) ?? [];
+      list.push({ id: c.id, name: c.name ?? "" });
+      categoriesBySectionId.set(c.section_id, list);
+    }
+  }
+
   const { data: presentationTemplates } = await supabase
     .from("menu_presentation_templates")
     .select("id, name")
@@ -80,7 +95,12 @@ export default async function SectionsPage() {
           {sections && sections.length > 0 ? (
             <ul className="list-none pl-0">
               {sections.map((s) => (
-                <SectionRow key={s.id} section={s} presentationTemplates={presentationTemplates ?? []} />
+                <SectionRow
+                  key={s.id}
+                  section={s}
+                  presentationTemplates={presentationTemplates ?? []}
+                  categories={categoriesBySectionId.get(s.id) ?? []}
+                />
               ))}
             </ul>
           ) : (
