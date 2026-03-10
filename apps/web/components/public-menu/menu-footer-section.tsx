@@ -3,6 +3,25 @@
 const DEFAULT_FOOTER_BG = "#F2F2F2";
 const MAILTO = "mailto:suporte@bwb.pt?subject=Menu%20Digital%20-%20Pedido%20de%20contacto";
 
+function kebabToCamel(str: string): string {
+  return str.replace(/-([a-z])/gi, (_, c) => (c as string).toUpperCase());
+}
+
+function parseCssDeclarations(css: string): Record<string, string> {
+  const style: Record<string, string> = {};
+  const segments = css.split(";").map((s) => s.trim()).filter(Boolean);
+  for (const segment of segments) {
+    const colonIndex = segment.indexOf(":");
+    if (colonIndex === -1) continue;
+    const prop = segment.slice(0, colonIndex).trim();
+    const value = segment.slice(colonIndex + 1).trim();
+    if (!prop || value === undefined) continue;
+    const camel = kebabToCamel(prop);
+    style[camel] = value;
+  }
+  return style;
+}
+
 export type MenuFooterProps = {
   logo_url?: string | null;
   address?: string | null;
@@ -18,7 +37,11 @@ export function MenuFooterSection({ footer }: { footer?: MenuFooterProps | null 
   const rawBg = footer?.background_color?.trim();
   const bg = rawBg && (/^#[0-9A-Fa-f]{6}$/.test(rawBg) || rawBg.startsWith("rgb")) ? rawBg : DEFAULT_FOOTER_BG;
   const style: Record<string, string> = rawBgCss
-    ? { background: rawBgCss }
+    ? (() => {
+        const parsed = parseCssDeclarations(rawBgCss);
+        if (Object.keys(parsed).length === 0) return { background: rawBgCss };
+        return parsed;
+      })()
     : { backgroundColor: bg };
   if (footer?.text_color?.trim()) {
     style.color = footer.text_color.trim();

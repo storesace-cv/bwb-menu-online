@@ -289,6 +289,17 @@ export function SettingsForm({
               className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
             />
             <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
+            <p className="text-xs text-slate-500">
+              Mais gradientes (copiar CSS):{" "}
+              <a
+                href="https://webgradients.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-slate-300 underline"
+              >
+                webgradients.com
+              </a>
+            </p>
           </div>
           <Input
             id="footer_text_color"
