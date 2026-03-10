@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Paginação Gestão de Artigos: primeira janela + restante em background).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Fix RSC redirect em Definições: evitar 307 em pedidos RSC no settings layout).
 
 ---
 
@@ -147,6 +147,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Alteração em lote: FormData com prefixo e diagnóstico:** O Next.js com `useFormState` pode enviar campos com prefixo numérico (ex.: `1_item_ids`, `1_batch_is_visible`). Helper `getFormDataValue(formData, name)` em `actions.ts` tenta `name`, depois `1_` + name e, em fallback, percorre `formData.entries()` para chaves que terminem em `_` + name; `batchUpdateItemsSectionCategory` passou a usar este helper para todos os campos do formulário de lote, corrigindo "Fetch failed" quando os valores não eram lidos. Log no início da action com `itemCount`, `hasSection`, `hasCategory`, `batchIsVisible` para diagnóstico nos logs. Secção "Alteração em lote" em [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) com comandos para consultar logs no servidor (`grep batch_update_section_category`).
 - **Nginx: consultar servidor, backup e só depois alterar:** Secção "Alterações à configuração Nginx" em [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md) com os 3 passos (consultar servidor, backup no servidor, depois alterar) e comandos; `deploy/nginx/apply.sh` faz backup automático no servidor (directório com timestamp em `nginx-backups/`) antes de copiar os vhosts; regra Cursor [.cursor/rules/nginx-changes.mdc](.cursor/rules/nginx-changes.mdc) obriga a seguir esta ordem ao editar nginx ou scripts relacionados.
 - **Paginação Gestão de Artigos (primeira janela + restante em background):** Em Definições → Gestão de Artigos o servidor carrega apenas os primeiros 150 artigos para resposta imediata; o cliente pede o resto em background via GET `/api/portal-admin/settings/items?offset=&limit=` e faz merge. Paginação na UI com selector "Registos por página" (25, 50, 100, 250, Todos) persistido em localStorage; botões Anterior/Seguinte e texto "A mostrar X–Y de Z"; "Selecionar todos" aplica-se à página actual; filtros e ordenação mantêm-se no cliente sobre a lista completa.
+- **Fix "Fetch failed" em Definições / Gestão de Artigos (RSC redirect):** No layout de Definições (`settings/layout.tsx`), quando é necessário redirecionar (sem loja ou sem permissão), em pedidos RSC passa a devolver o componente cliente `RedirectTo` em vez de `redirect()`, evitando resposta 307 e o "Fetch failed" na consola ao navegar para /portal-admin/settings ou /portal-admin/settings/items. Logging `portalDebugLog("settings_layout", …)` com pathname, host, isRsc e reason (no_storeId | no_access) para diagnóstico no servidor.
 
 ---
 
