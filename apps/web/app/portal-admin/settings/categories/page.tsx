@@ -49,7 +49,7 @@ export default async function CategoriesPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Categorias</h1>
-      <p className="text-slate-400 mb-6">Categorias do menu (ex.: Entradas, Sobremesas). Podem estar associadas a uma secção.</p>
+      <p className="text-slate-400 mb-6">Categorias do menu (ex.: Entradas, Sobremesas). Cada categoria pertence a uma e só uma secção; pode haver categorias com o mesmo nome em secções diferentes (são registos distintos).</p>
       <p className="mb-6">
         <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
       </p>

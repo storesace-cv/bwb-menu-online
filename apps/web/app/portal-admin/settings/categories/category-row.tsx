@@ -40,8 +40,7 @@ export function CategoryRow({
         <form action={updateFormAction} className="flex gap-4 flex-wrap items-center">
           <input type="hidden" name="id" value={category.id} />
           <Input id={`edit-cat-name-${category.id}`} name="name" label="Nome" type="text" required defaultValue={category.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
-          <Select id={`edit-cat-section-${category.id}`} name="section_id" label="Secção" wrapperClassName="mb-0" defaultValue={category.section_id ?? ""}>
-            <option value="">Nenhuma</option>
+          <Select id={`edit-cat-section-${category.id}`} name="section_id" label="Secção" wrapperClassName="mb-0" defaultValue={category.section_id ?? ""} required>
             {sections.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}

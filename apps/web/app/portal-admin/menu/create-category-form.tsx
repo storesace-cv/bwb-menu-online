@@ -14,8 +14,8 @@ export function CreateCategoryForm({ storeId, sections, presentationTemplates }:
     <form action={formAction} className="flex flex-wrap gap-4 items-end">
       <input type="hidden" name="store_id" value={storeId} />
       <Input id="cat-name" name="name" label="Nome" type="text" required placeholder="ex: Entradas" />
-      <Select id="cat-section" name="section_id" label="Secção">
-        <option value="">Nenhuma</option>
+      <Select id="cat-section" name="section_id" label="Secção" required>
+        <option value="">— Escolha uma secção —</option>
         {sections.map((s) => (
           <option key={s.id} value={s.id}>{s.name}</option>
         ))}

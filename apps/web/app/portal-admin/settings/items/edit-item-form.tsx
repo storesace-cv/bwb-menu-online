@@ -267,7 +267,16 @@ export function EditItemForm({
           name="section_id"
           label="Secção"
           value={sectionId}
-          onChange={(e) => setSectionId(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setSectionId(next);
+            if (next) {
+              const valid = categories.some((c) => c.id === categoryId && c.section_id === next);
+              if (!valid) setCategoryId("");
+            } else {
+              setCategoryId("");
+            }
+          }}
         >
           <option value="">— Nenhuma —</option>
           {sections.map((s) => (
@@ -290,11 +299,13 @@ export function EditItemForm({
           onChange={(e) => setCategoryId(e.target.value)}
         >
           <option value="">— Nenhuma —</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
+          {sectionId
+            ? categories.filter((c) => c.section_id === sectionId).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))
+            : null}
         </Select>
       </div>
 

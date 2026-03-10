@@ -405,11 +405,12 @@ export async function createCategory(_prev: { error?: string } | null, formData:
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
   const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
   if (!storeId || !name) return { error: "Loja e nome obrigatórios" };
+  if (!sectionId) return { error: "Secção obrigatória." };
   const { error } = await supabase.from("menu_categories").insert({
     store_id: storeId,
     name,
     sort_order: sortOrder,
-    section_id: sectionId || null,
+    section_id: sectionId,
     presentation_template_id: presentationTemplateId || null,
   });
   if (error) return { error: error.message };
@@ -517,13 +518,14 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
   const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
   if (!id || !name) return { error: "ID e nome obrigatórios" };
+  if (!sectionId) return { error: "Secção obrigatória." };
   const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
   if (!row) return { error: "Categoria não encontrada" };
   const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
   if (!hasAccess) return { error: "Sem acesso a esta loja" };
   const { error } = await supabase
     .from("menu_categories")
-    .update({ name, sort_order: sortOrder, section_id: sectionId || null, presentation_template_id: presentationTemplateId || null })
+    .update({ name, sort_order: sortOrder, section_id: sectionId, presentation_template_id: presentationTemplateId || null })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");

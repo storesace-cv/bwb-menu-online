@@ -388,7 +388,13 @@ export function ItemsListClient({
                 <select
                   name="section_id"
                   value={batchSectionId}
-                  onChange={(e) => setBatchSectionId(e.target.value)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setBatchSectionId(next);
+                    if (!next || !categories.some((c) => c.id === batchCategoryId && c.section_id === next)) {
+                      setBatchCategoryId("");
+                    }
+                  }}
                   className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200"
                 >
                   <option value="">— Nenhuma —</option>
@@ -406,9 +412,11 @@ export function ItemsListClient({
                   className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200"
                 >
                   <option value="">— Nenhuma —</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
+                  {batchSectionId
+                    ? categories.filter((c) => c.section_id === batchSectionId).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))
+                    : null}
                 </select>
               </label>
               <label className="block text-sm text-slate-300">
