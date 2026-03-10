@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Lista e alteração em lote: logging, force-dynamic e tratamento de erros).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Alteração em lote: FormData com prefixo 1_, log início e doc diagnóstico).
 
 ---
 
@@ -144,6 +144,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Ordenação persistente e colunas Secção/Categoria na lista de itens:** Em Definições → Itens, a ordenação escolhida na tabela passa a ser guardada em localStorage (chave `bwb-portal-settings-items-sort`) e restaurada ao carregar a página; componente BwbTable com modo controlado (`sortRules` e `onSortChange`). As colunas Secção e Categoria foram deslocadas para logo após Sub Familia para ficarem visíveis sem scroll horizontal.
 - **Lista itens: Secção e Categoria para todos os registos:** A query a `menu_category_items` na página da lista de artigos passou a ser feita em lotes de 200 `menu_item_id` (em vez de um único `.in()` com todos os IDs), evitando limites de URI/parâmetros do Supabase/PostgREST e garantindo que Secção e Categoria aparecem para todos os itens que as tenham definidas.
 - **Lista e alteração em lote: logging e tratamento de erros:** Página da lista de artigos com `export const dynamic = 'force-dynamic'` (sem cache estático); logging `portalDebugLog('settings_items_mci', …)` com `itemIdsCount`, `mciRowsCount` e, em falha de batch, `batchError` e `batchIndex`; verificação de `error` em cada query em lotes. Na action `batchUpdateItemsSectionCategory`: verificação de `error` após cada delete/insert em `menu_category_items` e após update em `menu_items`; em erro, log com `portalDebugLog('batch_update_section_category', …)` e `return { error: "…" }` para o utilizador; em sucesso, log com `itemCount` e `success: true`. Logs visíveis com `docker compose logs web 2>&1 | grep '\[portal-debug\]'`.
+- **Alteração em lote: FormData com prefixo e diagnóstico:** O Next.js com `useFormState` pode enviar campos com prefixo numérico (ex.: `1_item_ids`, `1_batch_is_visible`). Helper `getFormDataValue(formData, name)` em `actions.ts` tenta `name`, depois `1_` + name e, em fallback, percorre `formData.entries()` para chaves que terminem em `_` + name; `batchUpdateItemsSectionCategory` passou a usar este helper para todos os campos do formulário de lote, corrigindo "Fetch failed" quando os valores não eram lidos. Log no início da action com `itemCount`, `hasSection`, `hasCategory`, `batchIsVisible` para diagnóstico nos logs. Secção "Alteração em lote" em [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) com comandos para consultar logs no servidor (`grep batch_update_section_category`).
 
 ---
 

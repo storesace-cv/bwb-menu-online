@@ -107,3 +107,35 @@ GET https://menu.bwb.pt/api/debug/tenants-actions
 - A resposta é um array JSON de objetos com `ts`, `action`, `step` e restantes campos descritos acima, ordenados por `ts`.
 
 Fluxo sugerido: definir `PORTAL_DEBUG=1`, reproduzir o problema (guardar email, Re-enviar), depois consultar os logs com o grep acima ou abrir `/api/debug/tenants-actions` no browser para inspecionar o último `step` e presença de `catch` com `error`.
+
+## Alteração em lote (Definições → Artigos)
+
+A Server Action `batchUpdateItemsSectionCategory` regista logs com **phase** `batch_update_section_category`. Isto permite diagnosticar "Fetch failed" ao aplicar alteração em lote: ver se o pedido chegou à action, quantos itens foram recebidos e se houve erro em delete/insert/update.
+
+### Comandos para consultar logs no servidor
+
+No servidor (ex.: `cd /opt/bwb-menu-online`):
+
+```bash
+docker compose logs web 2>&1 | grep '\[portal-debug\]' | tail -80
+```
+
+Para filtrar apenas alteração em lote:
+
+```bash
+docker compose logs web 2>&1 | grep '\[portal-debug\]' | grep batch_update_section_category
+```
+
+Para erros gerais e últimas linhas:
+
+```bash
+docker compose logs web 2>&1 | tail -150
+```
+
+### Formato dos logs `batch_update_section_category`
+
+- **No início da action:** `itemCount`, `hasSection`, `hasCategory`, `batchIsVisible` (confirmam que a action foi invocada e com que dados).
+- **Em sucesso:** `itemCount`, `success: true`.
+- **Em falha:** `step: "delete" | "insert" | "update"`, `menuItemId`, `error` (mensagem do Supabase).
+
+Se ao submeter o formulário **não** aparecer nenhum log desta action, a request pode estar a falhar antes de chegar à action (body size, timeout no proxy ou crash ao parsear o body).

@@ -26,6 +26,18 @@ function normalizeArticleTypeIconCode(code: string): string {
   return ARTICLE_TYPE_ICON_WHITELIST.includes(code) ? code : "fish";
 }
 
+/** FormData keys can be prefixed (e.g. "1_item_ids") when using useFormState; try name then "1_" + name, then any key ending with _name. */
+function getFormDataValue(formData: FormData, name: string): string | null {
+  const direct = formData.get(name);
+  if (direct != null && typeof direct === "string") return direct;
+  const prefixed = formData.get("1_" + name);
+  if (prefixed != null && typeof prefixed === "string") return prefixed;
+  for (const [key, value] of formData.entries()) {
+    if ((key === name || key.endsWith("_" + name)) && typeof value === "string") return value;
+  }
+  return null;
+}
+
 export async function createTenant(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const nif = (formData.get("nif") as string)?.trim() ?? "";
@@ -1066,15 +1078,23 @@ export async function batchUpdateItemsSectionCategory(
   formData: FormData
 ) {
   const supabase = await createClient();
-  const itemIdsRaw = formData.get("item_ids") as string;
+  const itemIdsRaw = getFormDataValue(formData, "item_ids");
   const itemIds = (itemIdsRaw ? JSON.parse(itemIdsRaw) : []) as string[];
-  const sectionId = (formData.get("section_id") as string)?.trim() || null;
-  const categoryId = (formData.get("category_id") as string)?.trim() || null;
-  const batchArticleTypeId = (formData.get("batch_article_type_id") as string)?.trim() || null;
-  const batchIsVisible = (formData.get("batch_is_visible") as string) ?? "";
-  const batchIsFeatured = (formData.get("batch_is_featured") as string) ?? "";
-  const batchTakeAway = (formData.get("batch_take_away") as string) ?? "";
-  const batchIsPromotion = (formData.get("batch_is_promotion") as string) ?? "";
+  const sectionId = (getFormDataValue(formData, "section_id") ?? "")?.trim() || null;
+  const categoryId = (getFormDataValue(formData, "category_id") ?? "")?.trim() || null;
+  const batchArticleTypeId = (getFormDataValue(formData, "batch_article_type_id") ?? "")?.trim() || null;
+  const batchIsVisible = getFormDataValue(formData, "batch_is_visible") ?? "";
+  const batchIsFeatured = getFormDataValue(formData, "batch_is_featured") ?? "";
+  const batchTakeAway = getFormDataValue(formData, "batch_take_away") ?? "";
+  const batchIsPromotion = getFormDataValue(formData, "batch_is_promotion") ?? "";
+
+  portalDebugLog("batch_update_section_category", {
+    action: "batchUpdateItemsSectionCategory",
+    itemCount: itemIds?.length ?? 0,
+    hasSection: !!sectionId,
+    hasCategory: !!categoryId,
+    batchIsVisible: batchIsVisible ?? "",
+  });
 
   if (!itemIds?.length) return { error: "Selecione pelo menos um artigo." };
   const hasSectionOrCategory = !!(sectionId || categoryId);
