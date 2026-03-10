@@ -9,37 +9,50 @@ import { Card } from "@/components/admin";
 
 export const dynamic = "force-dynamic";
 
+const INITIAL_ITEMS_LIMIT = 150;
+
 export default async function SettingsItemsPage() {
   const headersList = await headers();
   const host = getPortalHost(headersList);
-  const supabase = await createClient();
-  const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
 
-  if (!storeId) {
-    return (
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Artigos</h1>
-        <p className="text-slate-400">Domínio não associado a nenhuma loja.</p>
-        <p className="mt-4"><Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link></p>
-      </div>
-    );
-  }
+  try {
+    const supabase = await createClient();
+    const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
 
-  const { data: articleTypes } = await supabase
+    if (!storeId) {
+      return (
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Artigos</h1>
+          <p className="text-slate-400">Domínio não associado a nenhuma loja.</p>
+          <p className="mt-4"><Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link></p>
+        </div>
+      );
+    }
+
+    const { data: articleTypes } = await supabase
     .from("article_types")
     .select("id, name, icon_code")
     .eq("store_id", storeId)
     .order("sort_order");
+
+  const { count: totalCount } = await supabase
+    .from("menu_items")
+    .select("id", { count: "exact", head: true })
+    .eq("store_id", storeId);
+
   const { data: itemsRaw } = await supabase
     .from("menu_items")
     .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order", { ascending: true })
-    .order("menu_name", { ascending: true });
+    .order("menu_name", { ascending: true })
+    .range(0, INITIAL_ITEMS_LIMIT - 1);
+
   const { data: resolvedPricesRows } = await supabase.rpc("get_resolved_prices_for_store", { p_store_id: storeId });
   const resolvedPriceByItemId = new Map<string, number>();
+  const initialIds = new Set((itemsRaw ?? []).map((i) => i.id));
   for (const row of resolvedPricesRows ?? []) {
-    if (row.menu_item_id && row.resolved_price != null) {
+    if (row.menu_item_id && initialIds.has(row.menu_item_id) && row.resolved_price != null) {
       resolvedPriceByItemId.set(row.menu_item_id, Number(row.resolved_price));
     }
   }
@@ -50,7 +63,7 @@ export default async function SettingsItemsPage() {
     itemFamilia[i.id] = { familia: null, sub_familia: null };
   }
   for (const row of familiaRows ?? []) {
-    if (row.menu_item_id) {
+    if (row.menu_item_id && initialIds.has(row.menu_item_id)) {
       itemFamilia[row.menu_item_id] = {
         familia: row.familia ?? null,
         sub_familia: row.sub_familia ?? null,
@@ -174,6 +187,8 @@ export default async function SettingsItemsPage() {
         <Card>
           <ItemsListClient
             items={items ?? []}
+            totalCount={totalCount ?? 0}
+            hasMore={(totalCount ?? 0) > (items?.length ?? 0)}
             sections={sections ?? []}
             categories={categories ?? []}
             articleTypes={articleTypes ?? []}
@@ -184,4 +199,22 @@ export default async function SettingsItemsPage() {
       </section>
     </div>
   );
+  } catch (e) {
+    const err = e as Error & { digest?: string };
+    if (err?.digest?.startsWith?.("NEXT_REDIRECT") || err?.message === "NEXT_REDIRECT") throw e;
+    if (err?.digest?.startsWith?.("NEXT_NOT_FOUND")) throw e;
+    console.error("[portal-admin settings/items]", err);
+    portalDebugLog("settings_items_page", { error: String(err) });
+    return (
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Artigos</h1>
+        <p className="text-slate-400 mb-4">Não foi possível carregar os dados. Tente novamente.</p>
+        <p className="flex flex-wrap gap-3">
+          <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
+          <span className="text-slate-500">·</span>
+          <Link href="/portal-admin/settings/items" className="text-emerald-400 hover:text-emerald-300">Tentar de novo</Link>
+        </p>
+      </div>
+    );
+  }
 }

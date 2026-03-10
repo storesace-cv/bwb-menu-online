@@ -81,15 +81,15 @@ export default async function PortalAdminLayout({
     return (
       <div className={THEME_WRAPPER_CLASS}>
         <header className="bg-slate-800/80 border-b border-slate-700 backdrop-blur-sm shadow-md px-4 py-3 flex flex-wrap gap-4 items-center">
-          <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors">Portal Admin</Link>
+          <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors" prefetch={false}>Portal Admin</Link>
           <span className="text-slate-400 text-sm">{mode === "global" ? "Global" : "Loja"}</span>
-          {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass}>Tenants</Link>}
-          {mode === "global" && <Link href="/portal-admin/import/mappings" className={linkClass}>Mapeamentos</Link>}
+          {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass} prefetch={false}>Tenants</Link>}
+          {mode === "global" && <Link href="/portal-admin/import/mappings" className={linkClass} prefetch={false}>Mapeamentos</Link>}
           {(mode === "global" || (mode === "tenant" && canAccessSettings)) && (
-            <Link href="/portal-admin/settings" className={linkClass}>Definições</Link>
+            <Link href="/portal-admin/settings" className={linkClass} prefetch={false}>Definições</Link>
           )}
-          <Link href="/portal-admin/menu" className={linkClass}>Menu</Link>
-          {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass}>Sync</Link>}
+          <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
+          {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
           <form action="/api/auth/signout" method="post" className="ml-auto">
             <button
               type="submit"
@@ -111,7 +111,7 @@ export default async function PortalAdminLayout({
       <div className={THEME_WRAPPER_CLASS}>
         <div className="p-8 max-w-md mx-auto">
           <p className="text-slate-300 mb-4">Erro ao carregar. Verifique a sessão.</p>
-          <Link href={PORTAL_LOGIN} className="text-emerald-400 hover:text-emerald-300 underline">Login</Link>
+          <Link href={PORTAL_LOGIN} className="text-emerald-400 hover:text-emerald-300 underline" prefetch={false}>Login</Link>
         </div>
       </div>
     );

@@ -39,7 +39,7 @@ export default async function SettingsPage() {
             <CreateTenantForm />
           </Card>
           {globalLinks.map(({ href, label, description }) => (
-            <Link key={href} href={href}>
+            <Link key={href} href={href} prefetch={false}>
               <Card className="p-5 hover:border-emerald-500/50 transition-colors h-full block">
                 <h2 className="text-lg font-medium text-slate-100 mb-1">{label}</h2>
                 <p className="text-sm text-slate-400">{description}</p>
@@ -83,7 +83,7 @@ export default async function SettingsPage() {
               </Card>
             </div>
           ) : (
-            <Link key={href} href={href}>
+            <Link key={href} href={href} prefetch={false}>
               <Card className="p-5 hover:border-emerald-500/50 transition-colors h-full block">
                 <h2 className="text-lg font-medium text-slate-100 mb-1">{label}</h2>
                 <p className="text-sm text-slate-400">{description}</p>

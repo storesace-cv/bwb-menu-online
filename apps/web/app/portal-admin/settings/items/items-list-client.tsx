@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useFormState } from "react-dom";
 import { ItemActions } from "./item-actions";
 import { MenuIcon } from "@/components/menu-icons";
@@ -8,8 +8,10 @@ import { BwbTable, Button } from "@/components/admin";
 import type { ColumnDef, SortRule } from "@/lib/admin/bwbTableSort";
 
 const ITEMS_SORT_STORAGE_KEY = "bwb-portal-settings-items-sort";
+const ITEMS_PER_PAGE_STORAGE_KEY = "bwb-portal-settings-items-per-page";
 const DEFAULT_ITEMS_SORT: SortRule[] = [{ key: "name", direction: "asc", type: "text" }];
 const SORTABLE_COLUMN_KEYS = new Set(["name", "price", "type", "familia", "sub_familia", "promo", "ta", "prep", "sort_order", "is_visible", "is_featured", "section", "category"]);
+const PER_PAGE_OPTIONS = [25, 50, 100, 250] as const;
 import { batchUpdateItemsSectionCategory } from "../../actions";
 
 type Section = { id: string; name: string; sort_order: number | null };
@@ -33,20 +35,75 @@ type Item = {
 };
 
 export function ItemsListClient({
-  items,
+  items: initialItems,
+  totalCount,
+  hasMore,
   sections,
   categories,
   articleTypes,
-  itemSectionCategory,
-  itemFamilia,
+  itemSectionCategory: initialItemSectionCategory,
+  itemFamilia: initialItemFamilia,
 }: {
   items: Item[];
+  totalCount: number;
+  hasMore: boolean;
   sections: Section[];
   categories: Category[];
   articleTypes: ArticleType[];
   itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>;
   itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }>;
 }) {
+  const [mergedItems, setMergedItems] = useState<Item[]>(initialItems);
+  const [mergedSectionCategory, setMergedSectionCategory] = useState<Record<string, { sectionName: string; categoryName: string }>>(initialItemSectionCategory);
+  const [mergedFamilia, setMergedFamilia] = useState<Record<string, { familia: string | null; sub_familia: string | null }>>(initialItemFamilia);
+  const [restLoading, setRestLoading] = useState(false);
+  const restLoadStarted = useRef(false);
+
+  const [perPage, setPerPage] = useState<number | "all">(() => {
+    if (typeof window === "undefined") return 50;
+    try {
+      const raw = localStorage.getItem(ITEMS_PER_PAGE_STORAGE_KEY);
+      if (raw === "all") return "all";
+      const n = parseInt(raw ?? "", 10);
+      if (PER_PAGE_OPTIONS.includes(n as (typeof PER_PAGE_OPTIONS)[number])) return n;
+      return 50;
+    } catch {
+      return 50;
+    }
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    if (initialItems.length > 0) {
+      setMergedItems(initialItems);
+      setMergedSectionCategory(initialItemSectionCategory);
+      setMergedFamilia(initialItemFamilia);
+    }
+  }, [initialItems, initialItemSectionCategory, initialItemFamilia]);
+
+  useEffect(() => {
+    if (!hasMore || restLoadStarted.current || initialItems.length === 0) return;
+    restLoadStarted.current = true;
+    setRestLoading(true);
+    const offset = initialItems.length;
+    fetch(`/api/portal-admin/settings/items?offset=${offset}&limit=5000`)
+      .then((res) => {
+        if (!res.ok) throw new Error(res.statusText);
+        return res.json();
+      })
+      .then((data: { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> }) => {
+        setMergedItems((prev) => [...prev, ...(data.items ?? [])]);
+        setMergedSectionCategory((prev) => ({ ...prev, ...(data.itemSectionCategory ?? {}) }));
+        setMergedFamilia((prev) => ({ ...prev, ...(data.itemFamilia ?? {}) }));
+      })
+      .catch(() => {
+        restLoadStarted.current = false;
+      })
+      .finally(() => {
+        setRestLoading(false);
+      });
+  }, [hasMore, initialItems.length]);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchModalOpen, setBatchModalOpen] = useState(false);
   const [batchSectionId, setBatchSectionId] = useState("");
@@ -97,18 +154,18 @@ export function ItemsListClient({
   const displayPrice = (i: Item) => i.menu_price ?? i.resolved_price ?? null;
 
   const filteredItems = useMemo(() => {
-    return items.filter((i) => {
+    return mergedItems.filter((i) => {
       if (filterName.trim()) {
         const name = displayName(i).toLowerCase();
         if (!name.includes(filterName.trim().toLowerCase())) return false;
       }
       if (filterType && i.article_type_id !== filterType) return false;
       if (filterFamilia.trim()) {
-        const familia = (itemFamilia[i.id]?.familia ?? "").toLowerCase();
+        const familia = (mergedFamilia[i.id]?.familia ?? "").toLowerCase();
         if (!familia.includes(filterFamilia.trim().toLowerCase())) return false;
       }
       if (filterSubFamilia.trim()) {
-        const subFamilia = (itemFamilia[i.id]?.sub_familia ?? "").toLowerCase();
+        const subFamilia = (mergedFamilia[i.id]?.sub_familia ?? "").toLowerCase();
         if (!subFamilia.includes(filterSubFamilia.trim().toLowerCase())) return false;
       }
       if (filterPromo === "sim" && !i.is_promotion) return false;
@@ -121,7 +178,21 @@ export function ItemsListClient({
       if (filterFeatured === "nao" && i.is_featured) return false;
       return true;
     });
-  }, [items, filterName, filterType, filterFamilia, filterSubFamilia, filterPromo, filterTA, filterVisible, filterFeatured, itemFamilia]);
+  }, [mergedItems, filterName, filterType, filterFamilia, filterSubFamilia, filterPromo, filterTA, filterVisible, filterFeatured, mergedFamilia]);
+
+  const perPageNum = perPage === "all" ? 999999 : perPage;
+  const totalFiltered = filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / perPageNum));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = (safePage - 1) * perPageNum;
+  const paginatedRows = useMemo(
+    () => filteredItems.slice(startIdx, startIdx + perPageNum),
+    [filteredItems, startIdx, perPageNum]
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages >= 1) setCurrentPage(1);
+  }, [currentPage, totalPages]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -132,9 +203,20 @@ export function ItemsListClient({
     });
   };
 
+  const allOnPageSelected = paginatedRows.length > 0 && paginatedRows.every((i) => selectedIds.has(i.id));
   const toggleSelectAll = () => {
-    if (selectedIds.size === filteredItems.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(filteredItems.map((i) => i.id)));
+    if (allOnPageSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(paginatedRows.map((i) => i.id)));
+  };
+
+  const handlePerPageChange = (value: number | "all") => {
+    setPerPage(value);
+    setCurrentPage(1);
+    try {
+      localStorage.setItem(ITEMS_PER_PAGE_STORAGE_KEY, value === "all" ? "all" : String(value));
+    } catch {
+      /* ignore */
+    }
   };
 
   const [batchState, batchFormAction] = useFormState(batchUpdateItemsSectionCategory, null);
@@ -158,9 +240,9 @@ export function ItemsListClient({
         headerRender: (
           <input
             type="checkbox"
-            checked={filteredItems.length > 0 && selectedIds.size === filteredItems.length}
+            checked={allOnPageSelected}
             onChange={toggleSelectAll}
-            aria-label="Selecionar todos"
+            aria-label="Selecionar todos na página"
           />
         ),
         headerClassName: "w-10",
@@ -201,29 +283,29 @@ export function ItemsListClient({
         key: "familia",
         label: "Familia",
         type: "text",
-        accessor: (i) => itemFamilia[i.id]?.familia ?? "",
-        render: (i) => itemFamilia[i.id]?.familia ?? "—",
+        accessor: (i) => mergedFamilia[i.id]?.familia ?? "",
+        render: (i) => mergedFamilia[i.id]?.familia ?? "—",
       },
       {
         key: "sub_familia",
         label: "Sub Familia",
         type: "text",
-        accessor: (i) => itemFamilia[i.id]?.sub_familia ?? "",
-        render: (i) => itemFamilia[i.id]?.sub_familia ?? "—",
+        accessor: (i) => mergedFamilia[i.id]?.sub_familia ?? "",
+        render: (i) => mergedFamilia[i.id]?.sub_familia ?? "—",
       },
       {
         key: "section",
         label: "Secção",
         type: "text",
-        accessor: (i) => itemSectionCategory[i.id]?.sectionName ?? "",
-        render: (i) => itemSectionCategory[i.id]?.sectionName ?? "—",
+        accessor: (i) => mergedSectionCategory[i.id]?.sectionName ?? "",
+        render: (i) => mergedSectionCategory[i.id]?.sectionName ?? "—",
       },
       {
         key: "category",
         label: "Categoria",
         type: "text",
-        accessor: (i) => itemSectionCategory[i.id]?.categoryName ?? "",
-        render: (i) => itemSectionCategory[i.id]?.categoryName ?? "—",
+        accessor: (i) => mergedSectionCategory[i.id]?.categoryName ?? "",
+        render: (i) => mergedSectionCategory[i.id]?.categoryName ?? "—",
       },
       {
         key: "promo",
@@ -275,7 +357,7 @@ export function ItemsListClient({
         render: (i) => <ItemActions itemId={i.id} menuName={displayName(i)} />,
       },
     ],
-    [filteredItems.length, selectedIds.size, typeById, itemSectionCategory, itemFamilia]
+    [allOnPageSelected, typeById, mergedSectionCategory, mergedFamilia]
   );
 
   return (
@@ -387,14 +469,62 @@ export function ItemsListClient({
         </label>
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
+          <label className="flex items-center gap-2">
+            Registos por página
+            <select
+              value={perPage === "all" ? "all" : perPage}
+              onChange={(e) => {
+                const v = e.target.value;
+                handlePerPageChange(v === "all" ? "all" : parseInt(v, 10));
+              }}
+              className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200"
+            >
+              {PER_PAGE_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+              <option value="all">Todos</option>
+            </select>
+          </label>
+          <span>
+            A mostrar {totalFiltered === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + perPageNum, totalFiltered)} de {totalFiltered}
+            {restLoading && " (a carregar…)"}
+            {!restLoading && hasMore && mergedItems.length < totalCount && totalCount > initialItems.length && " (carregado)"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={safePage <= 1}
+            className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
+          <span>
+            Página {safePage} de {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage >= totalPages}
+            className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Seguinte
+          </button>
+        </div>
+      </div>
+
       <BwbTable<Item>
         columns={columns}
-        rows={filteredItems}
+        rows={paginatedRows}
         rowKey={(i) => i.id}
         sortRules={sortRules}
         onSortChange={handleSortChange}
       />
-      {filteredItems.length === 0 && <p className="text-slate-500 py-4">Nenhum item.</p>}
+      {paginatedRows.length === 0 && !restLoading && <p className="text-slate-500 py-4">Nenhum item.</p>}
+      {paginatedRows.length === 0 && restLoading && <p className="text-slate-500 py-4">A carregar artigos…</p>}
 
       {/* Janela Alteração em Lote */}
       {batchModalOpen && (
