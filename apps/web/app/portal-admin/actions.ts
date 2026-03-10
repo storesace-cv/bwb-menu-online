@@ -32,7 +32,9 @@ function getFormDataValue(formData: FormData, name: string): string | null {
   if (direct != null && typeof direct === "string") return direct;
   const prefixed = formData.get("1_" + name);
   if (prefixed != null && typeof prefixed === "string") return prefixed;
-  for (const [key, value] of formData.entries()) {
+  const entries = Array.from(formData.entries());
+  for (let i = 0; i < entries.length; i++) {
+    const [key, value] = entries[i];
     if ((key === name || key.endsWith("_" + name)) && typeof value === "string") return value;
   }
   return null;
