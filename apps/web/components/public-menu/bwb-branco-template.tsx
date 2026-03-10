@@ -449,13 +449,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           const sectionStyle = section && (section.background_color || section.background_css)
             ? buildBackgroundStyle(section.background_color, section.background_css)
             : undefined;
-          return (
-          <div
-            key={group.sectionId ?? "_none"}
-            id={`section-${group.sectionId ?? "none"}`}
-            className={sectionStyle ? "mb-10 rounded-xl p-4" : "mb-10"}
-            style={sectionStyle}
-          >
+          const h1El = (
             <h1
               className={`mt-0 title ${sectionTitleAlign === "left" ? "text-left" : sectionTitleAlign === "right" ? "text-right" : "text-center"}`}
               style={{
@@ -466,6 +460,20 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
             >
               {group.sectionName}
             </h1>
+          );
+          return (
+          <div
+            key={group.sectionId ?? "_none"}
+            id={`section-${group.sectionId ?? "none"}`}
+            className="mb-10"
+          >
+            {sectionStyle ? (
+              <div style={sectionStyle} className="rounded-xl p-4">
+                {h1El}
+              </div>
+            ) : (
+              h1El
+            )}
             {activeSectionFilteredCategories.map((cat) => {
               const layoutDef = cat.presentation_layout_definition;
               const useLayout = layoutDef != null && Array.isArray(layoutDef.zoneOrder) && layoutDef.zoneOrder.length > 0;
