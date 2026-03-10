@@ -244,7 +244,7 @@ export function EditItemForm({
       {/* 4a. Alergénios */}
       <AllergenChecklist allergens={allergens} selectedIds={selectedAllergenIds} />
 
-      {/* 4b. Familia + Secção, Sub familia + Categoria */}
+      {/* 4b. Familia + Sub familia; Secção + Categoria */}
       <div className="flex flex-wrap gap-4 items-end">
         <div className="w-full sm:w-auto">
           <label className="block text-sm font-medium text-slate-300 mb-1">Familia</label>
@@ -262,6 +262,12 @@ export function EditItemForm({
             )}
           </p>
         </div>
+        <div className="w-full sm:w-auto">
+          <label className="block text-sm font-medium text-slate-300 mb-1">Sub familia</label>
+          <p className="text-slate-200 text-sm py-1.5">{(subFamilia ?? "").trim() || "—"}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-4 items-end">
         <Select
           id="edit-section"
           name="section_id"
@@ -285,12 +291,6 @@ export function EditItemForm({
             </option>
           ))}
         </Select>
-      </div>
-      <div className="flex flex-wrap gap-4 items-end">
-        <div className="w-full sm:w-auto">
-          <label className="block text-sm font-medium text-slate-300 mb-1">Sub familia</label>
-          <p className="text-slate-200 text-sm py-1.5">{(subFamilia ?? "").trim() || "—"}</p>
-        </div>
         <Select
           id="edit-category"
           name="category_id"

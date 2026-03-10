@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Lista de categorias em hierarquia por secção; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Layout Familia/Sub familia e Secção/Categoria no formulário de artigo; roadmap, commit, push, deploy).
 
 ---
 
@@ -139,6 +139,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Categoria associada a uma única secção:** Migration 055 — `menu_categories.section_id` passou a NOT NULL e FK para `menu_sections` com ON DELETE RESTRICT; backfill atribui categorias sem secção à primeira secção da loja ou cria secção "Geral". Cada categoria pertence a uma e só uma secção (como sub-família a família); o mesmo nome pode existir em secções diferentes (registos distintos). UI: em Editar artigo e Alteração em lote o dropdown de Categoria mostra apenas categorias da secção seleccionada; ao mudar de secção a categoria é limpa se não pertencer à nova; Criar categoria e Editar categoria exigem secção obrigatória (sem opção "Nenhuma"). Texto em Definições → Categorias actualizado.
 - **Lista de secções com categorias em hierarquia:** Em Definições → Secções, na "Lista de secções", cada secção passou a mostrar por baixo as categorias associadas em disposição hierárquica (tronco `|` e linhas `|-----→ Nome da categoria`), a título informativo; categorias carregadas e agrupadas por `section_id` na página; componente `SectionRow` com prop `categories`.
 - **Lista de categorias em hierarquia por secção:** Em Definições → Categorias, na "Lista de categorias", as categorias passaram a ser agrupadas por secção com disposição hierárquica: nome da secção como cabeçalho informativo, tronco `|` e linhas `|-----→ Nome` com secção, modelo, ordem e ações Editar/Apagar; agrupamento por `section_id` e ordenação por `sort_order`; componente `CategoryRow` com prop `showTreePrefix`.
+- **Layout Familia/Sub familia e Secção/Categoria:** No formulário de edição de artigo (Definições → Itens → Editar), o bloco de campos foi reorganizado: primeira linha com Familia e Sub familia; segunda linha com Secção e Categoria (em vez de Familia+Secção e Sub familia+Categoria).
 
 ---
 
