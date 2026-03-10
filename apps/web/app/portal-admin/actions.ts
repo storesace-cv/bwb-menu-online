@@ -986,7 +986,9 @@ export async function updateMenuItem(
     .eq("id", id);
   if (error) return { error: error.message };
 
-  if (sectionId || categoryId) {
+  if (!sectionId && !categoryId) {
+    await supabase.from("menu_category_items").delete().eq("menu_item_id", id);
+  } else if (sectionId || categoryId) {
     let targetCategoryId: string | null = categoryId;
     if (!targetCategoryId && sectionId) {
       const { data: firstCat } = await supabase

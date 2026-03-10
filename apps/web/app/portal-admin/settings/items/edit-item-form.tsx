@@ -68,6 +68,7 @@ export function EditItemForm({
   familia,
   subFamilia,
   highlightCategoryId,
+  resolvedPrice = null,
 }: {
   item: MenuItem;
   articleTypes: ArticleType[];
@@ -82,6 +83,7 @@ export function EditItemForm({
   familia: string | null;
   subFamilia: string | null;
   highlightCategoryId: string | null;
+  resolvedPrice?: number | null;
 }) {
   const router = useRouter();
   const [state, formAction] = useFormState(updateMenuItem, null);
@@ -399,7 +401,7 @@ export function EditItemForm({
           step="0.01"
           min={0}
           placeholder="0.00"
-          defaultValue={item.menu_price ?? ""}
+          defaultValue={item.menu_price ?? resolvedPrice ?? ""}
           className="w-32"
         />
         {isPromotion ? (

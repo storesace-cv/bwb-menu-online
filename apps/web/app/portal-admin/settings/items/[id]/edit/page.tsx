@@ -59,6 +59,12 @@ export default async function EditItemPage({
     );
   }
 
+  const { data: resolvedPricesRows } = await supabase.rpc("get_resolved_prices_for_store", { p_store_id: storeId });
+  const resolvedPriceRow = (resolvedPricesRows ?? []).find((r: { menu_item_id: string }) => r.menu_item_id === id);
+  const resolvedPrice = resolvedPriceRow != null && (resolvedPriceRow as { resolved_price: number | null }).resolved_price != null
+    ? Number((resolvedPriceRow as { resolved_price: number }).resolved_price)
+    : null;
+
   const { data: articleTypes } = await supabase
     .from("article_types")
     .select("id, name, icon_code")
@@ -135,6 +141,7 @@ export default async function EditItemPage({
           familia={familia}
           subFamilia={subFamilia}
           highlightCategoryId={highlightCategoryId}
+          resolvedPrice={resolvedPrice}
         />
       </Card>
     </div>
