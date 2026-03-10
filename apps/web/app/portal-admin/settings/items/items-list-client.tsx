@@ -59,18 +59,7 @@ export function ItemsListClient({
   const [restLoading, setRestLoading] = useState(false);
   const restLoadStarted = useRef(false);
 
-  const [perPage, setPerPage] = useState<number | "all">(() => {
-    if (typeof window === "undefined") return 50;
-    try {
-      const raw = localStorage.getItem(ITEMS_PER_PAGE_STORAGE_KEY);
-      if (raw === "all") return "all";
-      const n = parseInt(raw ?? "", 10);
-      if (PER_PAGE_OPTIONS.includes(n as (typeof PER_PAGE_OPTIONS)[number])) return n;
-      return 50;
-    } catch {
-      return 50;
-    }
-  });
+  const [perPage, setPerPage] = useState<number | "all">(50);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -118,26 +107,35 @@ export function ItemsListClient({
   const [filterVisible, setFilterVisible] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");
 
-  const [sortRules, setSortRules] = useState<SortRule[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_ITEMS_SORT;
+  const [sortRules, setSortRules] = useState<SortRule[]>(DEFAULT_ITEMS_SORT);
+
+  useEffect(() => {
     try {
-      const raw = localStorage.getItem(ITEMS_SORT_STORAGE_KEY);
-      if (!raw) return DEFAULT_ITEMS_SORT;
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_ITEMS_SORT;
-      const valid = parsed.filter(
-        (r): r is SortRule =>
-          r != null &&
-          typeof r === "object" &&
-          typeof (r as SortRule).key === "string" &&
-          ((r as SortRule).direction === "asc" || (r as SortRule).direction === "desc") &&
-          SORTABLE_COLUMN_KEYS.has((r as SortRule).key)
-      );
-      return valid.length > 0 ? valid : DEFAULT_ITEMS_SORT;
+      const rawPerPage = localStorage.getItem(ITEMS_PER_PAGE_STORAGE_KEY);
+      if (rawPerPage === "all") setPerPage("all");
+      else {
+        const n = parseInt(rawPerPage ?? "", 10);
+        if (PER_PAGE_OPTIONS.includes(n as (typeof PER_PAGE_OPTIONS)[number])) setPerPage(n);
+      }
+      const rawSort = localStorage.getItem(ITEMS_SORT_STORAGE_KEY);
+      if (rawSort) {
+        const parsed = JSON.parse(rawSort) as unknown;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const valid = parsed.filter(
+            (r): r is SortRule =>
+              r != null &&
+              typeof r === "object" &&
+              typeof (r as SortRule).key === "string" &&
+              ((r as SortRule).direction === "asc" || (r as SortRule).direction === "desc") &&
+              SORTABLE_COLUMN_KEYS.has((r as SortRule).key)
+          );
+          if (valid.length > 0) setSortRules(valid);
+        }
+      }
     } catch {
-      return DEFAULT_ITEMS_SORT;
+      /* ignore */
     }
-  });
+  }, []);
 
   const handleSortChange = (rules: SortRule[]) => {
     setSortRules(rules);

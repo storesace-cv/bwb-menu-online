@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Eliminar Fetch failed: links Definições e Gestão de Artigos com tag a para full page load).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Hidratação Gestão de Artigos, retry 502 em menu_category_items, docs settings_items_mci).
 
 ---
 
@@ -149,6 +149,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Paginação Gestão de Artigos (primeira janela + restante em background):** Em Definições → Gestão de Artigos o servidor carrega apenas os primeiros 150 artigos para resposta imediata; o cliente pede o resto em background via GET `/api/portal-admin/settings/items?offset=&limit=` e faz merge. Paginação na UI com selector "Registos por página" (25, 50, 100, 250, Todos) persistido em localStorage; botões Anterior/Seguinte e texto "A mostrar X–Y de Z"; "Selecionar todos" aplica-se à página actual; filtros e ordenação mantêm-se no cliente sobre a lista completa.
 - **Fix "Fetch failed" em Definições / Gestão de Artigos (RSC redirect):** No layout de Definições (`settings/layout.tsx`), quando é necessário redirecionar (sem loja ou sem permissão), em pedidos RSC passa a devolver o componente cliente `RedirectTo` em vez de `redirect()`, evitando resposta 307 e o "Fetch failed" na consola ao navegar para /portal-admin/settings ou /portal-admin/settings/items. Logging `portalDebugLog("settings_layout", …)` com pathname, host, isRsc e reason (no_storeId | no_access) para diagnóstico no servidor.
 - **Eliminar "Fetch failed" na consola (navegação completa):** Links "Definições" (header do portal-admin) e "Gestão de Artigos" (página Definições) passaram a usar `<a href="...">` em vez de `<Link>`, forçando full page load e evitando fetch RSC e o cancelamento que gerava "Fetch failed" na consola no fluxo menu → Definições → Gestão de Artigos.
+- **Hidratação Gestão de Artigos e retry 502:** Em `/portal-admin/settings/items`, o estado inicial de `perPage` e `sortRules` passou a ser fixo (50 e DEFAULT_ITEMS_SORT) para coincidir com o primeiro render no servidor; as preferências em localStorage são aplicadas num `useEffect` após a hidratação, eliminando os erros React #418/#423. Na página server, a query a `menu_category_items` em batch passou a ter retry automático quando o Supabase/proxy devolve 502 Bad Gateway (espera 1,5 s e repete o batch uma vez). Doc [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) com secção "Gestão de Artigos (settings/items) e 502 em menu_category_items" e comando para filtrar logs `settings_items_mci`.
 
 ---
 

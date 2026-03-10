@@ -143,3 +143,13 @@ docker compose logs web 2>&1 | tail -150
 - **Em falha:** `step: "delete" | "insert" | "update"`, `menuItemId`, `error` (mensagem do Supabase).
 
 Se ao submeter o formulário **não** aparecer nenhum log desta action, a request pode estar a falhar antes de chegar à action (body size, timeout no proxy ou crash ao parsear o body).
+
+## Gestão de Artigos (settings/items) e 502 em menu_category_items
+
+Ao carregar a página **Gestão de Artigos**, o servidor faz queries em batch à tabela `menu_category_items` (até 200 IDs por batch). Os logs com **phase** `settings_items_mci` mostram `itemIdsCount`, `mciRowsCount` e, em falha de um batch, `batchError` e `batchIndex`.
+
+Se aparecer **batchError** com texto tipo `502 Bad Gateway` ou HTML do nginx, o pedido do Next.js ao Supabase (ou ao proxy à frente) está a receber 502 (timeout ou upstream indisponível). Foi adicionado **retry automático**: ao detectar 502/Bad Gateway num batch, o servidor espera 1,5 s e repete esse batch uma vez. Se continuar a falhar, a página renderiza na mesma com secção/categoria em branco (—) para os itens desse batch. Para filtrar estes logs:
+
+```bash
+docker compose logs web 2>&1 | grep '\[portal-debug\]' | grep settings_items_mci
+```

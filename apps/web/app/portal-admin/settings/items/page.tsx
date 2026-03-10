@@ -96,19 +96,33 @@ export default async function SettingsItemsPage() {
   let mciRows: { menu_item_id: string; category_id: string }[] = [];
   let firstBatchError: string | null = null;
   let firstBatchIndex: number | null = null;
+
+  const fetchMciBatch = async (chunk: string[]) => {
+    const { data, error } = await supabase
+      .from("menu_category_items")
+      .select("menu_item_id, category_id")
+      .in("menu_item_id", chunk);
+    return { data, error };
+  };
+
   if (itemIds.length > 0) {
     for (let i = 0; i < itemIds.length; i += MCI_BATCH_SIZE) {
       const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
       const batchIndex = Math.floor(i / MCI_BATCH_SIZE);
-      const { data: batch, error: batchError } = await supabase
-        .from("menu_category_items")
-        .select("menu_item_id, category_id")
-        .in("menu_item_id", chunk);
+      let result = await fetchMciBatch(chunk);
+      const isRetryable =
+        result.error != null &&
+        (String(result.error.message).includes("502") || String(result.error.message).includes("Bad Gateway"));
+      if (isRetryable) {
+        await new Promise((r) => setTimeout(r, 1500));
+        result = await fetchMciBatch(chunk);
+      }
+      const batchError = result.error;
       if (batchError != null && firstBatchError == null) {
         firstBatchError = batchError.message;
         firstBatchIndex = batchIndex;
       }
-      mciRows = mciRows.concat(batch ?? []);
+      mciRows = mciRows.concat(result.data ?? []);
     }
   }
   portalDebugLog("settings_items_mci", {
