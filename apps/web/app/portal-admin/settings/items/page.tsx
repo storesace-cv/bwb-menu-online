@@ -2,9 +2,12 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
+import { portalDebugLog } from "@/lib/portal-debug-log";
 import { CreateItemForm } from "./create-item-form";
 import { ItemsListClient } from "./items-list-client";
 import { Card } from "@/components/admin";
+
+export const dynamic = "force-dynamic";
 
 export default async function SettingsItemsPage() {
   const headersList = await headers();
@@ -78,16 +81,28 @@ export default async function SettingsItemsPage() {
   const itemIds = (items ?? []).map((i) => i.id);
   const MCI_BATCH_SIZE = 200;
   let mciRows: { menu_item_id: string; category_id: string }[] = [];
+  let firstBatchError: string | null = null;
+  let firstBatchIndex: number | null = null;
   if (itemIds.length > 0) {
     for (let i = 0; i < itemIds.length; i += MCI_BATCH_SIZE) {
       const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
-      const { data: batch } = await supabase
+      const batchIndex = Math.floor(i / MCI_BATCH_SIZE);
+      const { data: batch, error: batchError } = await supabase
         .from("menu_category_items")
         .select("menu_item_id, category_id")
         .in("menu_item_id", chunk);
+      if (batchError != null && firstBatchError == null) {
+        firstBatchError = batchError.message;
+        firstBatchIndex = batchIndex;
+      }
       mciRows = mciRows.concat(batch ?? []);
     }
   }
+  portalDebugLog("settings_items_mci", {
+    itemIdsCount: itemIds.length,
+    mciRowsCount: mciRows.length,
+    ...(firstBatchError != null ? { batchError: firstBatchError, batchIndex: firstBatchIndex } : {}),
+  });
 
   const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
   const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));

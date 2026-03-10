@@ -17,7 +17,7 @@ import {
 } from "@/lib/logo-upload-utils";
 import { redirect } from "next/navigation";
 import { sendFirstStoreWelcomeEmail } from "@/lib/mailer";
-import { tenantsActionLog } from "@/lib/portal-debug-log";
+import { portalDebugLog, tenantsActionLog } from "@/lib/portal-debug-log";
 
 const DEFAULT_PASSWORD = "bwb-menu";
 
@@ -1148,13 +1148,26 @@ export async function batchUpdateItemsSectionCategory(
     const { data: itemRow } = await supabase.from("menu_items").select("store_id").eq("id", menuItemId).single();
     if (!itemRow) continue;
     if (targetCategoryId && catRow && itemRow.store_id === catRow.store_id) {
-      await supabase.from("menu_category_items").delete().eq("menu_item_id", menuItemId);
-      await supabase.from("menu_category_items").insert({ category_id: targetCategoryId, menu_item_id: menuItemId });
+      const { error: delErr } = await supabase.from("menu_category_items").delete().eq("menu_item_id", menuItemId);
+      if (delErr) {
+        portalDebugLog("batch_update_section_category", { action: "batchUpdateItemsSectionCategory", menuItemId, step: "delete", error: delErr.message });
+        return { error: "Alteração em lote falhou ao remover categoria: " + delErr.message };
+      }
+      const { error: insErr } = await supabase.from("menu_category_items").insert({ category_id: targetCategoryId, menu_item_id: menuItemId });
+      if (insErr) {
+        portalDebugLog("batch_update_section_category", { action: "batchUpdateItemsSectionCategory", menuItemId, step: "insert", error: insErr.message });
+        return { error: "Alteração em lote falhou ao atribuir categoria: " + insErr.message };
+      }
     }
     if (Object.keys(menuItemsUpdate).length > 0) {
-      await supabase.from("menu_items").update(menuItemsUpdate).eq("id", menuItemId);
+      const { error: updErr } = await supabase.from("menu_items").update(menuItemsUpdate).eq("id", menuItemId);
+      if (updErr) {
+        portalDebugLog("batch_update_section_category", { action: "batchUpdateItemsSectionCategory", menuItemId, step: "update", error: updErr.message });
+        return { error: "Alteração em lote falhou ao actualizar artigo: " + updErr.message };
+      }
     }
   }
+  portalDebugLog("batch_update_section_category", { action: "batchUpdateItemsSectionCategory", itemCount: itemIds.length, success: true });
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/items");
   return { success: true };
