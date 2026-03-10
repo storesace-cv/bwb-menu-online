@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (UI cores: picker + hex unificado; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Cores fill/stroke para logotipos SVG; roadmap, commit, push, deploy).
 
 ---
 
@@ -132,6 +132,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Rodapé: fundo em CSS e cor do texto:** Em Parâmetros App (Rodapé), além da cor sólida (hex) é possível definir "CSS de fundo (opcional)" (ex.: `linear-gradient(...)`); quando preenchido, substitui a cor no menu público. Novo campo "Cor do texto do rodapé (opcional)" (hex ou valor CSS); `store_settings` com `footer_background_css` e `footer_text_color`; `MenuFooterSection` aplica `background` ou `backgroundColor` e `color` conforme configurado.
 - **Rodapé: múltiplas propriedades CSS e WebGradients:** O campo "CSS de fundo" do rodapé passou a aceitar um bloco de declarações (várias propriedades separadas por `;`), aplicadas ao style do contentor: parser em `menu-footer-section.tsx` (split por `;`, extração prop:value, kebab-to-camel); assim é possível colar CSS com `background` e `background-blend-mode` (ex.: gradientes do WebGradients). Em Parâmetros App, link "Mais gradientes (copiar CSS): webgradients.com" junto ao campo.
 - **UI cores: picker + hex unificado:** Componente reutilizável `ColorPickerField` em `components/admin/` (picker nativo `type="color"` + campo hex sincronizado com validação); usado em Parâmetros App (cor primária, cor de fundo do rodapé, cor do texto do rodapé), Definições → Secções (cor do texto opcional) e Definições → Categorias (cor do texto). Valores por defeito de categorias normalizados a hex (`#A78F39`). Regra documentada em [docs/GUI_PORTAL_ADMIN.md](docs/GUI_PORTAL_ADMIN.md): definição de cores no portal-admin deve usar sempre ColorPickerField.
+- **Cores fill/stroke para logotipos SVG:** Em Parâmetros App, campos opcionais para definir cor de fill e stroke dos logotipos em SVG (logótipo principal e logo do rodapé), evitando que o browser aplique `currentColor` e as cores alternem. Novas chaves em `store_settings.settings`: `logo_fill_color`, `logo_stroke_color`, `footer_logo_fill_color`, `footer_logo_stroke_color`. API GET `/api/public-menu/logo?url=...&fill=...&stroke=...` faz fetch do SVG no servidor, aplica as cores e devolve o SVG (anti-SSRF: apenas URLs do mesmo origin e Supabase/storage). Hero e rodapé do menu público usam esta API quando o logo é SVG e pelo menos uma cor está definida.
 
 ---
 

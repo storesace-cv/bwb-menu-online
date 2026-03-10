@@ -75,6 +75,10 @@ export type PublicMenuItem = {
 
 export type PublicMenuStoreSettings = {
   logo_url?: string;
+  /** Cor do fill do logótipo principal (SVG). Opcional. */
+  logo_fill_color?: string;
+  /** Cor do stroke do logótipo principal (SVG). Opcional. */
+  logo_stroke_color?: string;
   currency_code?: string;
   store_display_name?: string;
   primary_color?: string;
@@ -83,6 +87,10 @@ export type PublicMenuStoreSettings = {
   footer_text?: string;
   /** Rodapé configurável (menu público). */
   footer_logo_url?: string;
+  /** Cor do fill do logo do rodapé (SVG). Opcional. */
+  footer_logo_fill_color?: string;
+  /** Cor do stroke do logo do rodapé (SVG). Opcional. */
+  footer_logo_stroke_color?: string;
   footer_address?: string;
   footer_email?: string;
   footer_phone?: string;

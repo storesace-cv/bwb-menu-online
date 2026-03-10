@@ -1139,6 +1139,10 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
   const featuredSectionLabel = (formData.get("featured_section_label") as string)?.trim() ?? "";
   const featuredTemplateKey = (formData.get("featured_template_key") as string)?.trim() || "modelo-destaque-1";
+  const logoFillColor = (formData.get("logo_fill_color") as string)?.trim() ?? "";
+  const logoStrokeColor = (formData.get("logo_stroke_color") as string)?.trim() ?? "";
+  const footerLogoFillColor = (formData.get("footer_logo_fill_color") as string)?.trim() ?? "";
+  const footerLogoStrokeColor = (formData.get("footer_logo_stroke_color") as string)?.trim() ?? "";
 
   if (logoFile && logoFile.size > 0) {
     const mime = (logoFile.type ?? "").toLowerCase();
@@ -1244,11 +1248,15 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   merged.store_display_name = storeDisplayName;
   merged.primary_color = primaryColor;
   merged.logo_url = logoUrl;
+  merged.logo_fill_color = logoFillColor;
+  merged.logo_stroke_color = logoStrokeColor;
   merged.currency_code = currencyCode;
   merged.menu_template_key = menuTemplateKey;
   merged.hero_text = heroText;
   merged.footer_text = footerText;
   merged.footer_logo_url = footerLogoUrl;
+  merged.footer_logo_fill_color = footerLogoFillColor;
+  merged.footer_logo_stroke_color = footerLogoStrokeColor;
   merged.footer_address = footerAddress;
   merged.footer_email = footerEmail;
   merged.footer_phone = footerPhone;

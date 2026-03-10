@@ -162,6 +162,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const storeName = menu.store_settings?.store_display_name || menu.store_name || "Menu";
   const heroText = menu.store_settings?.hero_text;
   const heroLogoUrl = menu.store_settings?.logo_url;
+  const logoFillColor = menu.store_settings?.logo_fill_color?.trim();
+  const logoStrokeColor = menu.store_settings?.logo_stroke_color?.trim();
   const reservationUrl = menu.store_settings?.reservation_url;
   const contactUrl = menu.store_settings?.contact_url;
   const privacyUrl = menu.store_settings?.privacy_url;
@@ -362,7 +364,15 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           style={{ backgroundColor: "color-mix(in srgb, var(--menu-primary) 12%, white)" }}
         >
           {heroLogoUrl ? (
-            <img src={heroLogoUrl} alt={storeName} className="max-h-[50px] w-auto object-contain" />
+            <img
+              src={
+                (logoFillColor || logoStrokeColor) && heroLogoUrl.toLowerCase().includes(".svg")
+                  ? `/api/public-menu/logo?url=${encodeURIComponent(heroLogoUrl)}${logoFillColor ? `&fill=${encodeURIComponent(logoFillColor)}` : ""}${logoStrokeColor ? `&stroke=${encodeURIComponent(logoStrokeColor)}` : ""}`
+                  : heroLogoUrl
+              }
+              alt={storeName}
+              className="max-h-[50px] w-auto object-contain"
+            />
           ) : null}
           {heroText ? (
             <p className="m-0 text-lg leading-relaxed whitespace-pre-wrap">{heroText}</p>
@@ -508,6 +518,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
       <MenuFooterSection
         footer={{
           logo_url: menu.store_settings?.footer_logo_url,
+          logo_fill_color: menu.store_settings?.footer_logo_fill_color?.trim() || undefined,
+          logo_stroke_color: menu.store_settings?.footer_logo_stroke_color?.trim() || undefined,
           address: menu.store_settings?.footer_address,
           email: menu.store_settings?.footer_email,
           phone: menu.store_settings?.footer_phone,

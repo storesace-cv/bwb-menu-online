@@ -24,6 +24,10 @@ function parseCssDeclarations(css: string): Record<string, string> {
 
 export type MenuFooterProps = {
   logo_url?: string | null;
+  /** Cor do fill do logo do rodapé (SVG). Aplicada quando o logo é SVG. */
+  logo_fill_color?: string | null;
+  /** Cor do stroke do logo do rodapé (SVG). Aplicada quando o logo é SVG. */
+  logo_stroke_color?: string | null;
   address?: string | null;
   email?: string | null;
   phone?: string | null;
@@ -66,7 +70,11 @@ export function MenuFooterSection({ footer }: { footer?: MenuFooterProps | null 
         {footer?.logo_url?.trim() ? (
           <p className="m-0">
             <img
-              src={footer.logo_url}
+              src={
+                (footer.logo_fill_color || footer.logo_stroke_color) && footer.logo_url.toLowerCase().includes(".svg")
+                  ? `/api/public-menu/logo?url=${encodeURIComponent(footer.logo_url)}${footer.logo_fill_color ? `&fill=${encodeURIComponent(footer.logo_fill_color)}` : ""}${footer.logo_stroke_color ? `&stroke=${encodeURIComponent(footer.logo_stroke_color)}` : ""}`
+                  : footer.logo_url
+              }
               alt=""
               className="max-h-[32px] w-auto object-contain inline-block"
             />

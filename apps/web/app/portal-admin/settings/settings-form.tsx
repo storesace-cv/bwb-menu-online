@@ -89,10 +89,14 @@ export function SettingsForm({
     store_display_name?: string;
     primary_color?: string;
     logo_url?: string;
+    logo_fill_color?: string;
+    logo_stroke_color?: string;
     currency_code?: string;
     menu_template_key?: string;
     hero_text?: string;
     footer_logo_url?: string;
+    footer_logo_fill_color?: string;
+    footer_logo_stroke_color?: string;
     footer_address?: string;
     footer_email?: string;
     footer_phone?: string;
@@ -116,6 +120,25 @@ export function SettingsForm({
     >
       <input type="hidden" name="store_id" value={storeId} />
       <LogoUploadBlock logoUrl={initial.logo_url} formId={FORM_ID} />
+      <ColorPickerField
+        id="logo_fill_color"
+        name="logo_fill_color"
+        label="Cor do fill do logótipo (SVG)"
+        defaultValue={initial.logo_fill_color ?? ""}
+        defaultHex="#000000"
+        placeholder="#000000"
+        allowEmpty
+      />
+      <ColorPickerField
+        id="logo_stroke_color"
+        name="logo_stroke_color"
+        label="Cor do stroke do logótipo (SVG)"
+        defaultValue={initial.logo_stroke_color ?? ""}
+        defaultHex="#000000"
+        placeholder="#000000"
+        allowEmpty
+      />
+      <p className="text-xs text-slate-500 -mt-2">Apenas para logotipos em SVG; deixe vazio para manter as cores do ficheiro.</p>
       <Select
         id="menu_template_key"
         name="menu_template_key"
@@ -201,6 +224,25 @@ export function SettingsForm({
         />
         <div className="flex flex-col gap-4">
           <FooterLogoUploadBlock logoUrl={initial.footer_logo_url} formId={FORM_ID} />
+          <ColorPickerField
+            id="footer_logo_fill_color"
+            name="footer_logo_fill_color"
+            label="Cor do fill do logo do rodapé (SVG)"
+            defaultValue={initial.footer_logo_fill_color ?? ""}
+            defaultHex="#000000"
+            placeholder="#000000"
+            allowEmpty
+          />
+          <ColorPickerField
+            id="footer_logo_stroke_color"
+            name="footer_logo_stroke_color"
+            label="Cor do stroke do logo do rodapé (SVG)"
+            defaultValue={initial.footer_logo_stroke_color ?? ""}
+            defaultHex="#000000"
+            placeholder="#000000"
+            allowEmpty
+          />
+          <p className="text-xs text-slate-500 -mt-2">Apenas para logotipos em SVG; deixe vazio para manter as cores do ficheiro.</p>
           <Input
             id="footer_address"
             name="footer_address"
