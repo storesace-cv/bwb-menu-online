@@ -43,7 +43,7 @@ export default async function CategoriesPage() {
       categoriesBySectionId.set(c.section_id, list);
     }
   }
-  for (const list of categoriesBySectionId.values()) {
+  for (const list of Array.from(categoriesBySectionId.values())) {
     list.sort((a, b) => a.sort_order - b.sort_order);
   }
   const uncategorized = (categories ?? []).filter((c) => !c.section_id);
