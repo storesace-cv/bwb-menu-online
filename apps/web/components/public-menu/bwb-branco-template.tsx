@@ -512,6 +512,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           email: menu.store_settings?.footer_email,
           phone: menu.store_settings?.footer_phone,
           background_color: menu.store_settings?.footer_background_color,
+          background_css: menu.store_settings?.footer_background_css,
+          text_color: menu.store_settings?.footer_text_color,
         }}
       />
       {(contactUrl || privacyUrl) && (

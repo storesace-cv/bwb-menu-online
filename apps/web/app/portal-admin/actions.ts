@@ -1132,6 +1132,8 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   const footerEmail = (formData.get("footer_email") as string)?.trim() ?? "";
   const footerPhone = (formData.get("footer_phone") as string)?.trim() ?? "";
   const footerBackgroundColor = (formData.get("footer_background_color") as string)?.trim() ?? "";
+  const footerBackgroundCss = (formData.get("footer_background_css") as string)?.trim() ?? "";
+  const footerTextColor = (formData.get("footer_text_color") as string)?.trim() ?? "";
   const contactUrl = (formData.get("contact_url") as string)?.trim() ?? "";
   const privacyUrl = (formData.get("privacy_url") as string)?.trim() ?? "";
   const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
@@ -1251,6 +1253,8 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   merged.footer_email = footerEmail;
   merged.footer_phone = footerPhone;
   merged.footer_background_color = footerBackgroundColor;
+  merged.footer_background_css = footerBackgroundCss;
+  merged.footer_text_color = footerTextColor;
   merged.contact_url = contactUrl;
   merged.privacy_url = privacyUrl;
   merged.reservation_url = reservationUrl;

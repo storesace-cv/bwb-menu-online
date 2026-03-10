@@ -147,6 +147,8 @@ export function SettingsForm({
     footer_email?: string;
     footer_phone?: string;
     footer_background_color?: string;
+    footer_background_css?: string;
+    footer_text_color?: string;
     contact_url?: string;
     privacy_url?: string;
     reservation_url?: string;
@@ -274,6 +276,28 @@ export function SettingsForm({
             placeholder="ex: +351 123 456 789"
           />
           <FooterBackgroundColorPicker defaultValue={initial.footer_background_color} />
+          <div className="flex flex-col gap-2">
+            <label htmlFor="footer_background_css" className="text-sm font-medium text-slate-300">
+              CSS de fundo (opcional)
+            </label>
+            <textarea
+              id="footer_background_css"
+              name="footer_background_css"
+              rows={3}
+              defaultValue={initial.footer_background_css ?? ""}
+              placeholder="ex: linear-gradient(90deg, rgba(42,123,155,1) 0%, rgba(87,199,133,1) 50%, rgba(237,221,83,1) 100%)"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
+            />
+            <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
+          </div>
+          <Input
+            id="footer_text_color"
+            name="footer_text_color"
+            label="Cor do texto do rodapé (opcional)"
+            type="text"
+            defaultValue={initial.footer_text_color ?? ""}
+            placeholder="ex: #FFFFFF ou white"
+          />
         </div>
       </div>
       <Input

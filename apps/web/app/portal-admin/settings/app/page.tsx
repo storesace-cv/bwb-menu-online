@@ -68,6 +68,8 @@ export default async function ParamsAppPage() {
             footer_email: settings.footer_email ?? "",
             footer_phone: settings.footer_phone ?? "",
             footer_background_color: settings.footer_background_color ?? "",
+            footer_background_css: settings.footer_background_css ?? "",
+            footer_text_color: settings.footer_text_color ?? "",
             contact_url: settings.contact_url ?? "",
             privacy_url: settings.privacy_url ?? "",
             reservation_url: settings.reservation_url ?? "",

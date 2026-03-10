@@ -87,6 +87,10 @@ export type PublicMenuStoreSettings = {
   footer_email?: string;
   footer_phone?: string;
   footer_background_color?: string;
+  /** CSS para background do rodapé (ex.: linear-gradient). Quando definido, sobrepõe footer_background_color. */
+  footer_background_css?: string;
+  /** Cor do texto do rodapé (hex ou CSS). */
+  footer_text_color?: string;
   contact_url?: string;
   privacy_url?: string;
   reservation_url?: string;

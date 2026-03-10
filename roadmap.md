@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-09 (Hero e main menu: menos padding; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Rodapé: CSS de fundo e cor do texto; roadmap, commit, push, deploy).
 
 ---
 
@@ -129,6 +129,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Título "Escolhas do Chef" igual ao título de secção:** O título da secção de destaques passou a usar o mesmo estilo que o título da secção "Restaurante" (classe `title`, alinhamento e margens/padding configuráveis via Parâmetros App), mantendo a cor primária do menu; props `titleAlign`, `titleMarginBottom`, `titlePaddingTop` em `FeaturedCarouselSection`.
 - **Secção hero: logo e texto hero centrados:** A secção hero do menu público mostra por ordem o Logótipo (menu público) e o Texto hero (Parâmetros App), tudo centrado; visível quando pelo menos um dos dois está definido; fundo mantido (color-mix com primária).
 - **Menu público: ajuste padding hero e main:** Secção hero com `p-4` (em vez de `p-6`), sem `mb-8` nem `gap-4`; `<main>` da página com `py-4` e `md:px-4` (em vez de `py-8` e `md:px-8`) para layout mais compacto.
+- **Rodapé: fundo em CSS e cor do texto:** Em Parâmetros App (Rodapé), além da cor sólida (hex) é possível definir "CSS de fundo (opcional)" (ex.: `linear-gradient(...)`); quando preenchido, substitui a cor no menu público. Novo campo "Cor do texto do rodapé (opcional)" (hex ou valor CSS); `store_settings` com `footer_background_css` e `footer_text_color`; `MenuFooterSection` aplica `background` ou `backgroundColor` e `color` conforme configurado.
 
 ---
 

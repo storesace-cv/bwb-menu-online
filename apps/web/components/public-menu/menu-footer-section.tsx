@@ -9,12 +9,20 @@ export type MenuFooterProps = {
   email?: string | null;
   phone?: string | null;
   background_color?: string | null;
+  background_css?: string | null;
+  text_color?: string | null;
 };
 
 export function MenuFooterSection({ footer }: { footer?: MenuFooterProps | null }) {
+  const rawBgCss = footer?.background_css?.trim();
   const rawBg = footer?.background_color?.trim();
   const bg = rawBg && (/^#[0-9A-Fa-f]{6}$/.test(rawBg) || rawBg.startsWith("rgb")) ? rawBg : DEFAULT_FOOTER_BG;
-  const style = { backgroundColor: bg };
+  const style: Record<string, string> = rawBgCss
+    ? { background: rawBgCss }
+    : { backgroundColor: bg };
+  if (footer?.text_color?.trim()) {
+    style.color = footer.text_color.trim();
+  }
 
   const addr = footer?.address?.trim();
   const em = footer?.email?.trim();
@@ -29,7 +37,7 @@ export function MenuFooterSection({ footer }: { footer?: MenuFooterProps | null 
   return (
     <footer className="mt-10 pt-6" aria-label="Rodapé">
       <div
-        className="rounded-2xl py-2 px-3 text-sm text-gray-800 text-center space-y-0 leading-tight"
+        className={`rounded-2xl py-2 px-3 text-sm text-center space-y-0 leading-tight ${footer?.text_color?.trim() ? "" : "text-gray-800"}`}
         style={style}
       >
         {footer?.logo_url?.trim() ? (
@@ -43,7 +51,7 @@ export function MenuFooterSection({ footer }: { footer?: MenuFooterProps | null 
         ) : null}
         {addr ? <p className="m-0 whitespace-nowrap overflow-x-auto">{addr}</p> : null}
         {lineContact ? <p className="m-0">{lineContact}</p> : null}
-        <p className="m-0 text-gray-700 text-xs">
+        <p className={`m-0 text-xs ${footer?.text_color?.trim() ? "text-inherit" : "text-gray-700"}`}>
           © {year}{" "}
           <a
             href={MAILTO}
