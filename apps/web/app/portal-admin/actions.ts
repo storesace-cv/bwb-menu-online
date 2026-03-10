@@ -1351,7 +1351,7 @@ export async function updateCategoryTitleAppearance(_prev: { error?: string } | 
   const marginBottom = (formData.get("category_title_margin_bottom") as string)?.trim() ?? "15";
   const paddingTop = (formData.get("category_title_padding_top") as string)?.trim() ?? "16";
   const indentPx = (formData.get("category_title_indent_px") as string)?.trim() ?? "10";
-  const color = (formData.get("category_title_color") as string)?.trim() ?? "rgb(167, 143, 57)";
+  const color = (formData.get("category_title_color") as string)?.trim() ?? "#A78F39";
 
   const merged: Record<string, string> = { ...currentSettings };
   merged.category_title_align = align;
@@ -1417,7 +1417,7 @@ export async function resetCategoryTitleAppearance(_prev: { success?: boolean; e
   merged.category_title_margin_bottom = "15";
   merged.category_title_padding_top = "16";
   merged.category_title_indent_px = "10";
-  merged.category_title_color = "rgb(167, 143, 57)";
+  merged.category_title_color = "#A78F39";
 
   const { error } = await supabase.from("store_settings").upsert(
     { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },

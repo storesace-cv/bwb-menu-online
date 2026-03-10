@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { updateSectionTitleAppearance, resetSectionTitleAppearance } from "../../actions";
-import { Input, Button, Alert, Select } from "@/components/admin";
+import { Input, Button, Alert, Select, ColorPickerField } from "@/components/admin";
 
 const ALIGN_OPTIONS: { value: string; label: string }[] = [
   { value: "left", label: "Esquerda" },
@@ -67,13 +67,14 @@ export function SectionTitleAppearanceForm({
         defaultValue={initial.section_title_padding_top ?? "20"}
         placeholder="20"
       />
-      <Input
+      <ColorPickerField
         id="section_title_color"
         name="section_title_color"
         label="Cor do texto (opcional)"
-        type="text"
         defaultValue={initial.section_title_color ?? ""}
+        defaultHex="#000000"
         placeholder="Deixar vazio para usar a cor normal do tema"
+        allowEmpty
       />
       <Button type="submit" variant="primary">
         Guardar

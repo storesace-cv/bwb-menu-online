@@ -55,6 +55,11 @@ Em `apps/web/components/admin/`:
 | `Spinner` | Indicador de carregamento (classe `.spinner` em admin.css). |
 | `TableContainer` | Wrapper com max-height e overflow para tabelas. |
 | `BwbTable` | Tabela com **Ordenação BWB** (multinível por clique nos cabeçalhos). Ver secção abaixo. |
+| `ColorPickerField` | Definição de cores: picker nativo (`type="color"`) + campo hex sincronizado. Ver secção **Definição de cores** abaixo. |
+
+### Definição de cores
+
+Sempre que o utilizador defina uma cor no portal-admin, deve usar-se o componente **ColorPickerField** em `@/components/admin` (picker nativo do browser + campo hex com validação). **Não** usar apenas `Input type="text"` para cores. O ColorPickerField aceita props como `name`, `id`, `label`, `defaultValue`, `defaultHex`, `placeholder` e `allowEmpty` (para campos opcionais).
 
 ### Ordenação BWB
 

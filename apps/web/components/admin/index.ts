@@ -1,6 +1,7 @@
 export { Alert } from "./Alert";
 export { Button } from "./Button";
 export { Card } from "./Card";
+export { ColorPickerField } from "./ColorPickerField";
 export { Input } from "./Input";
 export { MultiSelectDropdown } from "./MultiSelectDropdown";
 export type { MultiSelectOption } from "./MultiSelectDropdown";

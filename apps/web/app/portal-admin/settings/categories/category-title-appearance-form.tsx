@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { updateCategoryTitleAppearance, resetCategoryTitleAppearance } from "../../actions";
-import { Input, Button, Alert, Select } from "@/components/admin";
+import { Input, Button, Alert, Select, ColorPickerField } from "@/components/admin";
 
 const ALIGN_OPTIONS: { value: string; label: string }[] = [
   { value: "left", label: "Esquerda" },
@@ -80,13 +80,13 @@ export function CategoryTitleAppearanceForm({
       <p className="text-xs text-slate-500 -mt-2">
         Quanto o bloco das categorias avança para a direita em relação aos títulos de secção.
       </p>
-      <Input
+      <ColorPickerField
         id="category_title_color"
         name="category_title_color"
         label="Cor do texto"
-        type="text"
         defaultValue={initial.category_title_color ?? "rgb(167, 143, 57)"}
-        placeholder="ex: rgb(167, 143, 57) ou #A78F39"
+        defaultHex="#A78F39"
+        placeholder="#A78F39"
       />
       <Button type="submit" variant="primary">
         Guardar

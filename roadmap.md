@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Rodapé: múltiplas propriedades CSS + WebGradients; roadmap, commit, push, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (UI cores: picker + hex unificado; roadmap, commit, push, deploy).
 
 ---
 
@@ -131,6 +131,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público: ajuste padding hero e main:** Secção hero com `p-4` (em vez de `p-6`), sem `mb-8` nem `gap-4`; `<main>` da página com `py-4` e `md:px-4` (em vez de `py-8` e `md:px-8`) para layout mais compacto.
 - **Rodapé: fundo em CSS e cor do texto:** Em Parâmetros App (Rodapé), além da cor sólida (hex) é possível definir "CSS de fundo (opcional)" (ex.: `linear-gradient(...)`); quando preenchido, substitui a cor no menu público. Novo campo "Cor do texto do rodapé (opcional)" (hex ou valor CSS); `store_settings` com `footer_background_css` e `footer_text_color`; `MenuFooterSection` aplica `background` ou `backgroundColor` e `color` conforme configurado.
 - **Rodapé: múltiplas propriedades CSS e WebGradients:** O campo "CSS de fundo" do rodapé passou a aceitar um bloco de declarações (várias propriedades separadas por `;`), aplicadas ao style do contentor: parser em `menu-footer-section.tsx` (split por `;`, extração prop:value, kebab-to-camel); assim é possível colar CSS com `background` e `background-blend-mode` (ex.: gradientes do WebGradients). Em Parâmetros App, link "Mais gradientes (copiar CSS): webgradients.com" junto ao campo.
+- **UI cores: picker + hex unificado:** Componente reutilizável `ColorPickerField` em `components/admin/` (picker nativo `type="color"` + campo hex sincronizado com validação); usado em Parâmetros App (cor primária, cor de fundo do rodapé, cor do texto do rodapé), Definições → Secções (cor do texto opcional) e Definições → Categorias (cor do texto). Valores por defeito de categorias normalizados a hex (`#A78F39`). Regra documentada em [docs/GUI_PORTAL_ADMIN.md](docs/GUI_PORTAL_ADMIN.md): definição de cores no portal-admin deve usar sempre ColorPickerField.
 
 ---
 

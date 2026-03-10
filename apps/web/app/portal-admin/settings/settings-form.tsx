@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useFormState } from "react-dom";
 import { updateStoreSettings } from "../actions";
-import { Input, Button, Alert, Select } from "@/components/admin";
+import { Input, Button, Alert, Select, ColorPickerField } from "@/components/admin";
 import { DEFAULT_MENU_TEMPLATE_KEY } from "@/lib/menu-templates";
 
 const FORM_ID = "settings-app-form";
@@ -75,55 +74,6 @@ function FooterLogoUploadBlock({ logoUrl, formId }: { logoUrl?: string; formId: 
           </Button>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function FooterBackgroundColorPicker({ defaultValue }: { defaultValue?: string }) {
-  const [value, setValue] = useState(() => {
-    const v = (defaultValue ?? DEFAULT_FOOTER_BG).trim();
-    return /^#[0-9A-Fa-f]{6}$/.test(v) ? v : DEFAULT_FOOTER_BG;
-  });
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-slate-300">
-        Cor de fundo do rodapé
-      </label>
-      <div className="flex items-center gap-3 flex-wrap">
-        <input
-          type="hidden"
-          name="footer_background_color"
-          id="footer_background_color"
-          value={value}
-        />
-        <input
-          type="color"
-          aria-label="Cor de fundo"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="h-10 w-14 cursor-pointer rounded border border-slate-600 bg-slate-800"
-        />
-        <input
-          type="text"
-          aria-label="Cor em hex"
-          value={value}
-          onChange={(e) => {
-            const v = e.target.value.trim();
-            if (v === "" || /^#[0-9A-Fa-f]{0,6}$/.test(v) || /^[0-9A-Fa-f]{0,6}$/.test(v)) {
-              const hex = v.startsWith("#") ? v : v ? `#${v}` : DEFAULT_FOOTER_BG;
-              setValue(hex.length >= 7 ? hex.slice(0, 7) : hex || DEFAULT_FOOTER_BG);
-            }
-          }}
-          onBlur={(e) => {
-            const v = e.target.value.trim();
-            const hex = v.startsWith("#") ? v : v ? `#${v}` : "";
-            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) setValue(hex);
-            else if (!v) setValue(DEFAULT_FOOTER_BG);
-          }}
-          className="w-full max-w-[8rem] rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white"
-          placeholder="#F2F2F2"
-        />
-      </div>
     </div>
   );
 }
@@ -209,13 +159,13 @@ export function SettingsForm({
         defaultValue={initial.store_display_name ?? ""}
         placeholder="ex: Café Central"
       />
-      <Input
+      <ColorPickerField
         id="primary_color"
         name="primary_color"
         label="Cor primária"
-        type="text"
         defaultValue={initial.primary_color ?? ""}
-        placeholder="ex: #1976d2"
+        defaultHex="#1976d2"
+        placeholder="#1976d2"
       />
       <Input
         id="logo_url"
@@ -275,7 +225,14 @@ export function SettingsForm({
             defaultValue={initial.footer_phone ?? ""}
             placeholder="ex: +351 123 456 789"
           />
-          <FooterBackgroundColorPicker defaultValue={initial.footer_background_color} />
+          <ColorPickerField
+            id="footer_background_color"
+            name="footer_background_color"
+            label="Cor de fundo do rodapé"
+            defaultValue={initial.footer_background_color ?? ""}
+            defaultHex={DEFAULT_FOOTER_BG}
+            placeholder="#F2F2F2"
+          />
           <div className="flex flex-col gap-2">
             <label htmlFor="footer_background_css" className="text-sm font-medium text-slate-300">
               CSS de fundo (opcional)
@@ -301,13 +258,14 @@ export function SettingsForm({
               </a>
             </p>
           </div>
-          <Input
+          <ColorPickerField
             id="footer_text_color"
             name="footer_text_color"
             label="Cor do texto do rodapé (opcional)"
-            type="text"
             defaultValue={initial.footer_text_color ?? ""}
-            placeholder="ex: #FFFFFF ou white"
+            defaultHex="#FFFFFF"
+            placeholder="#FFFFFF"
+            allowEmpty
           />
         </div>
       </div>
