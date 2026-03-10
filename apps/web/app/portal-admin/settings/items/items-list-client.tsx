@@ -5,7 +5,11 @@ import { useFormState } from "react-dom";
 import { ItemActions } from "./item-actions";
 import { MenuIcon } from "@/components/menu-icons";
 import { BwbTable, Button } from "@/components/admin";
-import type { ColumnDef } from "@/lib/admin/bwbTableSort";
+import type { ColumnDef, SortRule } from "@/lib/admin/bwbTableSort";
+
+const ITEMS_SORT_STORAGE_KEY = "bwb-portal-settings-items-sort";
+const DEFAULT_ITEMS_SORT: SortRule[] = [{ key: "name", direction: "asc", type: "text" }];
+const SORTABLE_COLUMN_KEYS = new Set(["name", "price", "type", "familia", "sub_familia", "promo", "ta", "prep", "sort_order", "is_visible", "is_featured", "section", "category"]);
 import { batchUpdateItemsSectionCategory } from "../../actions";
 
 type Section = { id: string; name: string; sort_order: number | null };
@@ -56,6 +60,36 @@ export function ItemsListClient({
   const [filterTA, setFilterTA] = useState("");
   const [filterVisible, setFilterVisible] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");
+
+  const [sortRules, setSortRules] = useState<SortRule[]>(() => {
+    if (typeof window === "undefined") return DEFAULT_ITEMS_SORT;
+    try {
+      const raw = localStorage.getItem(ITEMS_SORT_STORAGE_KEY);
+      if (!raw) return DEFAULT_ITEMS_SORT;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_ITEMS_SORT;
+      const valid = parsed.filter(
+        (r): r is SortRule =>
+          r != null &&
+          typeof r === "object" &&
+          typeof (r as SortRule).key === "string" &&
+          ((r as SortRule).direction === "asc" || (r as SortRule).direction === "desc") &&
+          SORTABLE_COLUMN_KEYS.has((r as SortRule).key)
+      );
+      return valid.length > 0 ? valid : DEFAULT_ITEMS_SORT;
+    } catch {
+      return DEFAULT_ITEMS_SORT;
+    }
+  });
+
+  const handleSortChange = (rules: SortRule[]) => {
+    setSortRules(rules);
+    try {
+      localStorage.setItem(ITEMS_SORT_STORAGE_KEY, JSON.stringify(rules));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const typeById = useMemo(() => new Map(articleTypes.map((t) => [t.id, t])), [articleTypes]);
 
@@ -178,6 +212,20 @@ export function ItemsListClient({
         render: (i) => itemFamilia[i.id]?.sub_familia ?? "—",
       },
       {
+        key: "section",
+        label: "Secção",
+        type: "text",
+        accessor: (i) => itemSectionCategory[i.id]?.sectionName ?? "",
+        render: (i) => itemSectionCategory[i.id]?.sectionName ?? "—",
+      },
+      {
+        key: "category",
+        label: "Categoria",
+        type: "text",
+        accessor: (i) => itemSectionCategory[i.id]?.categoryName ?? "",
+        render: (i) => itemSectionCategory[i.id]?.categoryName ?? "—",
+      },
+      {
         key: "promo",
         label: "Promo",
         type: "text",
@@ -218,20 +266,6 @@ export function ItemsListClient({
         type: "text",
         accessor: (i) => (i.is_featured ? "★" : ""),
         render: (i) => (i.is_featured ? "★" : "—"),
-      },
-      {
-        key: "section",
-        label: "Secção",
-        type: "text",
-        accessor: (i) => itemSectionCategory[i.id]?.sectionName ?? "",
-        render: (i) => itemSectionCategory[i.id]?.sectionName ?? "—",
-      },
-      {
-        key: "category",
-        label: "Categoria",
-        type: "text",
-        accessor: (i) => itemSectionCategory[i.id]?.categoryName ?? "",
-        render: (i) => itemSectionCategory[i.id]?.categoryName ?? "—",
       },
       {
         key: "actions",
@@ -357,7 +391,8 @@ export function ItemsListClient({
         columns={columns}
         rows={filteredItems}
         rowKey={(i) => i.id}
-        defaultSort={[{ key: "name", direction: "asc", type: "text" }]}
+        sortRules={sortRules}
+        onSortChange={handleSortChange}
       />
       {filteredItems.length === 0 && <p className="text-slate-500 py-4">Nenhum item.</p>}
 

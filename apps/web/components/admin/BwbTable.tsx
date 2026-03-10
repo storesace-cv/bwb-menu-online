@@ -16,6 +16,9 @@ type BwbTableProps<T> = {
   columns: ColumnDef<T>[];
   rows: T[];
   defaultSort?: SortRule[];
+  /** Controlled sort: when both provided, sort is driven by parent (e.g. for persisting to localStorage) */
+  sortRules?: SortRule[];
+  onSortChange?: (rules: SortRule[]) => void;
   tableClassName?: string;
   /** Stable key per row (e.g. row => row.id) for list reconciliation when reordering */
   rowKey?: (row: T) => string | number;
@@ -28,11 +31,15 @@ export function BwbTable<T>({
   columns,
   rows,
   defaultSort = [],
+  sortRules: controlledSortRules,
+  onSortChange,
   tableClassName = "",
   rowKey,
   getRowClassName,
 }: BwbTableProps<T>) {
-  const [sortRules, setSortRules] = useState<SortRule[]>(defaultSort);
+  const [internalSortRules, setInternalSortRules] = useState<SortRule[]>(defaultSort);
+  const isControlled = controlledSortRules != null && onSortChange != null;
+  const sortRules = isControlled ? controlledSortRules : internalSortRules;
 
   const sortedRows = useMemo(
     () => sortData(rows, sortRules, columns),
@@ -76,11 +83,11 @@ export function BwbTable<T>({
                   ) : sortable ? (
                     <button
                       type="button"
-                      onClick={() =>
-                        setSortRules((prev) =>
-                          toggleSort(prev, { key: col.key, type: col.type })
-                        )
-                      }
+                      onClick={() => {
+                        const next = toggleSort(sortRules, { key: col.key, type: col.type });
+                        if (isControlled) onSortChange(next);
+                        else setInternalSortRules(next);
+                      }}
                       className="text-left font-medium text-slate-300 hover:text-slate-100 w-full"
                     >
                       <span className="inline-flex items-center gap-1">
