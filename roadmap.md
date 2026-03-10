@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Hidratação Gestão de Artigos, retry 502 em menu_category_items, docs settings_items_mci).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-10 (Sticky header tabela, retry 502 na API itens, moeda e backfill secção/categoria).
 
 ---
 
@@ -150,6 +150,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Fix "Fetch failed" em Definições / Gestão de Artigos (RSC redirect):** No layout de Definições (`settings/layout.tsx`), quando é necessário redirecionar (sem loja ou sem permissão), em pedidos RSC passa a devolver o componente cliente `RedirectTo` em vez de `redirect()`, evitando resposta 307 e o "Fetch failed" na consola ao navegar para /portal-admin/settings ou /portal-admin/settings/items. Logging `portalDebugLog("settings_layout", …)` com pathname, host, isRsc e reason (no_storeId | no_access) para diagnóstico no servidor.
 - **Eliminar "Fetch failed" na consola (navegação completa):** Links "Definições" (header do portal-admin) e "Gestão de Artigos" (página Definições) passaram a usar `<a href="...">` em vez de `<Link>`, forçando full page load e evitando fetch RSC e o cancelamento que gerava "Fetch failed" na consola no fluxo menu → Definições → Gestão de Artigos.
 - **Hidratação Gestão de Artigos e retry 502:** Em `/portal-admin/settings/items`, o estado inicial de `perPage` e `sortRules` passou a ser fixo (50 e DEFAULT_ITEMS_SORT) para coincidir com o primeiro render no servidor; as preferências em localStorage são aplicadas num `useEffect` após a hidratação, eliminando os erros React #418/#423. Na página server, a query a `menu_category_items` em batch passou a ter retry automático quando o Supabase/proxy devolve 502 Bad Gateway (espera 1,5 s e repete o batch uma vez). Doc [docs/DEBUG_PORTAL_ADMIN.md](docs/DEBUG_PORTAL_ADMIN.md) com secção "Gestão de Artigos (settings/items) e 502 em menu_category_items" e comando para filtrar logs `settings_items_mci`.
+- **Sticky header, retry 502 na API itens, moeda e backfill secção/categoria:** Cabeçalho da tabela em `BwbTable` fixo ao scroll (`sticky top-0 z-10 bg-slate-800` nos `<th>`). A API GET `/api/portal-admin/settings/items` aplica retry (2 s e 3 s) nos batches de `menu_category_items` em caso de 502/Bad Gateway, para os chunks carregados em background terem secção/categoria mesmo com falhas temporárias. Na lista de artigos: moeda da loja em vez de "€" fixo — a página lê `store_settings.settings.currency_code` e passa `currencyCode` ao `ItemsListClient`; coluna Preço usa essa moeda. Backfill no cliente: quando mais de metade dos itens iniciais têm secção "—", o cliente faz um GET à mesma API com `offset=0` e `limit=initialItems.length` e faz merge de `itemSectionCategory` e `itemFamilia`, recuperando secção/categoria quando o server render falhou (ex.: 502).
 
 ---
 
@@ -169,7 +170,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - StoresAce connector (paridade com NET-bo): sync StoresAce com logs (sync_runs/sync_events) e upsert em catalog_items; UI de sync suportar fonte por store e mostrar erros.
 
 **(P1) Funcionalidades essenciais do menu (produto)**
-- Moeda/locale por store (store_settings.currency_code + locale) e formatação de preço no menu público (sem hardcode de moeda nos dados).
+- Moeda/locale por store: em Definições → Gestão de Artigos a coluna Preço já usa `store_settings.currency_code`; no menu público o template BWB - Branco também usa essa moeda. Pendente: locale e formatação de preço por locale (sem hardcode).
 - Imagens "a sério" via Supabase Storage: upload + policies + thumbnails + limites e limpeza de órfãs; manter image_url apenas como fallback dev.
 - UX do menu: rota pública /item/[id] (detalhe do item); pesquisa + filtros (alergénios, destaque, categorias); estados: indisponível / esgotado / disponível por horário (opcional simples). Template BWB - Branco já cobre paridade Carpe Diem (header, Escolhas do Chefe, filtros tabs/toggles, secções, footer). Card de artigo com zonas 1 e A–G já implementado (ver [docs/MENU_ITEM_CARD_ZONES.md](docs/MENU_ITEM_CARD_ZONES.md)).
 - Campos para zonas C e D do card: **Ingredientes** (zona C) e **Tempo de Preparação** (zona D). A UI do portal-admin permite editar ingredientes e tempo de preparação; o payload do menu público inclui estes campos. **(Zona D — Tempo de preparação:** já implementado: campo em Definições → Artigos e exibição no card modelo-restaurante-1. **Zona E — Alergénios:** já implementado com tabela global multi-idioma, seleção múltipla no editor/criação de artigo e badges por severidade no menu público; ver migration 046.)

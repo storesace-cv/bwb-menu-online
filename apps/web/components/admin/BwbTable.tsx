@@ -69,7 +69,7 @@ export function BwbTable<T>({
               return (
                 <th
                   key={col.key}
-                  className={`text-left py-2 px-3 text-slate-300 ${col.headerClassName ?? ""}`.trim()}
+                  className={`sticky top-0 z-10 bg-slate-800 text-left py-2 px-3 text-slate-300 ${col.headerClassName ?? ""}`.trim()}
                   aria-sort={
                     !hasHeaderRender && rule
                       ? rule.direction === "asc"

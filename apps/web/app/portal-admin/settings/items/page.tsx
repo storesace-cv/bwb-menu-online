@@ -24,7 +24,7 @@ export default async function SettingsItemsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Artigos</h1>
           <p className="text-slate-400">Domínio não associado a nenhuma loja.</p>
-          <p className="mt-4"><Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link></p>
+          <p className="mt-4"><Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>← Definições</Link></p>
         </div>
       );
     }
@@ -105,17 +105,20 @@ export default async function SettingsItemsPage() {
     return { data, error };
   };
 
+  const isRetryableError = (err: { message?: string } | null) =>
+    err != null &&
+    (String(err.message).includes("502") || String(err.message).includes("Bad Gateway"));
+
   if (itemIds.length > 0) {
     for (let i = 0; i < itemIds.length; i += MCI_BATCH_SIZE) {
       const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
       const batchIndex = Math.floor(i / MCI_BATCH_SIZE);
       let result = await fetchMciBatch(chunk);
-      const isRetryable =
-        result.error != null &&
-        (String(result.error.message).includes("502") || String(result.error.message).includes("Bad Gateway"));
-      if (isRetryable) {
-        await new Promise((r) => setTimeout(r, 1500));
-        result = await fetchMciBatch(chunk);
+      for (const delayMs of [2000, 3000]) {
+        if (isRetryableError(result.error)) {
+          await new Promise((r) => setTimeout(r, delayMs));
+          result = await fetchMciBatch(chunk);
+        } else break;
       }
       const batchError = result.error;
       if (batchError != null && firstBatchError == null) {
@@ -168,6 +171,14 @@ export default async function SettingsItemsPage() {
     }
   }
 
+  const { data: storeSettingsRow } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .single();
+  const settings = storeSettingsRow?.settings as { currency_code?: string } | undefined;
+  const currencyCode = settings?.currency_code ?? "€";
+
   const { data: aiEnabledRpc } = await supabase.rpc("store_can_use_ai_description", {
     p_store_id: storeId,
   });
@@ -183,11 +194,11 @@ export default async function SettingsItemsPage() {
     <div>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Artigos</h1>
       <p className="mb-6">
-        <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
+        <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>← Definições</Link>
         {" · "}
-        <Link href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300">Menu (categorias)</Link>
+        <Link href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>Menu (categorias)</Link>
         {" · "}
-        <Link href="/portal-admin/article-types" className="text-emerald-400 hover:text-emerald-300">Tipos de artigo</Link>
+        <Link href="/portal-admin/article-types" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>Tipos de artigo</Link>
       </p>
 
       <section className="mb-8">
@@ -208,6 +219,7 @@ export default async function SettingsItemsPage() {
             articleTypes={articleTypes ?? []}
             itemSectionCategory={itemSectionCategory}
             itemFamilia={itemFamilia}
+            currencyCode={currencyCode}
           />
         </Card>
       </section>
@@ -224,9 +236,9 @@ export default async function SettingsItemsPage() {
         <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Artigos</h1>
         <p className="text-slate-400 mb-4">Não foi possível carregar os dados. Tente novamente.</p>
         <p className="flex flex-wrap gap-3">
-          <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
+          <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>← Definições</Link>
           <span className="text-slate-500">·</span>
-          <Link href="/portal-admin/settings/items" className="text-emerald-400 hover:text-emerald-300">Tentar de novo</Link>
+          <Link href="/portal-admin/settings/items" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>Tentar de novo</Link>
         </p>
       </div>
     );

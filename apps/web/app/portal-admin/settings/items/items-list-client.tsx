@@ -43,6 +43,7 @@ export function ItemsListClient({
   articleTypes,
   itemSectionCategory: initialItemSectionCategory,
   itemFamilia: initialItemFamilia,
+  currencyCode = "€",
 }: {
   items: Item[];
   totalCount: number;
@@ -52,6 +53,7 @@ export function ItemsListClient({
   articleTypes: ArticleType[];
   itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>;
   itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }>;
+  currencyCode?: string;
 }) {
   const [mergedItems, setMergedItems] = useState<Item[]>(initialItems);
   const [mergedSectionCategory, setMergedSectionCategory] = useState<Record<string, { sectionName: string; categoryName: string }>>(initialItemSectionCategory);
@@ -69,6 +71,30 @@ export function ItemsListClient({
       setMergedFamilia(initialItemFamilia);
     }
   }, [initialItems, initialItemSectionCategory, initialItemFamilia]);
+
+  const backfillSectionCategoryStarted = useRef(false);
+  useEffect(() => {
+    if (backfillSectionCategoryStarted.current || initialItems.length === 0) return;
+    const withDash = initialItems.filter((i) => (initialItemSectionCategory[i.id]?.sectionName ?? "—") === "—").length;
+    if (withDash <= initialItems.length / 2) return;
+    backfillSectionCategoryStarted.current = true;
+    fetch(`/api/portal-admin/settings/items?offset=0&limit=${initialItems.length}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(res.statusText);
+        return res.json();
+      })
+      .then((data: { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> }) => {
+        if (data.itemSectionCategory && Object.keys(data.itemSectionCategory).length > 0) {
+          setMergedSectionCategory((prev) => ({ ...prev, ...data.itemSectionCategory }));
+        }
+        if (data.itemFamilia && Object.keys(data.itemFamilia).length > 0) {
+          setMergedFamilia((prev) => ({ ...prev, ...data.itemFamilia }));
+        }
+      })
+      .catch(() => {
+        backfillSectionCategoryStarted.current = false;
+      });
+  }, [initialItems.length, initialItemSectionCategory]);
 
   useEffect(() => {
     if (!hasMore || restLoadStarted.current || initialItems.length === 0) return;
@@ -265,7 +291,7 @@ export function ItemsListClient({
         label: "Preço",
         type: "number",
         accessor: (i) => displayPrice(i),
-        render: (i) => (displayPrice(i) != null ? `${Number(displayPrice(i)).toFixed(2)} €` : "—"),
+        render: (i) => (displayPrice(i) != null ? `${Number(displayPrice(i)).toFixed(2)} ${currencyCode}` : "—"),
       },
       {
         key: "type",
@@ -355,7 +381,7 @@ export function ItemsListClient({
         render: (i) => <ItemActions itemId={i.id} menuName={displayName(i)} />,
       },
     ],
-    [allOnPageSelected, typeById, mergedSectionCategory, mergedFamilia]
+    [allOnPageSelected, typeById, mergedSectionCategory, mergedFamilia, currencyCode, selectedIds]
   );
 
   return (

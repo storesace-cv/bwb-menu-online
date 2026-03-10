@@ -90,13 +90,28 @@ export async function GET(request: NextRequest) {
   const itemIds = items.map((i) => i.id);
   const MCI_BATCH_SIZE = 200;
   let mciRows: { menu_item_id: string; category_id: string }[] = [];
-  for (let i = 0; i < itemIds.length; i += MCI_BATCH_SIZE) {
-    const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
-    const { data: batch } = await supabase
+
+  const fetchMciBatch = async (chunk: string[]) => {
+    const { data, error } = await supabase
       .from("menu_category_items")
       .select("menu_item_id, category_id")
       .in("menu_item_id", chunk);
-    mciRows = mciRows.concat(batch ?? []);
+    return { data, error };
+  };
+  const isRetryableError = (err: { message?: string } | null) =>
+    err != null &&
+    (String(err.message).includes("502") || String(err.message).includes("Bad Gateway"));
+
+  for (let i = 0; i < itemIds.length; i += MCI_BATCH_SIZE) {
+    const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
+    let result = await fetchMciBatch(chunk);
+    for (const delayMs of [2000, 3000]) {
+      if (isRetryableError(result.error)) {
+        await new Promise((r) => setTimeout(r, delayMs));
+        result = await fetchMciBatch(chunk);
+      } else break;
+    }
+    mciRows = mciRows.concat(result.data ?? []);
   }
 
   const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
