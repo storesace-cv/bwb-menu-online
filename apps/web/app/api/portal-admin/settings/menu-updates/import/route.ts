@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
   const { data: storeRow } = await supabase
     .from("stores")
-    .select("id, name, tenant_id")
+    .select("id, name, tenant_id, store_number")
     .eq("id", storeId)
     .single();
   if (!storeRow) {
@@ -74,8 +74,16 @@ export async function POST(request: NextRequest) {
     .select("nif, name")
     .eq("id", (storeRow as { tenant_id: string }).tenant_id)
     .single();
-  const sessionTenantLabel = (tenantRow as { name?: string } | null)?.name?.trim() || (tenantRow as { nif?: string } | null)?.nif || "";
-  const sessionStoreLabel = (storeRow as { name?: string }).name?.trim() || host || "";
+  const sessionTenantLabel =
+    (tenantRow as { nif?: string; name?: string } | null)?.nif?.trim() ??
+    (tenantRow as { name?: string } | null)?.name?.trim() ??
+    "";
+  const sessionStoreLabel = String(
+    (storeRow as { store_number?: number }).store_number ??
+      (storeRow as { name?: string }).name?.trim() ??
+      host ??
+      ""
+  );
 
   let file: File;
   try {

@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Export Excel: colunas Tenant/Loja e nome do ficheiro).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Import Excel alinhado com export; regra export/import).
 
 ---
 
@@ -159,6 +159,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Exportação e importação Excel do menu (modelo próprio):** Card "Actualizações ao Menu" em Definições (`/portal-admin/settings/menu-updates`) com Exportar e Importar. Ficheiro Excel com colunas Tenant e Loja (primeiras duas, sempre bloqueadas) para validação na importação: se o ficheiro não pertencer ao tenant/loja da sessão, a importação é rejeitada com mensagem explícita. Chave: código do artigo (`item_code`); colunas Nome, Preço, Tipo, Familia, Sub Familia, Secção, Categoria, Promo, TA, Tempo prep., Ordem, Visível, Destaque. Proteção da folha (ExcelJS) e validação (dropdowns para Tipo/Secção/Categoria com valores da BD no momento da exportação; Sim/Não para Promo, TA, Visível, Destaque; numérico para Tempo prep. e Ordem). APIs GET `/api/portal-admin/settings/menu-updates/export` e POST `.../import` (multipart); listas dinâmicas (tipos, secções, categorias) lidas da BD em cada exportação. Dependência `exceljs`; leitura do ficheiro na importação com `xlsx`.
 - **Export Excel: Descrição/Ingredientes, larguras, filtros, ordenação e Categoria por Secção:** No ficheiro exportado foram adicionadas as colunas **Descrição** e **Ingredientes** (após Nome). Para evitar problemas de abertura no Excel, as quebras de linha são substituídas pelo placeholder **" || "** no export; na importação, " || " é reconvertido em parágrafo (quebra de linha) antes de gravar em `menu_description` e `menu_ingredients`. Com a folha protegida, o utilizador pode ajustar largura de colunas e linhas, usar **filtros** (auto-filter) e **ordenação**. A lista de **Categoria** é dependente da **Secção** seleccionada na mesma linha: folha oculta `_Listas`, nomes definidos e validação INDIRECT por linha. **Fix erro ao abrir:** nomes definidos não podem conter hífen (Excel remove-os na reparação); sanitização do nome da secção passou a incluir hífen → underscore (ex.: Self-Service → Self_Service) e a fórmula INDIRECT usa SUBSTITUTE duplo (espaço e hífen) para coincidir.
 - **Export Excel: colunas Tenant/Loja e nome do ficheiro:** A primeira coluna do ficheiro exportado (Tenant) passou a mostrar o **NIF do tenant** (em vez do nome); a segunda coluna (Loja) passou a mostrar o **número da loja** (`store_number`). O nome do ficheiro exportado segue o formato `<NIF>-<numero_loja>_<ddmmaa_hhmm>.xlsx` (ex.: `123456789-1_080326_1430.xlsx`).
+- **Import Excel compatível com export e regra de consistência:** A validação Tenant/Loja na importação foi alinhada com o export: a sessão compara agora NIF do tenant e número da loja (`store_number`) com os valores da primeira linha do ficheiro, permitindo reimportar ficheiros exportados. Regra do projeto: qualquer alteração ao export obriga a verificar a compatibilidade da importação e a actualizá-la no mesmo PR/commit; regra Cursor em `.cursor/rules/excel-menu-export-import.mdc` e referência em "Como manter este ficheiro".
 
 ---
 
@@ -200,3 +201,5 @@ Este documento regista o que já está feito e o que está planeado, para manter
 ## Como manter este ficheiro
 
 Ao concluir uma fase ou marco, mover os itens correspondentes de **Planeado / pendente** para **Feito** e ajustar o texto se necessário. Ao definir novo trabalho (planos, issues, sprints), adicionar ou atualizar itens em **Planeado / pendente**. Em planos ou PRs que alterem o âmbito do projeto, atualizar o roadmap em conjunto com as alterações.
+
+**Export/Import Excel (Actualizações ao Menu):** O ficheiro exportado é a referência; a importação deve validar e processar exactamente esse formato (colunas Tenant = NIF, Loja = número da loja, e restantes cabeçalhos). Qualquer alteração ao export obriga a verificar se a importação continua compatível e, em caso negativo, a actualizar a importação de imediato no mesmo PR/commit. Regra Cursor em `.cursor/rules/excel-menu-export-import.mdc`.
