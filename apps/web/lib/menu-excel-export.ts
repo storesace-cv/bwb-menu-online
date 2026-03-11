@@ -118,8 +118,8 @@ export async function buildMenuUpdatesWorkbook(params: MenuExcelExportParams): P
     sheet.getCell(r, 10).dataValidation = { type: "list", allowBlank: true, formulae: [categoryList] };
     sheet.getCell(r, 11).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
     sheet.getCell(r, 12).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
-    sheet.getCell(r, 13).dataValidation = { type: "wholeNumber", operator: "greaterThanOrEqual", formulae: [0], allowBlank: true };
-    sheet.getCell(r, 14).dataValidation = { type: "wholeNumber", operator: "greaterThanOrEqual", formulae: [0], allowBlank: true };
+    sheet.getCell(r, 13).dataValidation = { type: "whole", operator: "greaterThanOrEqual", formulae: [0], allowBlank: true };
+    sheet.getCell(r, 14).dataValidation = { type: "whole", operator: "greaterThanOrEqual", formulae: [0], allowBlank: true };
     sheet.getCell(r, 15).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
     sheet.getCell(r, 16).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
   }
@@ -136,10 +136,7 @@ export async function buildMenuUpdatesWorkbook(params: MenuExcelExportParams): P
     deleteColumns: false,
     deleteRows: false,
     sort: false,
-    filter: false,
-    useAutoFilter: false,
-    editObjects: false,
-    editScenarios: false,
+    autoFilter: false,
   });
 
   const buffer = await workbook.xlsx.writeBuffer();

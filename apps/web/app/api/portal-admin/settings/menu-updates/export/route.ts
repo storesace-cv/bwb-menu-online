@@ -115,7 +115,7 @@ export async function GET() {
   }
 
   const typeById = new Map((articleTypes ?? []).map((t) => [(t as { id: string }).id, (t as { name: string }).name]));
-  const categoryById = new Map((categories ?? []).map((c) => [(c as { id: string }).id, c as { id: string; name: string; section_id: string | null }]));
+  const categoryById = new Map((categories ?? []).map((c) => [(c as { id: string }).id, c as { id: string; name: string; section_id: string | null; sort_order?: number | null }]));
   const sectionById = new Map((sections ?? []).map((s) => [(s as { id: string }).id, (s as { name: string }).name]));
 
   const MCI_BATCH = 200;
@@ -138,7 +138,7 @@ export async function GET() {
     categoriesByItem.set(row.menu_item_id, list);
   }
   const itemSectionCategory: Record<string, { sectionName: string; categoryName: string }> = {};
-  for (const [menuItemId, list] of categoriesByItem) {
+  for (const [menuItemId, list] of Array.from(categoriesByItem.entries())) {
     list.sort((a, b) => a.sort_order - b.sort_order);
     const firstCatId = list[0]?.category_id;
     const cat = firstCatId ? categoryById.get(firstCatId) : null;
@@ -155,7 +155,8 @@ export async function GET() {
   }
 
   const rows: MenuExcelRow[] = itemsRaw.map((i) => {
-    const catalog = (i as { catalog_items?: { name_original: string | null } | null }).catalog_items;
+    const rawCatalog = (i as { catalog_items?: { name_original: string | null } | { name_original: string | null }[] | null }).catalog_items;
+    const catalog = Array.isArray(rawCatalog) ? rawCatalog[0] ?? null : rawCatalog;
     const displayName = (i as { menu_name?: string | null }).menu_name?.trim() || catalog?.name_original?.trim() || "";
     const price = resolvedPriceByItemId.get(i.id) ?? (i as { menu_price?: number | null }).menu_price ?? null;
     const typeName = (i as { article_type_id?: string | null }).article_type_id ? typeById.get((i as { article_type_id: string }).article_type_id) ?? "" : "";
