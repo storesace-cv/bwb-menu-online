@@ -56,6 +56,20 @@ export function FeaturedCarouselSection({
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    setIsSmallScreen(mq.matches);
+    const handler = () => setIsSmallScreen(mq.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const centerWidth = isSmallScreen ? CENTER_WIDTH_MOBILE : CENTER_WIDTH_DESKTOP;
+  const carouselMinHeight = isSmallScreen ? CAROUSEL_MIN_HEIGHT_MOBILE : CAROUSEL_MIN_HEIGHT_DESKTOP;
+  const sideScale = isSmallScreen ? SIDE_SCALE_MOBILE : SIDE_SCALE_DESKTOP;
+  const overlapPx = isSmallScreen ? OVERLAP_PX_MOBILE : OVERLAP_PX_DESKTOP;
+
   const goPrev = useCallback(() => {
     setActiveIndex((i) => (i - 1 + n) % n);
   }, [n]);
