@@ -14,7 +14,7 @@ import {
 
 const zoneRowClass = "min-h-0";
 
-/** Altura do card (desktop); imagem fica quadrada com este lado; zona de texto = 5/3 da largura da imagem (imagem + 2/3 da imagem). */
+/** Altura do card (desktop); imagem quadrada (--card-h). Zona de texto usa flex-1 para se adaptar ao espaço (proporção 5/3 quando há espaço suficiente). */
 const CARD_HEIGHT_PX = 280;
 
 /** Card "Modelo Restaurante 2": imagem à esquerda, conteúdo à direita. inRowCards devolve 8 zonas (subgrid) como Restaurante 1. */
@@ -159,7 +159,7 @@ export function ItemCardRestaurante2({
             onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
           />
         </button>
-        <div className="flex-1 flex flex-col min-w-0 p-3 sm:p-4 sm:flex-none sm:w-[calc(5/3*var(--card-h))]">
+        <div className="flex-1 flex flex-col min-w-0 p-3 sm:p-4">
           <h3 className="font-bold text-lg text-gray-900 text-left mt-0 mb-1">{item.menu_name}</h3>
           <div className="flex items-center justify-between gap-2 flex-wrap min-h-[28px]">
             {item.prep_minutes != null ? (
