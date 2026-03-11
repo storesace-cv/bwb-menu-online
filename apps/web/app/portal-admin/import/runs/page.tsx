@@ -19,7 +19,8 @@ export default async function ImportRunsPage() {
     );
   }
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
-  let list: Awaited<ReturnType<typeof supabase.from<"import_runs">.select>>["data"] = [];
+  type ImportRunRow = { id: string; source_type: string; tenant_nif: string | null; store_id: string | null; file_name: string | null; started_at: string | null; finished_at: string | null; counts: Record<string, number> | null; error: string | null };
+  let list: ImportRunRow[] = [];
   let error: { message: string } | null = null;
 
   if (isSuper) {
