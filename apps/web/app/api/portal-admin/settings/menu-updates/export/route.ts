@@ -29,7 +29,7 @@ export async function GET() {
 
   const { data: storeRow } = await supabase
     .from("stores")
-    .select("id, name, tenant_id")
+    .select("id, name, tenant_id, store_number")
     .eq("id", storeId)
     .single();
   if (!storeRow) {
@@ -41,8 +41,28 @@ export async function GET() {
     .select("nif, name")
     .eq("id", (storeRow as { tenant_id: string }).tenant_id)
     .single();
-  const tenantLabel = (tenantRow as { nif?: string; name?: string } | null)?.name?.trim() || (tenantRow as { nif?: string } | null)?.nif || "Tenant";
-  const storeLabel = (storeRow as { name?: string }).name?.trim() || host || storeId;
+  const tenantLabel =
+    (tenantRow as { nif?: string; name?: string } | null)?.nif?.trim() ??
+    (tenantRow as { name?: string } | null)?.name?.trim() ??
+    "Tenant";
+  const storeLabel = String(
+    (storeRow as { store_number?: number }).store_number ??
+      (storeRow as { name?: string }).name?.trim() ??
+      host ??
+      storeId
+  );
+
+  const tenantNif = (tenantRow as { nif?: string } | null)?.nif?.trim() ?? "Tenant";
+  const storeNumber = (storeRow as { store_number?: number }).store_number ?? 0;
+  const now = new Date();
+  const ddmmaa_hhmm = [
+    String(now.getDate()).padStart(2, "0"),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getFullYear()).slice(-2),
+  ]
+    .join("")
+    .concat("_", String(now.getHours()).padStart(2, "0"), String(now.getMinutes()).padStart(2, "0"));
+  const filename = `${tenantNif}-${storeNumber}_${ddmmaa_hhmm}.xlsx`;
 
   const { data: articleTypes } = await supabase
     .from("article_types")
@@ -97,7 +117,6 @@ export async function GET() {
       categoryNames,
       categoriesBySectionName,
     });
-    const filename = `menu-actualizacoes-${new Date().toISOString().slice(0, 10)}.xlsx`;
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -214,7 +233,6 @@ export async function GET() {
     categoriesBySectionName,
   });
 
-  const filename = `menu-actualizacoes-${new Date().toISOString().slice(0, 10)}.xlsx`;
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
