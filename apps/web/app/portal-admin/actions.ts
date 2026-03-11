@@ -45,6 +45,7 @@ export async function createTenant(_prev: { error?: string } | null, formData: F
   const nif = (formData.get("nif") as string)?.trim() ?? "";
   const name = (formData.get("name") as string)?.trim() ?? "";
   const contactEmail = (formData.get("contact_email") as string)?.trim()?.toLowerCase() ?? "";
+  const sourceType = (formData.get("source_type") as string)?.trim() || "netbo_api";
   if (!nif) return { error: "NIF obrigatório" };
   if (!contactEmail) return { error: "Email obrigatório" };
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -53,6 +54,7 @@ export async function createTenant(_prev: { error?: string } | null, formData: F
     p_nif: nif,
     p_name: name || null,
     p_contact_email: contactEmail,
+    p_source_type: sourceType,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/tenants");
@@ -182,6 +184,9 @@ export async function updateTenantContactEmail(tenantId: string, contactEmail: s
       p_tenant_id: tid,
       p_name: null,
       p_contact_email: email,
+      p_image_source: null,
+      p_source_type: null,
+      p_is_active: null,
     });
     tenantsActionLog({
       action: "updateTenantContactEmail",
@@ -308,6 +313,72 @@ export async function resendTenantWelcomeEmail(tenantId: string): Promise<{ erro
       error: err instanceof Error ? err.message : String(err),
     });
     return { error: err instanceof Error ? err.message : "Erro ao re-enviar e-mail." };
+  }
+}
+
+export async function updateTenantImageSource(tenantId: string, imageSource: string): Promise<{ error?: string } | null> {
+  const tid = (tenantId ?? "").trim();
+  if (!tid) return { error: "Tenant obrigatório" };
+  const valid = ["storage", "url", "legacy_path"].includes(imageSource);
+  if (!valid) return { error: "Método de imagens inválido" };
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("admin_update_tenant", {
+      p_tenant_id: tid,
+      p_name: null,
+      p_contact_email: null,
+      p_image_source: imageSource,
+      p_source_type: null,
+      p_is_active: null,
+    });
+    if (error) return { error: error.message };
+    revalidatePath("/portal-admin/tenants");
+    revalidatePath("/portal-admin/settings");
+    return null;
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Erro ao guardar." };
+  }
+}
+
+export async function updateTenantSourceType(tenantId: string, sourceType: string): Promise<{ error?: string } | null> {
+  const tid = (tenantId ?? "").trim();
+  if (!tid) return { error: "Tenant obrigatório" };
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("admin_update_tenant", {
+      p_tenant_id: tid,
+      p_name: null,
+      p_contact_email: null,
+      p_image_source: null,
+      p_source_type: sourceType,
+      p_is_active: null,
+    });
+    if (error) return { error: error.message };
+    revalidatePath("/portal-admin/tenants");
+    return null;
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Erro ao guardar." };
+  }
+}
+
+export async function setTenantActive(tenantId: string, isActive: boolean): Promise<{ error?: string } | null> {
+  const tid = (tenantId ?? "").trim();
+  if (!tid) return { error: "Tenant obrigatório" };
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("admin_update_tenant", {
+      p_tenant_id: tid,
+      p_name: null,
+      p_contact_email: null,
+      p_image_source: null,
+      p_source_type: null,
+      p_is_active: isActive,
+    });
+    if (error) return { error: error.message };
+    revalidatePath("/portal-admin/tenants");
+    return null;
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Erro ao guardar." };
   }
 }
 

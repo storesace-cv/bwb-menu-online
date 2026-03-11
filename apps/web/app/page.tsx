@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { getPublicMenuInitialByHostname } from "@/lib/supabase";
 import { PublicMenuClient } from "@/components/public-menu-client";
+import { TenantDisabledView } from "@/components/tenant-disabled-view";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,14 @@ export default async function Home() {
         <h1>BWB Menu Online</h1>
         <p>Nenhuma loja encontrada para este endereço.</p>
         <p style={{ fontSize: "0.875rem", color: "#666" }}>{menu.error}</p>
+      </main>
+    );
+  }
+
+  if (menu.tenant_disabled) {
+    return (
+      <main className="min-h-screen w-full">
+        <TenantDisabledView />
       </main>
     );
   }

@@ -23,16 +23,25 @@ export default async function ImageImportPage() {
     const storeId = normalizeStoreId(storeIdRaw);
 
     let imageSource = "storage";
+    let tenantImageSource: string | null = null;
     if (storeId) {
-      const { data: row, error: settingsError } = await supabase
-        .from("store_settings")
-        .select("settings")
-        .eq("store_id", storeId)
-        .maybeSingle();
-      if (!settingsError && row?.settings != null && typeof row.settings === "object") {
-        const settings = row.settings as Record<string, unknown>;
-        const src = settings.image_source;
-        if (src === "url" || src === "legacy_path") imageSource = src;
+      const { data: tenantSrc } = await supabase.rpc("get_tenant_image_source_by_store_id", {
+        p_store_id: storeId,
+      });
+      if (typeof tenantSrc === "string" && ["storage", "url", "legacy_path"].includes(tenantSrc)) {
+        tenantImageSource = tenantSrc;
+        imageSource = tenantSrc;
+      } else {
+        const { data: row, error: settingsError } = await supabase
+          .from("store_settings")
+          .select("settings")
+          .eq("store_id", storeId)
+          .maybeSingle();
+        if (!settingsError && row?.settings != null && typeof row.settings === "object") {
+          const settings = row.settings as Record<string, unknown>;
+          const src = settings.image_source;
+          if (src === "url" || src === "legacy_path") imageSource = src;
+        }
       }
     }
 
@@ -64,7 +73,11 @@ export default async function ImageImportPage() {
         </nav>
         <h1 className="text-2xl font-semibold text-slate-100 mb-2">Gestão de Imagens</h1>
         <p className="text-slate-400 mb-6">Defina o método de leitura de imagens no menu e importe imagens em lote associadas aos artigos pelo código no nome do ficheiro.</p>
-        <ImageImportClient storeId={storeId} initialImageSource={imageSource} />
+        <ImageImportClient
+          storeId={storeId}
+          initialImageSource={imageSource}
+          tenantImageSourceLocked={tenantImageSource != null}
+        />
       </div>
     );
   } catch (e) {

@@ -27,13 +27,23 @@ function normalizeImageSource(value: string | undefined): (typeof VALID_IMAGE_SO
   return VALID_IMAGE_SOURCES.includes(v as (typeof VALID_IMAGE_SOURCES)[number]) ? (v as (typeof VALID_IMAGE_SOURCES)[number]) : "storage";
 }
 
-export function ImageImportClient({ storeId, initialImageSource }: { storeId: string; initialImageSource?: string }) {
+export function ImageImportClient({
+  storeId,
+  initialImageSource,
+  tenantImageSourceLocked = false,
+}: {
+  storeId: string;
+  initialImageSource?: string;
+  tenantImageSourceLocked?: boolean;
+}) {
   const effectiveImageSource = normalizeImageSource(initialImageSource ?? "storage");
   const [imageSourceState, formAction] = useFormState(updateImageSource, null);
   const [overwrite, setOverwrite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<FileResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const imageSourceLabel = IMAGE_SOURCE_OPTIONS.find((o) => o.value === effectiveImageSource)?.label ?? effectiveImageSource;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,23 +84,32 @@ export function ImageImportClient({ storeId, initialImageSource }: { storeId: st
     <div className="space-y-6 max-w-3xl">
       <Card className="p-5 bg-slate-800/50 border-slate-700">
         <h2 className="text-lg font-medium text-slate-200 mb-3">Método de leitura de imagens</h2>
-        <form action={formAction} className="flex flex-col gap-4 max-w-md mb-0">
-          <input type="hidden" name="store_id" value={storeId} />
-          <Select
-            id="image_source"
-            name="image_source"
-            label="Método de leitura de imagens"
-            defaultValue={effectiveImageSource}
-          >
-            {IMAGE_SOURCE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </Select>
-          <Button type="submit" variant="primary">Guardar método</Button>
-          {imageSourceState?.error && <Alert variant="error">{imageSourceState.error}</Alert>}
-        </form>
+        {tenantImageSourceLocked ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-slate-400">
+              O método de leitura de imagens é definido ao nível do tenant e não pode ser alterado aqui.
+            </p>
+            <p className="text-slate-200 font-medium">{imageSourceLabel}</p>
+          </div>
+        ) : (
+          <form action={formAction} className="flex flex-col gap-4 max-w-md mb-0">
+            <input type="hidden" name="store_id" value={storeId} />
+            <Select
+              id="image_source"
+              name="image_source"
+              label="Método de leitura de imagens"
+              defaultValue={effectiveImageSource}
+            >
+              {IMAGE_SOURCE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </Select>
+            <Button type="submit" variant="primary">Guardar método</Button>
+            {imageSourceState?.error && <Alert variant="error">{imageSourceState.error}</Alert>}
+          </form>
+        )}
       </Card>
 
       <Card className="p-5 bg-slate-800/50 border-slate-700">

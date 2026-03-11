@@ -12,8 +12,9 @@ type DomainRow = { hostname: string; is_primary?: boolean };
 export default async function TenantStoresPage({ params }: Props) {
   const { tenantId } = await params;
   const supabase = await createClient();
-  const { data: tenantRow } = await supabase.from("tenants").select("nif").eq("id", tenantId).single();
+  const { data: tenantRow } = await supabase.from("tenants").select("nif, source_type").eq("id", tenantId).single();
   const tenantNif = (tenantRow?.nif ?? "").trim();
+  const tenantSourceType = (tenantRow as { source_type?: string } | null)?.source_type ?? "netbo_api";
   const { data: raw } = await supabase.rpc("admin_list_stores", { p_tenant_id: tenantId });
   const list: StoreRow[] = Array.isArray(raw) ? raw : [];
 
@@ -35,7 +36,7 @@ export default async function TenantStoresPage({ params }: Props) {
       <section className="mb-8">
         <Card>
           <h2 className="text-lg font-medium text-slate-200 mb-4">Adicionar loja</h2>
-          <CreateStoreForm tenantId={tenantId} tenantNif={tenantNif} />
+          <CreateStoreForm tenantId={tenantId} tenantNif={tenantNif} tenantSourceType={tenantSourceType} />
         </Card>
       </section>
 

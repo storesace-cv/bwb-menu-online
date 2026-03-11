@@ -158,6 +158,8 @@ export type PublicMenuPayload = {
 /** Payload da carga inicial: inclui featured_items no topo (todos os is_featured da loja). */
 export type PublicMenuInitialPayload = PublicMenuPayload & {
   featured_items?: { item: PublicMenuItem; categoryName: string }[];
+  /** Quando true, o tenant está desactivado; mostrar vista com vídeo e mensagem. */
+  tenant_disabled?: boolean;
 };
 
 export async function getPublicMenuByHostname(

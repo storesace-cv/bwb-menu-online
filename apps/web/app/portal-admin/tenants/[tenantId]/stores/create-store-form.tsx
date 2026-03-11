@@ -4,20 +4,29 @@ import { useState } from "react";
 import { useFormState } from "react-dom";
 import { createStore } from "../../../actions";
 import { Input, Button, Alert } from "@/components/admin";
-import { SOURCE_TYPE_OPTIONS } from "../../source-type-options";
 
-export function CreateStoreForm({ tenantId, tenantNif }: { tenantId: string; tenantNif: string }) {
+export function CreateStoreForm({
+  tenantId,
+  tenantNif,
+  tenantSourceType = "netbo_api",
+}: {
+  tenantId: string;
+  tenantNif: string;
+  tenantSourceType?: string;
+}) {
   const [state, formAction] = useFormState(createStore, null);
   const [domainOrigin, setDomainOrigin] = useState<"shared" | "private">("shared");
   const [storeNumber, setStoreNumber] = useState<string>("");
 
   const nif = (tenantNif ?? "").trim().toLowerCase();
   const sharedHostname = nif && storeNumber ? `${nif}${storeNumber}.menu.bwb.pt` : null;
+  const sourceType = (tenantSourceType ?? "netbo_api").trim() || "netbo_api";
 
   return (
     <form action={formAction} className="flex flex-wrap gap-4 items-end">
       <input type="hidden" name="tenant_id" value={tenantId} />
       <input type="hidden" name="domain_origin" value={domainOrigin} />
+      <input type="hidden" name="source_type" value={sourceType} />
       <Input
         id="store_number"
         name="store_number"
@@ -28,23 +37,6 @@ export function CreateStoreForm({ tenantId, tenantNif }: { tenantId: string; ten
         onChange={(e) => setStoreNumber((e.target as HTMLInputElement).value)}
       />
       <Input id="store_name" name="name" label="Nome da Loja" type="text" placeholder="Nome da loja" />
-      <div className="mb-4">
-        <label htmlFor="source_type" className="block text-sm font-medium text-slate-300 mb-1">
-          Origem dos Dados
-        </label>
-        <select
-          id="source_type"
-          name="source_type"
-          defaultValue="netbo_api"
-          className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-white"
-        >
-          {SOURCE_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value} disabled={opt.disabled}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
       <div className="mb-4">
         <label htmlFor="domain_origin_sel" className="block text-sm font-medium text-slate-300 mb-1">
           Origem do Domínio

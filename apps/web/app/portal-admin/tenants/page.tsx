@@ -5,9 +5,21 @@ import { CreateStoreForm } from "./[tenantId]/stores/create-store-form";
 import { StoreDomainsBlock } from "./store-domains-block";
 import { StoresTableClient } from "./stores-table-client";
 import { TenantContactEmailBlock } from "./tenant-contact-email-block";
+import { TenantImageSourceBlock } from "./tenant-image-source-block";
+import { TenantSourceTypeBlock } from "./tenant-source-type-block";
+import { TenantActiveBlock } from "./tenant-active-block";
 import { Card } from "@/components/admin";
 
-type TenantRow = { id: string; nif: string; name: string | null; contact_email?: string | null; created_at?: string };
+type TenantRow = {
+  id: string;
+  nif: string;
+  name: string | null;
+  contact_email?: string | null;
+  image_source?: string;
+  source_type?: string;
+  is_active?: boolean;
+  created_at?: string;
+};
 type StoreRow = { id: string; tenant_id: string; store_number: number; name: string | null; source_type: string; is_active?: boolean };
 type DomainRow = { hostname: string; is_primary?: boolean };
 
@@ -18,11 +30,17 @@ function normalizeTenantRow(row: unknown): TenantRow | null {
   const rawEmail = r.contact_email;
   const contact_email =
     typeof rawEmail === "string" && rawEmail.trim() !== "" ? rawEmail.trim() : null;
+  const image_source = typeof r.image_source === "string" ? r.image_source : "storage";
+  const source_type = typeof r.source_type === "string" ? r.source_type : "netbo_api";
+  const is_active = typeof r.is_active === "boolean" ? r.is_active : true;
   return {
     id: r.id,
     nif: typeof r.nif === "string" ? r.nif : "",
     name: r.name != null ? String(r.name) : null,
     contact_email,
+    image_source,
+    source_type,
+    is_active,
     created_at: r.created_at != null ? String(r.created_at) : undefined,
   };
 }
@@ -83,9 +101,16 @@ export default async function TenantsPage() {
         {tenantsWithStores.map(({ tenant: t, storesWithDomains }) => (
           <Card key={t.id} className="p-5">
             <div className="mb-4">
-              <h2 className="text-lg font-medium text-slate-200">
-                {t.nif} — {t.name ?? "—"}
-              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-medium text-slate-200">
+                  {t.nif} — {t.name ?? "—"}
+                </h2>
+                {!t.is_active && (
+                  <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-medium text-amber-400">
+                    Desactivado
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-slate-400 mt-1">
                 <Link href={`/portal-admin/tenants/${t.id}/stores`} className="text-emerald-400 hover:text-emerald-300">
                   Abrir lojas em página separada
@@ -93,11 +118,14 @@ export default async function TenantsPage() {
               </p>
             </div>
 
+            <TenantActiveBlock tenantId={t.id} initialIsActive={t.is_active ?? true} />
+            <TenantImageSourceBlock tenantId={t.id} initialImageSource={t.image_source ?? "storage"} />
+            <TenantSourceTypeBlock tenantId={t.id} initialSourceType={t.source_type ?? "netbo_api"} />
             <TenantContactEmailBlock tenantId={t.id} initialEmail={t.contact_email ?? null} />
 
             <div className="mb-6">
               <h3 className="text-sm font-medium text-slate-300 mb-3">Adicionar loja</h3>
-              <CreateStoreForm tenantId={t.id} tenantNif={t.nif} />
+              <CreateStoreForm tenantId={t.id} tenantNif={t.nif} tenantSourceType={t.source_type ?? "netbo_api"} />
             </div>
 
             <h3 className="text-sm font-medium text-slate-300 mb-3">Lojas</h3>
