@@ -69,9 +69,9 @@ function listFormula(values: string[]): string {
   return `"${escaped.slice(0, 20).join(",")}"`;
 }
 
-/** Sanitize section name for Excel defined name (used in INDIRECT); match SUBSTITUTE in formula */
+/** Sanitize section name for Excel defined name (used in INDIRECT); match SUBSTITUTE in formula. No hyphens allowed in defined names. */
 function sanitizeSectionNameForName(name: string): string {
-  return name.replace(/\s+/g, "_").replace(/—/g, "_");
+  return name.replace(/\s+/g, "_").replace(/—/g, "_").replace(/-/g, "_");
 }
 
 function getExcelColumnLetter(columnNumber: number): string {
@@ -159,7 +159,7 @@ export async function buildMenuUpdatesWorkbook(params: MenuExcelExportParams): P
     sheet.getCell(r, CATEGORY_COL).dataValidation = {
       type: "list",
       allowBlank: true,
-      formulae: [`INDIRECT(SUBSTITUTE($${getExcelColumnLetter(SECTION_COL)}${r}," ","_"))`],
+      formulae: [`INDIRECT(SUBSTITUTE(SUBSTITUTE($${getExcelColumnLetter(SECTION_COL)}${r}," ","_"),"-","_"))`],
     };
     sheet.getCell(r, 13).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
     sheet.getCell(r, 14).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
