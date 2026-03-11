@@ -16,6 +16,7 @@ export function CreateStoreForm({
   tenantSourceType?: string;
 }) {
   const [state, formAction] = useFormState(createStore, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
   const [domainOrigin, setDomainOrigin] = useState<"shared" | "private">("shared");
   const [storeNumber, setStoreNumber] = useState<string>("");
 
@@ -24,7 +25,7 @@ export function CreateStoreForm({
   const sourceType = (tenantSourceType ?? "netbo_api").trim() || "netbo_api";
 
   return (
-    <form action={formAction} className="flex flex-wrap gap-4 items-end">
+    <form action={formAction} className="flex flex-wrap gap-4 items-end" {...formBind}>
       <input type="hidden" name="tenant_id" value={tenantId} />
       <input type="hidden" name="domain_origin" value={domainOrigin} />
       <input type="hidden" name="source_type" value={sourceType} />

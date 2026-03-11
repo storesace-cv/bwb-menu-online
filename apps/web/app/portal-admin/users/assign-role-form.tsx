@@ -23,6 +23,7 @@ export function AssignRoleForm({
   roles: Role[];
 }) {
   const [state, formAction] = useFormState(assignRole, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
   const [tenantId, setTenantId] = useState("");
   const [storeId, setStoreId] = useState("");
   const stores = tenantId ? storesByTenant[tenantId] ?? [] : [];
@@ -33,7 +34,7 @@ export function AssignRoleForm({
   };
 
   return (
-    <form action={formAction} className="flex flex-wrap gap-4 items-end">
+    <form action={formAction} className="flex flex-wrap gap-4 items-end" {...formBind}>
       <Select id="assign-user" name="user_id" label="Utilizador" required>
         <option value="">—</option>
         {users.map((u) => (
