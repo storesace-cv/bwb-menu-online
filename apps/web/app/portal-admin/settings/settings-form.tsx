@@ -126,12 +126,14 @@ export function SettingsForm({
   };
 }) {
   const [state, formAction] = useFormState(updateStoreSettings, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
   return (
     <form
       id={FORM_ID}
       action={formAction}
       className="flex flex-col gap-6"
       encType="multipart/form-data"
+      {...formBind}
     >
       <input type="hidden" name="store_id" value={storeId} />
 
