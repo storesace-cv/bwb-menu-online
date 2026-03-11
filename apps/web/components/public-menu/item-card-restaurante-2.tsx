@@ -143,19 +143,19 @@ export function ItemCardRestaurante2({
   return (
     <li className="list-none h-full flex">
       <article
-        className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col sm:flex-row w-full h-full min-h-0 sm:h-[var(--card-h)] sm:min-h-[var(--card-h)]"
+        className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-row w-full h-full min-h-0 sm:h-[var(--card-h)] sm:min-h-[var(--card-h)]"
         style={{ ["--card-h" as string]: `${CARD_HEIGHT_PX}px` }}
       >
         <button
           type="button"
           onClick={() => setImageModalOpen(true)}
-          className="block w-full sm:w-[var(--card-h)] sm:min-w-[var(--card-h)] sm:h-[var(--card-h)] sm:min-h-[var(--card-h)] aspect-[4/3] sm:aspect-auto overflow-hidden bg-gray-100 text-left focus:outline-none border-0 shrink-0"
+          className="block w-[100px] min-w-[100px] h-[100px] sm:w-[var(--card-h)] sm:min-w-[var(--card-h)] sm:h-[var(--card-h)] sm:min-h-[var(--card-h)] aspect-square sm:aspect-auto overflow-hidden bg-gray-100 text-left focus:outline-none border-0 shrink-0"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
           <img
             src={effectiveSrc}
             alt={item.menu_name ?? ""}
-            className="h-full w-full object-cover border-0 min-h-[200px] sm:min-h-0"
+            className="h-full w-full object-cover border-0 min-h-0"
             onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
           />
         </button>

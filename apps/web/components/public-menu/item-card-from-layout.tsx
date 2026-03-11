@@ -252,11 +252,11 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           <button
             type="button"
             onClick={() => setImageModalOpen(true)}
-            className={`block w-full overflow-hidden bg-gray-100 text-left focus:outline-none border-0 ${imageHeightPx == null ? "aspect-[4/3]" : ""}`}
+            className={`block w-full max-w-full overflow-hidden bg-gray-100 text-left focus:outline-none border-0 ${imageHeightPx == null ? "aspect-[4/3]" : ""}`}
             style={imageHeightPx != null ? { height: `${imageHeightPx}px`, minHeight: `${imageHeightPx}px` } : undefined}
             aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
           >
-            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
+            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full max-w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
           </button>
         );
       case "icons":
@@ -363,12 +363,12 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
   return (
     <li className="list-none h-full flex">
       <article
-        className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col w-full h-full"
+        className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col w-full min-w-0 h-full"
         style={minHeight != null ? { minHeight: `${minHeight}px` } : undefined}
       >
         {hasImage && imageRowIndex >= 0 && renderZone("image")}
         <div
-          className="flex flex-col flex-1 min-h-0"
+          className="flex flex-col flex-1 min-h-0 min-w-0"
           style={{ padding: `${contentPaddingPx}px` }}
         >
           {contentRows.map((row, rowIdx) => {

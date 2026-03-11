@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (proporções Modelo Restaurante 2; secção por defeito; export Excel ordenado).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (menu público responsividade completa; doc MENU_PUBLIC_RESPONSIVIDADE).
 
 ---
 
@@ -165,6 +165,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Secção apresentada por defeito (migration 063):** Coluna `menu_sections.is_default` (boolean, default false). RPC `public_menu_initial_by_hostname` ordena por `is_default DESC, sort_order` para que a secção por defeito seja a primeira e carregue as categorias iniciais; fallback mantido quando nenhuma tem is_default. Em Definições → Secções, na lista: badge "Apresentada por defeito" e botão "Definir como apresentada por defeito"; action `setSectionAsDefault` define is_default na secção escolhida e limpa nas outras da mesma loja.
 - **Export Excel ordenado por Familia; Sub Familia; Nome:** O ficheiro exportado em Definições → Actualizações ao Menu passou a ser ordenado por Familia, Sub Familia e Nome (valores "—" e vazios tratados como string vazia; localeCompare pt). Alteração apenas na API de export (ordenação do array `rows` antes de `buildMenuUpdatesWorkbook`).
 - **Modelo Restaurante 2: proporções do card:** No card "Modelo Restaurante 2" (menu público), mantendo a altura do modelo: a imagem passou a ser quadrada (largura = altura, 280px em desktop) e a zona de texto à direita tem largura igual a 66% da imagem. Alterações em `item-card-restaurante-2.tsx` (constante `CARD_HEIGHT_PX`, variável CSS `--card-h`, classes Tailwind para imagem quadrada e painel com `calc(0.66*var(--card-h))`).
+- **Menu público: responsividade completa (WCAG Reflow, Target Size):** Todo o menu público alinhado com boas práticas internacionais: carrossel de destaques com dots com área de toque 44×44px (WCAG 2.5.5); ItemCardFromLayout e ItemCardRestaurante1 com `min-w-0`/`max-w-full` para reflow sem scroll horizontal; ItemCardDestaque1 com overlay `min-w-0`, `break-words` no nome/descrição; template com contentor `min-w-0 max-w-full` e modal de reserva `max-w-[min(400px,90vw)] md:max-w-[min(400px,25vw)]`; rodapé com `min-w-0 max-w-full`. Documentação em [docs/MENU_PUBLIC_RESPONSIVIDADE.md](docs/MENU_PUBLIC_RESPONSIVIDADE.md).
 
 ---
 

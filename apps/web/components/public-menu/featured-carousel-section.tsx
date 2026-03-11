@@ -173,7 +173,7 @@ export function FeaturedCarouselSection({
         </div>
       </div>
 
-      {/* Indicadores: um círculo por registo, destacar o activo */}
+      {/* Indicadores: um círculo por registo, destacar o activo; área de toque ≥44px (WCAG 2.5.5) */}
       {n >= 1 && (
         <div className="flex justify-center gap-1.5 mt-3" role="tablist" aria-label="Posição no carrossel">
           {featuredItems.map((_, index) => (
@@ -184,16 +184,19 @@ export function FeaturedCarouselSection({
               aria-label={`Ir para destaque ${index + 1}`}
               aria-selected={index === activeIndex}
               onClick={() => setActiveIndex(index)}
-              className="rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
-              style={{
-                width: index === activeIndex ? 12 : 8,
-                height: index === activeIndex ? 12 : 8,
-                minWidth: index === activeIndex ? 12 : 8,
-                minHeight: index === activeIndex ? 12 : 8,
-                backgroundColor: index === activeIndex ? "var(--menu-primary)" : "transparent",
-                borderColor: index === activeIndex ? "var(--menu-primary)" : "rgba(0,0,0,0.2)",
-              }}
-            />
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
+            >
+              <span
+                className="rounded-full block flex-shrink-0 border-2 border-transparent"
+                style={{
+                  width: index === activeIndex ? 12 : 8,
+                  height: index === activeIndex ? 12 : 8,
+                  backgroundColor: index === activeIndex ? "var(--menu-primary)" : "transparent",
+                  borderColor: index === activeIndex ? "var(--menu-primary)" : "rgba(0,0,0,0.2)",
+                }}
+                aria-hidden
+              />
+            </button>
           ))}
         </div>
       )}

@@ -42,7 +42,7 @@ export function MenuFooterSection({ footer }: { footer?: MenuFooterProps | null 
   return (
     <footer className="mt-10 pt-6" aria-label="Rodapé">
       <div
-        className={`rounded-2xl py-2 px-3 text-sm text-center space-y-0 leading-tight ${footer?.text_color?.trim() ? "" : "text-gray-800"}`}
+        className={`rounded-2xl py-2 px-3 text-sm text-center space-y-0 leading-tight min-w-0 max-w-full ${footer?.text_color?.trim() ? "" : "text-gray-800"}`}
         style={style}
       >
         {footer?.logo_url?.trim() ? (

@@ -340,7 +340,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   // suppressHydrationWarning: tolera alterações ao DOM por extensões do browser (ex.: token-signing) que provocam mismatch de hidratação (#418/#423); conteúdo final é equivalente.
   return (
     <div
-      className="menu-public-contents"
+      className="menu-public-contents min-w-0 max-w-full"
       style={
         {
           "--menu-primary": primaryColor,
@@ -359,7 +359,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           onClick={() => setReservationModalOpen(false)}
         >
           <div
-            className="bg-white p-6 rounded-xl w-[90%] md:max-w-[25vw] shadow-xl"
+            className="bg-white p-6 rounded-xl w-[90%] max-w-[min(400px,90vw)] md:max-w-[min(400px,25vw)] shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="reservation-modal-title" className="mt-0 text-lg font-semibold">Reservar uma mesa</h3>

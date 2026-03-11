@@ -271,7 +271,7 @@ export function ItemCardRestaurante1({
         >
           <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
         </button>
-        <div className="p-3 flex flex-col flex-1 min-h-0">
+        <div className="p-3 flex flex-col flex-1 min-h-0 min-w-0">
           <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">
             {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
             {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
