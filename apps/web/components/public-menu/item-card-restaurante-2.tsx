@@ -43,6 +43,7 @@ export function ItemCardRestaurante2({
       onClose={() => setImageModalOpen(false)}
       imageSrc={effectiveSrc}
       imageAlt={item.menu_name ?? ""}
+      descriptionText={item.menu_description ?? null}
       ingredientsText={item.menu_ingredients}
     />
   );

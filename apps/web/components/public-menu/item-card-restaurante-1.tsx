@@ -65,12 +65,14 @@ export function ImageIngredientsModal({
   onClose,
   imageSrc,
   imageAlt,
+  descriptionText,
   ingredientsText,
 }: {
   open: boolean;
   onClose: () => void;
   imageSrc: string | null;
   imageAlt: string;
+  descriptionText?: string | null;
   ingredientsText: string | null;
 }) {
   useEffect(() => {
@@ -153,6 +155,7 @@ export function ItemCardRestaurante1({
       onClose={() => setImageModalOpen(false)}
       imageSrc={effectiveSrc}
       imageAlt={item.menu_name ?? ""}
+      descriptionText={item.menu_description ?? null}
       ingredientsText={item.menu_ingredients}
     />
   );

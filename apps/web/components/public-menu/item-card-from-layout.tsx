@@ -119,12 +119,14 @@ function ImageIngredientsModal({
   onClose,
   imageSrc,
   imageAlt,
+  descriptionText,
   ingredientsText,
 }: {
   open: boolean;
   onClose: () => void;
   imageSrc: string | null;
   imageAlt: string;
+  descriptionText?: string | null;
   ingredientsText: string | null;
 }) {
   useEffect(() => {
@@ -155,11 +157,11 @@ function ImageIngredientsModal({
           </div>
         )}
         <div className="p-4 overflow-y-auto shrink-0">
+          <h4 className="font-semibold text-gray-900 mb-2">DESCRIÇÃO</h4>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap mb-4">{descriptionText && descriptionText.trim() !== "" ? descriptionText : "—"}</p>
+          <h4 className="font-semibold text-gray-900 mb-2 italic">Ingredientes</h4>
           {ingredientsText && ingredientsText.trim() !== "" ? (
-            <>
-              <h4 className="font-semibold text-gray-900 mb-2">Ingredientes</h4>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap">{ingredientsText}</p>
-            </>
+            <p className="text-sm text-gray-600 whitespace-pre-wrap">{ingredientsText}</p>
           ) : (
             <p className="text-sm text-gray-500">Sem lista de ingredientes.</p>
           )}
@@ -425,6 +427,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         onClose={() => setImageModalOpen(false)}
         imageSrc={effectiveSrc}
         imageAlt={item.menu_name ?? ""}
+        descriptionText={item.menu_description ?? null}
         ingredientsText={item.menu_ingredients}
       />
     </li>

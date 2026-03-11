@@ -10,9 +10,14 @@ export type FeaturedItemWithCategory = {
   categoryName?: string;
 };
 
-const CENTER_WIDTH = "min(320px, 85vw)";
-const SIDE_SCALE = 0.88;
-const OVERLAP_PX = 30;
+const CENTER_WIDTH_DESKTOP = "min(320px, 85vw)";
+const CENTER_WIDTH_MOBILE = "min(220px, 62vw)";
+const CAROUSEL_MIN_HEIGHT_DESKTOP = 504;
+const CAROUSEL_MIN_HEIGHT_MOBILE = 360;
+const SIDE_SCALE_DESKTOP = 0.88;
+const SIDE_SCALE_MOBILE = 0.9;
+const OVERLAP_PX_DESKTOP = 30;
+const OVERLAP_PX_MOBILE = 20;
 
 export function FeaturedCarouselSection({
   featuredItems,
@@ -112,13 +117,13 @@ export function FeaturedCarouselSection({
           position: "absolute",
           left: "50%",
           top: 0,
-          width: CENTER_WIDTH,
-          maxWidth: "85vw",
+          width: centerWidth,
+          maxWidth: isSmallScreen ? "62vw" : "85vw",
           transform: isCenter
             ? "translateX(-50%)"
             : slot === "left"
-              ? `translateX(calc(-100% + ${OVERLAP_PX}px)) scale(${SIDE_SCALE})`
-              : `translateX(${OVERLAP_PX}px) scale(${SIDE_SCALE})`,
+              ? `translateX(calc(-100% + ${overlapPx}px)) scale(${sideScale})`
+              : `translateX(${overlapPx}px) scale(${sideScale})`,
           transformOrigin: slot === "left" ? "right center" : slot === "right" ? "left center" : "center center",
           zIndex: isCenter ? 2 : 1,
         }}
@@ -153,13 +158,13 @@ export function FeaturedCarouselSection({
           role="region"
           aria-label="Destaques"
           className="relative w-full flex justify-center overflow-x-visible overflow-y-visible px-4"
-          style={{ minHeight: "504px" }}
+          style={{ minHeight: `${carouselMinHeight}px` }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           onKeyDown={handleKeyDown}
         >
-          <div className="relative overflow-visible" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "504px" }}>
+          <div className="relative overflow-visible" style={{ width: centerWidth, maxWidth: isSmallScreen ? "62vw" : "85vw", minHeight: `${carouselMinHeight}px` }}>
             {n === 1 ? (
               renderSlot(0, "center")
             ) : (

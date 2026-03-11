@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Modelo Restaurante 2: imagem max 268px, texto 2×).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Modal imagem DESCRIÇÃO/INGREDIENTES; Destaques menores em smartphones).
 
 ---
 
@@ -177,6 +177,8 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Modelo Restaurante 2: descrição colapsável e Font Awesome:** No Modelo Restaurante 2 a descrição passou a ser apresentada fechada por defeito, abrindo ao clicar (igual aos ingredientes). Ingredientes em todos os modelos: ícone `fa-eye` + texto "Ingredientes" (Font Awesome 6.5.1 via CDN em `app/layout.tsx`). No Restaurante 2, botão "Descrição" com `fa-eye` + "Descrição" e conteúdo colapsável. Aplicado em `item-card-restaurante-2.tsx`, `item-card-restaurante-1.tsx`, `item-card-from-layout.tsx` e `item-card-destaque-1.tsx`.
 - **Botões Descrição e Ingredientes centrados:** Nos botões com `fa-eye` + "Descrição" ou "Ingredientes", o conteúdo (ícone + texto) passou a aparecer centrado: `justify-center` em vez de `text-left` (ou adição de `flex items-center justify-center gap-2` onde faltava) em todos os modelos.
 - **Modelo Restaurante 2: imagem com largura máxima 268px:** A foto no card deixou de crescer com o viewport: o botão da imagem usa `flex-[1_1_0] min-w-0 aspect-square max-w-[268px]`, mantendo a secção de texto sempre visível e com pelo menos o dobro da largura da imagem; em células estreitas mantém-se proporção 1:2.
+- **Modal da imagem: DESCRIÇÃO e INGREDIENTES:** Na janela que abre ao clicar na imagem do artigo (ImageIngredientsModal), por baixo da imagem passou a mostrar-se a secção DESCRIÇÃO (texto do artigo) e a secção INGREDIENTES (rótulo em itálico + conteúdo). Aplicado no modal exportado (Restaurante 1, Restaurante 2) e no modal local de item-card-from-layout.
+- **Destaques (Escolhas do Chef) menores em smartphones:** Em viewports ≤768px o carrossel de destaques usa cartão mais estreito (min(220px, 62vw)), altura 360px e scale/overlap ajustados (0.9, 20px), para os 3 registos (esquerda, centro, direita) serem visíveis na totalidade; desktop mantém 320px/85vw e 504px.
 
 ---
 
