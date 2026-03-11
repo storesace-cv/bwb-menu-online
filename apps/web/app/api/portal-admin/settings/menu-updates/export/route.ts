@@ -65,9 +65,23 @@ export async function GET() {
     .order("sort_order");
   const categoryNames = (categories ?? []).map((c) => (c as { name: string }).name);
 
+  const sectionByIdForExport = new Map((sections ?? []).map((s) => [(s as { id: string }).id, (s as { name: string }).name]));
+  const categoriesBySectionName: Record<string, string[]> = {};
+  for (const cat of categories ?? []) {
+    const c = cat as { id: string; name: string; section_id: string | null };
+    const secName = c.section_id ? sectionByIdForExport.get(c.section_id) : null;
+    if (secName) {
+      if (!categoriesBySectionName[secName]) categoriesBySectionName[secName] = [];
+      categoriesBySectionName[secName].push(c.name);
+    }
+  }
+  for (const name of sectionNames) {
+    if (!categoriesBySectionName[name]) categoriesBySectionName[name] = ["—"];
+  }
+
   const { data: itemsRaw } = await supabase
     .from("menu_items")
-    .select("id, item_code, menu_name, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
+    .select("id, item_code, menu_name, menu_description, menu_ingredients, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order", { ascending: true })
     .order("menu_name", { ascending: true })
@@ -81,6 +95,7 @@ export async function GET() {
       typeNames,
       sectionNames,
       categoryNames,
+      categoriesBySectionName,
     });
     const filename = `menu-actualizacoes-${new Date().toISOString().slice(0, 10)}.xlsx`;
     return new NextResponse(new Uint8Array(buffer), {
@@ -154,6 +169,10 @@ export async function GET() {
     }
   }
 
+  /** Normalise line breaks for Excel (preserve paragraphs) */
+  const normaliseNewlines = (s: string | null | undefined): string | null =>
+    s == null ? null : s.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim() || null;
+
   const rows: MenuExcelRow[] = itemsRaw.map((i) => {
     const rawCatalog = (i as { catalog_items?: { name_original: string | null } | { name_original: string | null }[] | null }).catalog_items;
     const catalog = Array.isArray(rawCatalog) ? rawCatalog[0] ?? null : rawCatalog;
@@ -165,6 +184,8 @@ export async function GET() {
     return {
       item_code: (i as { item_code?: string | null }).item_code ?? null,
       menu_name: displayName || null,
+      description: normaliseNewlines((i as { menu_description?: string | null }).menu_description),
+      ingredients: normaliseNewlines((i as { menu_ingredients?: string | null }).menu_ingredients),
       price,
       type_name: typeName,
       familia: fam?.familia ?? "—",
@@ -187,6 +208,7 @@ export async function GET() {
     typeNames,
     sectionNames,
     categoryNames,
+    categoriesBySectionName,
   });
 
   const filename = `menu-actualizacoes-${new Date().toISOString().slice(0, 10)}.xlsx`;
