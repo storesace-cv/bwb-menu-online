@@ -136,7 +136,7 @@ export function FeaturedCarouselSection({
 
   const alignClass = titleAlign === "left" ? "text-left" : titleAlign === "right" ? "text-right" : "text-center";
   return (
-    <section className="relative z-10 mb-10" aria-label="Destaques">
+    <section className="relative z-10 mb-10 overflow-visible" aria-label="Destaques">
       <h2
         className={`mt-0 title ${alignClass}`}
         style={{
@@ -152,14 +152,14 @@ export function FeaturedCarouselSection({
           tabIndex={0}
           role="region"
           aria-label="Destaques"
-          className="relative w-full flex justify-center overflow-visible px-4"
+          className="relative w-full flex justify-center overflow-x-visible overflow-y-visible px-4"
           style={{ minHeight: "504px" }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           onKeyDown={handleKeyDown}
         >
-          <div className="relative" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "504px" }}>
+          <div className="relative overflow-visible" style={{ width: CENTER_WIDTH, maxWidth: "85vw", minHeight: "504px" }}>
             {n === 1 ? (
               renderSlot(0, "center")
             ) : (
