@@ -11,6 +11,8 @@ const EXPECTED_HEADERS = [
   "Loja",
   "Código",
   "Nome",
+  "Descrição",
+  "Ingredientes",
   "Preço",
   "Tipo",
   "Familia",
@@ -33,6 +35,11 @@ function trim(s: unknown): string {
 function parseBool(val: string): boolean {
   const v = val.toLowerCase();
   return v === "sim" || v === "1" || v === "★" || v === "true" || v === "s";
+}
+
+/** Convert Excel paragraph placeholder " || " back to newline for DB */
+function pipePlaceholderToNewlines(s: string): string {
+  return s.split(/\s*\|\|\s*/).join("\n").trim();
 }
 
 export async function POST(request: NextRequest) {
@@ -182,6 +189,8 @@ export async function POST(request: NextRequest) {
     }
 
     const menuName = trim(row[col("Nome")]);
+    const descRaw = trim(row[col("Descrição")]);
+    const ingrRaw = trim(row[col("Ingredientes")]);
     const typeName = trim(row[col("Tipo")]);
     const sectionName = trim(row[col("Secção")]);
     const categoryName = trim(row[col("Categoria")]);
@@ -200,8 +209,13 @@ export async function POST(request: NextRequest) {
     const is_visible = parseBool(visibleStr);
     const is_featured = parseBool(featuredStr);
 
+    const menu_description = descRaw ? pipePlaceholderToNewlines(descRaw) || null : null;
+    const menu_ingredients = ingrRaw ? pipePlaceholderToNewlines(ingrRaw) || null : null;
+
     const updatePayload: Record<string, unknown> = {
       menu_name: menuName || null,
+      menu_description,
+      menu_ingredients,
       article_type_id,
       prep_minutes,
       sort_order,

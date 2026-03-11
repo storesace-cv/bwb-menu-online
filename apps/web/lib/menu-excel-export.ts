@@ -113,19 +113,15 @@ export async function buildMenuUpdatesWorkbook(params: MenuExcelExportParams): P
   });
   headerRow.font = { bold: true };
 
-  // Data rows (preserve newlines in description/ingredients for paragraphs)
+  // Data rows (Descrição and Ingredientes use " || " as paragraph placeholder, no newlines in cells)
   rows.forEach((row, idx) => {
     const r = sheet.getRow(idx + 2);
     r.getCell(1).value = tenantLabel;
     r.getCell(2).value = storeLabel;
     r.getCell(3).value = row.item_code ?? "";
     r.getCell(4).value = row.menu_name ?? "";
-    const descCell = r.getCell(5);
-    descCell.value = row.description ?? "";
-    descCell.alignment = { wrapText: true, vertical: "top" };
-    const ingCell = r.getCell(6);
-    ingCell.value = row.ingredients ?? "";
-    ingCell.alignment = { wrapText: true, vertical: "top" };
+    r.getCell(5).value = row.description ?? "";
+    r.getCell(6).value = row.ingredients ?? "";
     r.getCell(7).value = row.price != null ? Number(row.price) : "";
     r.getCell(8).value = row.type_name;
     r.getCell(9).value = row.familia;

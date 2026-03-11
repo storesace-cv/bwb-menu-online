@@ -169,9 +169,12 @@ export async function GET() {
     }
   }
 
-  /** Normalise line breaks for Excel (preserve paragraphs) */
-  const normaliseNewlines = (s: string | null | undefined): string | null =>
-    s == null ? null : s.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim() || null;
+  /** Replace line breaks with " || " for Excel (avoids cell newline issues); trim, null if empty */
+  const newlinesToPipePlaceholder = (s: string | null | undefined): string | null => {
+    if (s == null) return null;
+    const out = (s as string).replace(/\r\n|\r|\n/g, " || ").trim();
+    return out || null;
+  };
 
   const rows: MenuExcelRow[] = itemsRaw.map((i) => {
     const rawCatalog = (i as { catalog_items?: { name_original: string | null } | { name_original: string | null }[] | null }).catalog_items;
@@ -184,8 +187,8 @@ export async function GET() {
     return {
       item_code: (i as { item_code?: string | null }).item_code ?? null,
       menu_name: displayName || null,
-      description: normaliseNewlines((i as { menu_description?: string | null }).menu_description),
-      ingredients: normaliseNewlines((i as { menu_ingredients?: string | null }).menu_ingredients),
+      description: newlinesToPipePlaceholder((i as { menu_description?: string | null }).menu_description),
+      ingredients: newlinesToPipePlaceholder((i as { menu_ingredients?: string | null }).menu_ingredients),
       price,
       type_name: typeName,
       familia: fam?.familia ?? "—",
