@@ -14,7 +14,7 @@ import {
 
 const zoneRowClass = "min-h-0";
 
-/** Proporção imagem : texto = 1 : 2 (zona de texto = 2× a imagem); flex 1:2 mantém esta proporção de forma dinâmica em qualquer largura. */
+/** Proporção imagem : texto = 1 : 2; a imagem tem largura máxima 268px (não cresce com o viewport); o texto ocupa o espaço restante (pelo menos 2× a imagem quando a imagem está no máximo). Em células estreitas mantém-se 1:2. */
 /** Card "Modelo Restaurante 2": imagem à esquerda, conteúdo à direita. inRowCards devolve 8 zonas (subgrid) como Restaurante 1. */
 export function ItemCardRestaurante2({
   item,
@@ -158,7 +158,7 @@ export function ItemCardRestaurante2({
         <button
           type="button"
           onClick={() => setImageModalOpen(true)}
-          className="block w-[100px] min-w-[100px] h-[100px] sm:w-[var(--card-h)] sm:min-w-[var(--card-h)] sm:h-[var(--card-h)] sm:min-h-[var(--card-h)] aspect-square sm:aspect-auto overflow-hidden bg-gray-100 text-left focus:outline-none border-0 shrink-0"
+          className="block flex-[1_1_0] min-w-0 aspect-square max-w-[268px] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
           <img
