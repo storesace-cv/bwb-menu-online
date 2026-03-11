@@ -3,7 +3,7 @@
 import { useFormState } from "react-dom";
 import { updateStoreSettings } from "../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
-import { Input, Alert, Select, ColorPickerField, Card, SubmitButton } from "@/components/admin";
+import { Input, Alert, Select, ColorPickerField, Card, Button, SubmitButton } from "@/components/admin";
 import { DEFAULT_MENU_TEMPLATE_KEY } from "@/lib/menu-templates";
 
 const FORM_ID = "settings-app-form";
