@@ -41,9 +41,19 @@ export async function GET() {
     .select("nif, name")
     .eq("id", (storeRow as { tenant_id: string }).tenant_id)
     .single();
+  const storeNumber = (storeRow as { store_number?: number }).store_number ?? 0;
+  const subdomain = (host.split(".")[0] ?? "").trim();
+  const storeNumStr = String(storeNumber);
+  const nifFromHost =
+    /^\d+$/.test(subdomain) && subdomain.endsWith(storeNumStr)
+      ? subdomain.slice(0, -storeNumStr.length)
+      : null;
+  const tenantNifRaw = (tenantRow as { nif?: string } | null)?.nif?.trim();
+  const tenantNif = tenantNifRaw ?? nifFromHost ?? "Tenant";
   const tenantLabel =
-    (tenantRow as { nif?: string; name?: string } | null)?.nif?.trim() ??
+    tenantNifRaw ??
     (tenantRow as { name?: string } | null)?.name?.trim() ??
+    nifFromHost ??
     "Tenant";
   const storeLabel = String(
     (storeRow as { store_number?: number }).store_number ??
@@ -52,8 +62,6 @@ export async function GET() {
       storeId
   );
 
-  const tenantNif = (tenantRow as { nif?: string } | null)?.nif?.trim() ?? "Tenant";
-  const storeNumber = (storeRow as { store_number?: number }).store_number ?? 0;
   const now = new Date();
   const ddmmaa_hhmm = [
     String(now.getDate()).padStart(2, "0"),

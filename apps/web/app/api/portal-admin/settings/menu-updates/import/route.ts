@@ -74,9 +74,17 @@ export async function POST(request: NextRequest) {
     .select("nif, name")
     .eq("id", (storeRow as { tenant_id: string }).tenant_id)
     .single();
+  const storeNumber = (storeRow as { store_number?: number }).store_number ?? 0;
+  const subdomain = (host.split(".")[0] ?? "").trim();
+  const storeNumStr = String(storeNumber);
+  const nifFromHost =
+    /^\d+$/.test(subdomain) && subdomain.endsWith(storeNumStr)
+      ? subdomain.slice(0, -storeNumStr.length)
+      : null;
   const sessionTenantLabel =
     (tenantRow as { nif?: string; name?: string } | null)?.nif?.trim() ??
     (tenantRow as { name?: string } | null)?.name?.trim() ??
+    nifFromHost ??
     "";
   const sessionStoreLabel = String(
     (storeRow as { store_number?: number }).store_number ??
