@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Ordenação Familia/SubFamilia/Nome; roadmap e deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Secções: cards, Ordenar e drag-and-drop; roadmap e deploy).
 
 ---
 
@@ -183,6 +183,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Performance Advisor RLS (migration 065):** Políticas em `public.profiles` passaram a usar `(select auth.uid())` para avaliação única por query (InitPlan); políticas em `public.import_runs` unificadas numa por ação (SELECT com superadmin OR store_access; INSERT/UPDATE/DELETE só superadmin), eliminando múltiplas políticas permissivas para SELECT.
 - **Query Performance índices (migration 066):** Índices em `menu_items(catalog_item_id)` e `menu_category_items(menu_item_id)` para acelerar queries PostgREST (LATERAL join a catalog_items, batch por menu_item_id) e RPCs do menu (public_menu_initial_by_hostname, get_resolved_prices_for_store, etc.).
 - **Ordenação Familia → Sub Familia → Nome na Gestão de Artigos:** Em Definições → Gestão de Artigos a ordenação multinível (incl. Familia, Sub Familia, Nome) passou a ser aplicada à lista filtrada completa antes da paginação; assim famílias e subfamílias ficam agrupadas em todas as páginas (ex.: espirituosas com todas as subfamílias juntas). Alteração em `ItemsListClient`: `sortData(filteredItems, sortRules, columnsForSort)` → `sortedFilteredItems`, paginação sobre `sortedFilteredItems`.
+- **Definições → Secções: cards, Ordenar secções e drag-and-drop:** Paridade de UI com Definições → Categorias: removida a representação em árvore (`|`, `|-----→`); lista de secções em cards (`bg-slate-800`), cada secção com handle de arraste e botão "Ordenar secções" (ordenação alfabética); categorias da secção em sub-cards read-only (`bg-slate-700/90`); drag-and-drop de secções com persistência via `reorderSections`; nova action `sortSectionsAlphabetically(storeId)`; componente cliente `SectionsListClient` com @dnd-kit; `SectionRow` sem árvore e em `<div>` para uso dentro do card.
 
 ---
 

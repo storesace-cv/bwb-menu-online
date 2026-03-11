@@ -657,6 +657,118 @@ export async function deleteCategory(_prev: { error?: string } | null, formData:
   return null;
 }
 
+export async function sortSectionCategoriesAlphabetically(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const sectionId = (formData.get("sectionId") as string)?.trim() ?? "";
+  if (!sectionId) return { error: "ID da secção obrigatório" };
+  const { data: section } = await supabase.from("menu_sections").select("store_id").eq("id", sectionId).single();
+  if (!section) return { error: "Secção não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: section.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { data: cats } = await supabase
+    .from("menu_categories")
+    .select("id, name")
+    .eq("section_id", sectionId)
+    .order("sort_order");
+  if (!cats || cats.length === 0) return null;
+  const sorted = [...cats].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"));
+  for (let i = 0; i < sorted.length; i++) {
+    const { error } = await supabase.from("menu_categories").update({ sort_order: i }).eq("id", sorted[i].id);
+    if (error) return { error: error.message };
+  }
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
+
+export async function reorderCategories(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const sectionId = (formData.get("sectionId") as string)?.trim() ?? "";
+  const categoryIdsRaw = formData.get("categoryIds") as string | null;
+  if (!sectionId || !categoryIdsRaw) return { error: "sectionId e categoryIds obrigatórios" };
+  let categoryIds: string[];
+  try {
+    categoryIds = JSON.parse(categoryIdsRaw) as string[];
+    if (!Array.isArray(categoryIds)) throw new Error("Not array");
+  } catch {
+    return { error: "categoryIds inválido" };
+  }
+  if (categoryIds.length === 0) return null;
+  const { data: section } = await supabase.from("menu_sections").select("store_id").eq("id", sectionId).single();
+  if (!section) return { error: "Secção não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: section.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { data: existing } = await supabase
+    .from("menu_categories")
+    .select("id")
+    .eq("section_id", sectionId);
+  const existingIds = new Set((existing ?? []).map((c) => c.id));
+  for (const id of categoryIds) {
+    if (!existingIds.has(id)) return { error: "Categoria não pertence à secção" };
+  }
+  for (let i = 0; i < categoryIds.length; i++) {
+    const { error } = await supabase.from("menu_categories").update({ sort_order: i }).eq("id", categoryIds[i]);
+    if (error) return { error: error.message };
+  }
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
+
+export async function sortSectionsAlphabetically(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const storeId = (formData.get("storeId") as string)?.trim() ?? "";
+  if (!storeId) return { error: "storeId obrigatório" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { data: sections } = await supabase
+    .from("menu_sections")
+    .select("id, name")
+    .eq("store_id", storeId)
+    .order("sort_order");
+  if (!sections || sections.length === 0) return null;
+  const sorted = [...sections].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"));
+  for (let i = 0; i < sorted.length; i++) {
+    const { error } = await supabase.from("menu_sections").update({ sort_order: i }).eq("id", sorted[i].id);
+    if (error) return { error: error.message };
+  }
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/sections");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
+
+export async function reorderSections(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const sectionIdsRaw = formData.get("sectionIds") as string | null;
+  if (!sectionIdsRaw) return { error: "sectionIds obrigatório" };
+  let sectionIds: string[];
+  try {
+    sectionIds = JSON.parse(sectionIdsRaw) as string[];
+    if (!Array.isArray(sectionIds)) throw new Error("Not array");
+  } catch {
+    return { error: "sectionIds inválido" };
+  }
+  if (sectionIds.length === 0) return null;
+  const { data: first } = await supabase.from("menu_sections").select("store_id").eq("id", sectionIds[0]).single();
+  if (!first) return { error: "Secção não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: first.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { data: allSections } = await supabase.from("menu_sections").select("id").eq("store_id", first.store_id);
+  const storeSectionIds = new Set((allSections ?? []).map((s) => s.id));
+  for (const id of sectionIds) {
+    if (!storeSectionIds.has(id)) return { error: "Secção não pertence à loja" };
+  }
+  for (let i = 0; i < sectionIds.length; i++) {
+    const { error } = await supabase.from("menu_sections").update({ sort_order: i }).eq("id", sectionIds[i]);
+    if (error) return { error: error.message };
+  }
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/sections");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
+}
+
 /** Copiar modelo de apresentação (superadmin). Cria novo registo com o mesmo component_key e nome indicado. */
 export async function copyPresentationTemplate(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();

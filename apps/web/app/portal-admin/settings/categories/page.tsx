@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
 import { CreateCategoryForm } from "../../menu/create-category-form";
-import { CategoryRow } from "./category-row";
+import { CategoriesListClient } from "./categories-list-client";
 import { CategoryTitleAppearanceForm } from "./category-title-appearance-form";
 import { Card } from "@/components/admin";
 
@@ -98,48 +98,12 @@ export default async function CategoriesPage() {
         <h2 className="text-lg font-medium text-slate-200 mb-4">Lista de categorias</h2>
         <Card>
           {categories && categories.length > 0 ? (
-            <div className="list-none pl-0" aria-label="Categorias agrupadas por secção">
-              {sections?.map((s) => {
-                const sectionCategories = categoriesBySectionId.get(s.id) ?? [];
-                if (sectionCategories.length === 0) return null;
-                return (
-                  <div key={s.id} className="pb-4 last:pb-0">
-                    <div className="font-medium text-slate-200 pt-4 first:pt-0">{s.name}</div>
-                    <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
-                    <ul className="list-none pl-0">
-                      {sectionCategories.map((c) => (
-                        <CategoryRow
-                          key={c.id}
-                          category={c}
-                          sections={sections ?? []}
-                          presentationTemplates={presentationTemplates ?? []}
-                          showTreePrefix
-                        />
-                      ))}
-                    </ul>
-                    <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
-                  </div>
-                );
-              })}
-              {uncategorized.length > 0 && (
-                <div className="pb-4 last:pb-0 pt-4">
-                  <div className="font-medium text-slate-200">Sem secção</div>
-                  <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
-                  <ul className="list-none pl-0">
-                    {uncategorized.map((c) => (
-                      <CategoryRow
-                        key={c.id}
-                        category={c}
-                        sections={sections ?? []}
-                        presentationTemplates={presentationTemplates ?? []}
-                        showTreePrefix
-                      />
-                    ))}
-                  </ul>
-                  <div className="ml-4 font-mono text-sm whitespace-pre text-slate-600">      |</div>
-                </div>
-              )}
-            </div>
+            <CategoriesListClient
+              sections={sections ?? []}
+              categoriesBySectionId={Object.fromEntries(categoriesBySectionId)}
+              uncategorized={uncategorized}
+              presentationTemplates={presentationTemplates ?? []}
+            />
           ) : (
             <p className="text-slate-500 py-4">Nenhuma categoria. Crie uma acima.</p>
           )}

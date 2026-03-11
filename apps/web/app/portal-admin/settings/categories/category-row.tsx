@@ -14,12 +14,10 @@ export function CategoryRow({
   category,
   sections,
   presentationTemplates,
-  showTreePrefix = false,
 }: {
   category: Category;
   sections: Section[];
   presentationTemplates: PresentationTemplate[];
-  showTreePrefix?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateCategory, null);
@@ -40,7 +38,7 @@ export function CategoryRow({
 
   if (editing) {
     return (
-      <li className="flex flex-wrap items-center gap-4 py-4 border-b border-slate-700 last:border-b-0">
+      <div className="flex flex-wrap items-center gap-4 py-4 border-b border-slate-700 last:border-b-0">
         <form action={updateFormAction} className="flex gap-4 flex-wrap items-center" {...updateFormBind}>
           <input type="hidden" name="id" value={category.id} />
           <Input id={`edit-cat-name-${category.id}`} name="name" label="Nome" type="text" required defaultValue={category.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
@@ -64,28 +62,29 @@ export function CategoryRow({
             <Alert variant="error">{updateState.error}</Alert>
           </div>
         )}
-      </li>
+      </div>
     );
   }
 
   return (
-    <li className="flex items-center gap-3 py-4 border-b border-slate-700 last:border-b-0">
-      {showTreePrefix && (
-        <span className="font-mono text-sm whitespace-pre text-slate-500">      |-----→    </span>
-      )}
-      <span className="text-slate-200 font-medium">{category.name}</span>
-      <span className="text-slate-500 text-sm">secção: {sectionName}</span>
-      <span className="text-slate-500 text-sm">modelo: {templateName}</span>
-      <span className="text-slate-500 text-sm">ordem {category.sort_order}</span>
-      <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm ml-2">
-        Editar
-      </Button>
-      <form ref={deleteFormRef} action={(fd: FormData) => { void deleteCategory(null, fd); }} className="inline">
-        <input type="hidden" name="id" value={category.id} />
-        <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
-          Apagar
+    <div className="flex justify-between items-start gap-3 w-full">
+      <div className="flex flex-wrap items-center gap-3 min-w-0">
+        <span className="text-slate-200 font-medium">{category.name}</span>
+        <span className="text-slate-500 text-sm">secção: {sectionName}</span>
+        <span className="text-slate-500 text-sm">modelo: {templateName}</span>
+        <span className="text-slate-500 text-sm">ordem {category.sort_order}</span>
+      </div>
+      <div className="flex flex-col gap-1 shrink-0">
+        <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm">
+          Editar
         </Button>
-      </form>
-    </li>
+        <form ref={deleteFormRef} action={(fd: FormData) => { void deleteCategory(null, fd); }} className="inline">
+          <input type="hidden" name="id" value={category.id} />
+          <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm w-full">
+            Apagar
+          </Button>
+        </form>
+      </div>
+    </div>
   );
 }

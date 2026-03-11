@@ -15,7 +15,12 @@ export function ItemActions({ itemId, menuName }: { itemId: string; menuName: st
 
   return (
     <span className="flex gap-2 items-center">
-      <Link href={`/portal-admin/settings/items/${itemId}/edit`} className="text-emerald-400 hover:text-emerald-300 text-sm">
+      <Link
+        href={`/portal-admin/settings/items/${itemId}/edit`}
+        className="text-emerald-400 hover:text-emerald-300 text-sm"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         Editar
       </Link>
       <form ref={formRef} action={(fd: FormData) => { void deleteMenuItem(null, fd); }} className="inline">

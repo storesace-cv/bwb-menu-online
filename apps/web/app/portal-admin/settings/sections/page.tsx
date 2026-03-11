@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
 import { CreateSectionForm } from "../../menu/create-section-form";
-import { SectionRow } from "./section-row";
+import { SectionsListClient } from "./sections-list-client";
 import { SectionTitleAppearanceForm } from "./section-title-appearance-form";
 import { Card } from "@/components/admin";
 
@@ -94,16 +94,12 @@ export default async function SectionsPage() {
         <h2 className="text-lg font-medium text-slate-200 mb-4">Lista de secções</h2>
         <Card>
           {sections && sections.length > 0 ? (
-            <ul className="list-none pl-0">
-              {sections.map((s) => (
-                <SectionRow
-                  key={s.id}
-                  section={s}
-                  presentationTemplates={presentationTemplates ?? []}
-                  categories={categoriesBySectionId.get(s.id) ?? []}
-                />
-              ))}
-            </ul>
+            <SectionsListClient
+              sections={sections}
+              categoriesBySectionId={Object.fromEntries(categoriesBySectionId)}
+              presentationTemplates={presentationTemplates ?? []}
+              storeId={storeId}
+            />
           ) : (
             <p className="text-slate-500 py-4">Nenhuma secção. Crie uma acima.</p>
           )}

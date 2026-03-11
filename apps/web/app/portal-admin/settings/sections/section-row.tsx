@@ -17,16 +17,12 @@ type Section = {
   is_default?: boolean;
 };
 
-type CategoryItem = { id: string; name: string };
-
 export function SectionRow({
   section,
   presentationTemplates,
-  categories = [],
 }: {
   section: Section;
   presentationTemplates: PresentationTemplate[];
-  categories?: CategoryItem[];
 }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateSection, null);
@@ -42,7 +38,7 @@ export function SectionRow({
 
   if (editing) {
     return (
-      <li className="flex flex-wrap items-start gap-4 py-4 border-b border-slate-700 last:border-b-0">
+      <div className="flex flex-wrap items-start gap-4 py-4">
         <form action={updateFormAction} className="flex flex-col gap-4 flex-1 min-w-0" {...updateFormBind}>
           <input type="hidden" name="id" value={section.id} />
           <div className="flex gap-4 flex-wrap items-end">
@@ -84,7 +80,7 @@ export function SectionRow({
             <Alert variant="error">{updateState.error}</Alert>
           )}
         </form>
-      </li>
+      </div>
     );
   }
 
@@ -93,7 +89,7 @@ export function SectionRow({
     : "—";
 
   return (
-    <li className="py-4 border-b border-slate-700 last:border-b-0">
+    <div>
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-slate-200 font-medium">{section.name}</span>
         {section.is_default && (
@@ -124,14 +120,6 @@ export function SectionRow({
       {defaultState?.error && (
         <Alert variant="error" className="mt-2">{defaultState.error}</Alert>
       )}
-      {categories.length > 0 && (
-        <div className="ml-4 mt-2 font-mono text-sm whitespace-pre text-slate-500" aria-label="Categorias desta secção">
-          <div className="text-slate-600">      |</div>
-          {categories.map((cat) => (
-            <div key={cat.id} className="text-slate-500">{`      |-----→    ${cat.name}`}</div>
-          ))}
-        </div>
-      )}
-    </li>
+    </div>
   );
 }
