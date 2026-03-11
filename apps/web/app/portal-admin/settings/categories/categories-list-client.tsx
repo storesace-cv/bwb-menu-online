@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   DndContext,
   type DragEndEvent,
@@ -23,6 +23,7 @@ import {
   reorderCategories,
   reorderSections,
 } from "../../actions";
+import { deleteCategory } from "../../actions";
 import { CategoryRow } from "./category-row";
 import { Button } from "@/components/admin";
 
@@ -184,6 +185,9 @@ function SortableCategoryCard({
   sections: SectionItem[];
   presentationTemplates: PresentationTemplate[];
 }) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const isEditing = editingId === category.id;
+
   const {
     attributes,
     listeners,
@@ -198,30 +202,54 @@ function SortableCategoryCard({
     transition,
   };
 
+  const handleDeleteClick = () => {
+    if (!confirm(`Apagar a categoria «${category.name}»? Os itens deixarão de estar associados a esta categoria.`)) return;
+    (document.getElementById(`delete-category-form-${category.id}`) as HTMLFormElement)?.requestSubmit();
+  };
+
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`w-full bg-slate-700/90 border border-slate-600 rounded-lg p-3 ${isDragging ? "opacity-80 z-20 shadow-md" : ""}`}
-    >
-      <div className="flex gap-2 items-start">
-        <button
-          type="button"
-          className="cursor-grab active:cursor-grabbing touch-none p-1 text-slate-400 hover:text-slate-300 rounded shrink-0"
-          {...listeners}
-          {...attributes}
-          aria-label="Arrastar categoria"
-        >
-          <span className="font-mono text-sm leading-none">⋮⋮</span>
-        </button>
-        <div className="flex-1 min-w-0">
-          <CategoryRow
-            category={category}
-            sections={sections}
-            presentationTemplates={presentationTemplates}
-          />
+    <div className="flex gap-2 items-start w-full">
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`flex-1 min-w-0 bg-slate-700/90 border border-slate-600 rounded-lg p-3 ${isDragging ? "opacity-80 z-20 shadow-md" : ""}`}
+      >
+        <div className="flex gap-2 items-start">
+          <button
+            type="button"
+            className="cursor-grab active:cursor-grabbing touch-none p-1 text-slate-400 hover:text-slate-300 rounded shrink-0"
+            {...listeners}
+            {...attributes}
+            aria-label="Arrastar categoria"
+          >
+            <span className="font-mono text-sm leading-none">⋮⋮</span>
+          </button>
+          <div className="flex-1 min-w-0">
+            <CategoryRow
+              category={category}
+              sections={sections}
+              presentationTemplates={presentationTemplates}
+              contentOnly
+              editing={isEditing}
+              onEditClick={() => setEditingId(category.id)}
+              onCancelClick={() => setEditingId(null)}
+            />
+          </div>
         </div>
       </div>
+      {!isEditing && (
+        <div className="flex gap-2 shrink-0 items-start">
+          <Button type="button" variant="outline" onClick={() => setEditingId(category.id)} className="py-1 px-2 text-sm">
+            Editar
+          </Button>
+          <form id={`delete-category-form-${category.id}`} action={(fd: FormData) => { void deleteCategory(null, fd); }} className="inline">
+            <input type="hidden" name="id" value={category.id} />
+            <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
+              Apagar
+            </Button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

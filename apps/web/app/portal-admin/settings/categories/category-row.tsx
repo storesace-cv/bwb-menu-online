@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFormState } from "react-dom";
 import { updateCategory, deleteCategory } from "../../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
@@ -14,13 +14,32 @@ export function CategoryRow({
   category,
   sections,
   presentationTemplates,
+  contentOnly,
+  editing: controlledEditing,
+  onEditClick,
+  onCancelClick,
 }: {
   category: Category;
   sections: Section[];
   presentationTemplates: PresentationTemplate[];
+  /** When true, only render content (no buttons); parent renders buttons outside. */
+  contentOnly?: boolean;
+  /** When contentOnly, controlled editing state. */
+  editing?: boolean;
+  /** When contentOnly, called when Editar is clicked. */
+  onEditClick?: () => void;
+  /** When contentOnly, called when Cancelar is clicked. */
+  onCancelClick?: () => void;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [internalEditing, setInternalEditing] = useState(false);
+  const editing = contentOnly ? (controlledEditing ?? false) : internalEditing;
+  const setEditing = contentOnly
+    ? (value: boolean) => { if (value) onEditClick?.(); else onCancelClick?.(); }
+    : setInternalEditing;
   const [updateState, updateFormAction] = useFormState(updateCategory, null);
+  useEffect(() => {
+    if (contentOnly && updateState && !updateState.error) onCancelClick?.();
+  }, [contentOnly, updateState, onCancelClick]);
   const [updateSubmitting, updateFormBind] = useFormSubmitLoading(updateState);
   const deleteFormRef = useRef<HTMLFormElement>(null);
 
@@ -66,25 +85,41 @@ export function CategoryRow({
     );
   }
 
+  const content = (
+    <div className="flex flex-wrap items-center gap-3 min-w-0">
+      <span className="text-slate-200 font-medium">{category.name}</span>
+      <span className="text-slate-500 text-sm">secção: {sectionName}</span>
+      <span className="text-slate-500 text-sm">modelo: {templateName}</span>
+      <span className="text-slate-500 text-sm">ordem {category.sort_order}</span>
+    </div>
+  );
+
+  const buttons = (
+    <div className="flex gap-2 shrink-0">
+      <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm">
+        Editar
+      </Button>
+      <form ref={deleteFormRef} action={(fd: FormData) => { void deleteCategory(null, fd); }} className="inline">
+        <input type="hidden" name="id" value={category.id} />
+        <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
+          Apagar
+        </Button>
+      </form>
+    </div>
+  );
+
+  if (contentOnly && !editing) {
+    return (
+      <div className="flex justify-between items-start gap-3 w-full">
+        {content}
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-between items-start gap-3 w-full">
-      <div className="flex flex-wrap items-center gap-3 min-w-0">
-        <span className="text-slate-200 font-medium">{category.name}</span>
-        <span className="text-slate-500 text-sm">secção: {sectionName}</span>
-        <span className="text-slate-500 text-sm">modelo: {templateName}</span>
-        <span className="text-slate-500 text-sm">ordem {category.sort_order}</span>
-      </div>
-      <div className="flex flex-col gap-1 shrink-0">
-        <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm">
-          Editar
-        </Button>
-        <form ref={deleteFormRef} action={(fd: FormData) => { void deleteCategory(null, fd); }} className="inline">
-          <input type="hidden" name="id" value={category.id} />
-          <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm w-full">
-            Apagar
-          </Button>
-        </form>
-      </div>
+      {content}
+      {buttons}
     </div>
   );
 }

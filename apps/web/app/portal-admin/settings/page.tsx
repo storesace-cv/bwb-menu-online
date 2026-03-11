@@ -83,8 +83,8 @@ export default async function SettingsPage() {
                 <p className="text-sm text-slate-400">{description}</p>
               </Card>
             </div>
-          ) : href === "/portal-admin/settings/items" ? (
-            <a key={href} href={href} className="block">
+) : ["/portal-admin/settings/items", "/portal-admin/settings/sections", "/portal-admin/settings/categories"].includes(href) ? (
+              <a key={href} href={href} className="block">
               <Card className="p-5 hover:border-emerald-500/50 transition-colors h-full block">
                 <h2 className="text-lg font-medium text-slate-100 mb-1">{label}</h2>
                 <p className="text-sm text-slate-400">{description}</p>
