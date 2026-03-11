@@ -7,7 +7,7 @@ import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { ItemActions } from "./item-actions";
 import { MenuIcon } from "@/components/menu-icons";
 import { BwbTable, Button, SubmitButton } from "@/components/admin";
-import type { ColumnDef, SortRule } from "@/lib/admin/bwbTableSort";
+import { sortData, type ColumnDef, type SortRule } from "@/lib/admin/bwbTableSort";
 
 const ITEMS_SORT_STORAGE_KEY = "bwb-portal-settings-items-sort";
 const ITEMS_PER_PAGE_STORAGE_KEY = "bwb-portal-settings-items-per-page";
@@ -224,14 +224,38 @@ export function ItemsListClient({
     });
   }, [mergedItems, filterName, filterType, filterFamilia, filterSubFamilia, filterPromo, filterTA, filterVisible, filterFeatured, mergedFamilia]);
 
+  const columnsForSort = useMemo<ColumnDef<Item>[]>(
+    () => [
+      { key: "name", label: "", type: "text", accessor: (i) => displayName(i) },
+      { key: "price", label: "", type: "number", accessor: (i) => displayPrice(i) },
+      { key: "type", label: "", type: "text", accessor: (i) => (i.article_type_id ? typeById.get(i.article_type_id)?.name ?? "" : "") },
+      { key: "familia", label: "", type: "text", accessor: (i) => mergedFamilia[i.id]?.familia ?? "" },
+      { key: "sub_familia", label: "", type: "text", accessor: (i) => mergedFamilia[i.id]?.sub_familia ?? "" },
+      { key: "section", label: "", type: "text", accessor: (i) => mergedSectionCategory[i.id]?.sectionName ?? "" },
+      { key: "category", label: "", type: "text", accessor: (i) => mergedSectionCategory[i.id]?.categoryName ?? "" },
+      { key: "promo", label: "", type: "text", accessor: (i) => (i.is_promotion ? "1" : "0") },
+      { key: "ta", label: "", type: "text", accessor: (i) => (i.take_away ? "Sim" : "Não") },
+      { key: "prep", label: "", type: "number", accessor: (i) => i.prep_minutes },
+      { key: "sort_order", label: "", type: "number", accessor: (i) => i.sort_order },
+      { key: "is_visible", label: "", type: "text", accessor: (i) => (i.is_visible ? "Sim" : "Não") },
+      { key: "is_featured", label: "", type: "text", accessor: (i) => (i.is_featured ? "★" : "") },
+    ],
+    [typeById, mergedSectionCategory, mergedFamilia]
+  );
+
+  const sortedFilteredItems = useMemo(
+    () => sortData(filteredItems, sortRules, columnsForSort),
+    [filteredItems, sortRules, columnsForSort]
+  );
+
   const perPageNum = perPage === "all" ? 999999 : perPage;
   const totalFiltered = filteredItems.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / perPageNum));
   const safePage = Math.min(currentPage, totalPages);
   const startIdx = (safePage - 1) * perPageNum;
   const paginatedRows = useMemo(
-    () => filteredItems.slice(startIdx, startIdx + perPageNum),
-    [filteredItems, startIdx, perPageNum]
+    () => sortedFilteredItems.slice(startIdx, startIdx + perPageNum),
+    [sortedFilteredItems, startIdx, perPageNum]
   );
 
   useEffect(() => {
