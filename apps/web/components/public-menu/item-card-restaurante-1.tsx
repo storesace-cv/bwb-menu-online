@@ -8,8 +8,8 @@ import { MenuIcon } from "../menu-icons";
 const STORAGE_BASE = (process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "") + "/storage/v1/object/public/";
 const MENU_IMAGES_BUCKET = "menu-images";
 
-/** Label do alergénio: locale → pt → en → code */
-function getAllergenLabel(
+/** Label do alergénio: locale → pt → en → code (exportado para uso em ItemCardRestaurante2). */
+export function getAllergenLabel(
   a: { name_i18n?: Record<string, string>; code: string; name?: string },
   locale?: string
 ): string {
@@ -23,7 +23,7 @@ function getAllergenLabel(
   return a.code;
 }
 
-const SEVERITY_CLASSES: Record<number, string> = {
+export const SEVERITY_CLASSES: Record<number, string> = {
   1: "bg-green-600/20 text-green-800 border border-green-500/40",
   2: "bg-lime-600/20 text-lime-800 border border-lime-500/40",
   3: "bg-orange-600/20 text-orange-800 border border-orange-500/40",
@@ -60,7 +60,7 @@ export function getImageSrc(item: PublicMenuItem, imageSource?: string): string 
 
 export const FALLBACK_IMAGE = "/images/no_image_product.jpg";
 
-function ImageIngredientsModal({
+export function ImageIngredientsModal({
   open,
   onClose,
   imageSrc,

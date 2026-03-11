@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
 import { ItemCardRestaurante1 } from "@/components/public-menu/item-card-restaurante-1";
+import { ItemCardRestaurante2 } from "@/components/public-menu/item-card-restaurante-2";
 import { ItemCardDestaque1 } from "@/components/public-menu/item-card-destaque-1";
 
 export const DEFAULT_PRESENTATION_KEY = "modelo-restaurante-1";
@@ -144,6 +145,7 @@ type FeaturedCardComponent = ComponentType<FeaturedCardProps>;
 
 const registry: Record<string, PresentationCardComponent> = {
   [DEFAULT_PRESENTATION_KEY]: ItemCardRestaurante1,
+  "modelo-restaurante-2": ItemCardRestaurante2,
 };
 
 const featuredRegistry: Record<string, FeaturedCardComponent> = {

@@ -25,8 +25,9 @@ export default async function SectionsPage() {
 
   const { data: sections } = await supabase
     .from("menu_sections")
-    .select("id, name, sort_order, presentation_template_id, background_color, background_css")
+    .select("id, name, sort_order, presentation_template_id, background_color, background_css, is_default")
     .eq("store_id", storeId)
+    .order("is_default", { ascending: false })
     .order("sort_order");
 
   const { data: categories } = await supabase

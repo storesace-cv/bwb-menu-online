@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useFormState } from "react-dom";
-import { updateSection, deleteSection } from "../../actions";
+import { updateSection, deleteSection, setSectionAsDefault } from "../../actions";
 import { Input, Select, Button, Alert, ColorPickerField } from "@/components/admin";
 
 type PresentationTemplate = { id: string; name: string };
@@ -13,6 +13,7 @@ type Section = {
   presentation_template_id?: string | null;
   background_color?: string | null;
   background_css?: string | null;
+  is_default?: boolean;
 };
 
 type CategoryItem = { id: string; name: string };
@@ -28,6 +29,7 @@ export function SectionRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateSection, null);
+  const [defaultState, defaultFormAction] = useFormState(setSectionAsDefault, null);
   const deleteFormRef = useRef<HTMLFormElement>(null);
 
   const handleDeleteClick = () => {
@@ -91,8 +93,21 @@ export function SectionRow({
     <li className="py-4 border-b border-slate-700 last:border-b-0">
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-slate-200 font-medium">{section.name}</span>
+        {section.is_default && (
+          <span className="text-xs font-medium px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-700/60">
+            Apresentada por defeito
+          </span>
+        )}
         <span className="text-slate-500 text-sm">ordem {section.sort_order}</span>
         <span className="text-slate-500 text-sm">modelo: {templateName}</span>
+        {!section.is_default && (
+          <form action={defaultFormAction} className="inline">
+            <input type="hidden" name="sectionId" value={section.id} />
+            <Button type="submit" variant="outline" className="py-1 px-2 text-sm">
+              Definir como apresentada por defeito
+            </Button>
+          </form>
+        )}
         <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm ml-2">
           Editar
         </Button>
@@ -103,6 +118,9 @@ export function SectionRow({
           </Button>
         </form>
       </div>
+      {defaultState?.error && (
+        <Alert variant="error" className="mt-2">{defaultState.error}</Alert>
+      )}
       {categories.length > 0 && (
         <div className="ml-4 mt-2 font-mono text-sm whitespace-pre text-slate-500" aria-label="Categorias desta secção">
           <div className="text-slate-600">      |</div>

@@ -231,6 +231,22 @@ export async function GET() {
     };
   });
 
+  /** Ordenar por Familia; Sub Familia; Nome (valores "—" e vazios tratados como "" para comparação) */
+  const norm = (s: string | null): string => (s == null || s === "—" ? "" : String(s).trim());
+  rows.sort((a, b) => {
+    const fa = norm(a.familia);
+    const fb = norm(b.familia);
+    const cmpF = fa.localeCompare(fb, "pt");
+    if (cmpF !== 0) return cmpF;
+    const sa = norm(a.sub_familia);
+    const sb = norm(b.sub_familia);
+    const cmpS = sa.localeCompare(sb, "pt");
+    if (cmpS !== 0) return cmpS;
+    const na = norm(a.menu_name);
+    const nb = norm(b.menu_name);
+    return na.localeCompare(nb, "pt");
+  });
+
   const buffer = await buildMenuUpdatesWorkbook({
     tenantLabel,
     storeLabel,

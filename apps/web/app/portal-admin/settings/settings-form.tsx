@@ -134,9 +134,9 @@ export function SettingsForm({
     >
       <input type="hidden" name="store_id" value={storeId} />
 
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Cabeçalho</h2>
-        <p className="text-sm text-slate-400 mb-4">Topo e identidade do menu público.</p>
+      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Cabeçalho</h2>
+      <p className="text-sm text-slate-400 mb-4">Topo e identidade do menu público.</p>
+      <Card className="border-white">
         <div className={GRID_SECTION}>
           <Input
             id="store_display_name"
@@ -191,9 +191,9 @@ export function SettingsForm({
         </div>
       </Card>
 
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Hero</h2>
-        <p className="text-sm text-slate-400 mb-4">Faixa introdutória acima do menu.</p>
+      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Hero</h2>
+      <p className="text-sm text-slate-400 mb-4">Faixa introdutória acima do menu.</p>
+      <Card className="border-white">
         <div className={GRID_SECTION}>
           <Input
             id="hero_text"
@@ -230,9 +230,9 @@ export function SettingsForm({
         </div>
       </Card>
 
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Artigos e menu</h2>
-        <p className="text-sm text-slate-400 mb-4">Conteúdo e apresentação do menu.</p>
+      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Artigos e menu</h2>
+      <p className="text-sm text-slate-400 mb-4">Conteúdo e apresentação do menu.</p>
+      <Card className="border-white">
         <div className={GRID_SECTION}>
           <Select
             id="menu_template_key"
@@ -280,9 +280,9 @@ export function SettingsForm({
         </div>
       </Card>
 
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Rodapé</h2>
-        <p className="text-sm text-slate-400 mb-4">Rodapé do menu público.</p>
+      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Rodapé</h2>
+      <p className="text-sm text-slate-400 mb-4">Rodapé do menu público.</p>
+      <Card className="border-white">
         <input
           type="hidden"
           name="footer_logo_url"
@@ -373,9 +373,9 @@ export function SettingsForm({
         </div>
       </Card>
 
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Ligações externas</h2>
-        <p className="text-sm text-slate-400 mb-4">URLs exibidas no menu (contacto, privacidade, reserva).</p>
+      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Ligações externas</h2>
+      <p className="text-sm text-slate-400 mb-4">URLs exibidas no menu (contacto, privacidade, reserva).</p>
+      <Card className="border-white">
         <div className={GRID_SECTION}>
           <Input
             id="contact_url"

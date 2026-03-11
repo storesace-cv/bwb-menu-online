@@ -595,6 +595,29 @@ export async function deleteSection(_prev: { error?: string } | null, formData: 
   return null;
 }
 
+export async function setSectionAsDefault(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const sectionId = (formData.get("sectionId") as string)?.trim() ?? "";
+  if (!sectionId) return { error: "ID da secção obrigatório" };
+  const { data: row } = await supabase.from("menu_sections").select("store_id").eq("id", sectionId).single();
+  if (!row) return { error: "Secção não encontrada" };
+  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
+  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  const { error: errClear } = await supabase
+    .from("menu_sections")
+    .update({ is_default: false })
+    .eq("store_id", row.store_id);
+  if (errClear) return { error: errClear.message };
+  const { error: errSet } = await supabase
+    .from("menu_sections")
+    .update({ is_default: true })
+    .eq("id", sectionId);
+  if (errSet) return { error: errSet.message };
+  revalidatePath("/portal-admin/menu");
+  revalidatePath("/portal-admin/settings/sections");
+  return null;
+}
+
 export async function updateCategory(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const id = (formData.get("id") as string)?.trim() ?? "";
