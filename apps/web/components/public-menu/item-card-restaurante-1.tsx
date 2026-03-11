@@ -195,11 +195,11 @@ export function ItemCardRestaurante1({
             <button
               type="button"
               onClick={() => setIngredientsOpen((o) => !o)}
-              className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+              className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
               aria-expanded={ingredientsOpen}
             >
+              <i className="fas fa-eye" aria-hidden />
               <span>Ingredientes</span>
-              <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
             </button>
             {ingredientsOpen && (
               <div className="mt-0 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
@@ -285,11 +285,11 @@ export function ItemCardRestaurante1({
             <button
               type="button"
               onClick={() => setIngredientsOpen((o) => !o)}
-              className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+              className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
               aria-expanded={ingredientsOpen}
             >
+              <i className="fas fa-eye" aria-hidden />
               <span>Ingredientes</span>
-              <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
             </button>
             {ingredientsOpen && (
               <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>

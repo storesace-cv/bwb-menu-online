@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Modelo Restaurante 2: coluna de texto dinâmica).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Modelo Restaurante 2: proporção 1:2, descrição colapsável, Font Awesome, botões centrados).
 
 ---
 
@@ -172,6 +172,12 @@ Este documento regista o que já está feito e o que está planeado, para manter
 ---
 
 
+
+- **Modelo Restaurante 2: proporção fixa 1:2 (imagem : texto):** Proporção imagem 1/3 e texto 2/3 em qualquer largura de card via flex (`flex-[1_1_0]` na imagem com `aspect-square`, `flex-[2_2_0]` na zona de texto); removidas larguras/alturas fixas e `--card-h`; article sem altura fixa em sm (opcional `sm:min-h-[240px]`); sem truncamento da descrição/título.
+- **Modelo Restaurante 2: descrição colapsável e Font Awesome:** No Modelo Restaurante 2 a descrição passou a ser apresentada fechada por defeito, abrindo ao clicar (igual aos ingredientes). Ingredientes em todos os modelos: ícone `fa-eye` + texto "Ingredientes" (Font Awesome 6.5.1 via CDN em `app/layout.tsx`). No Restaurante 2, botão "Descrição" com `fa-eye` + "Descrição" e conteúdo colapsável. Aplicado em `item-card-restaurante-2.tsx`, `item-card-restaurante-1.tsx`, `item-card-from-layout.tsx` e `item-card-destaque-1.tsx`.
+- **Botões Descrição e Ingredientes centrados:** Nos botões com `fa-eye` + "Descrição" ou "Ingredientes", o conteúdo (ícone + texto) passou a aparecer centrado: `justify-center` em vez de `text-left` (ou adição de `flex items-center justify-center gap-2` onde faltava) em todos os modelos.
+
+---
 
 ## Planeado / pendente
 

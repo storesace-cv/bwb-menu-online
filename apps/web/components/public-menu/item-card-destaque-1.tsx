@@ -220,10 +220,10 @@ export function ItemCardDestaque1({
                 e.stopPropagation();
                 setIngredientsOpen((o) => !o);
               }}
-              className="w-fit text-sm text-white/95 hover:text-white font-medium py-0.5"
+              className="w-fit flex items-center justify-center gap-2 text-sm text-white/95 hover:text-white font-medium py-0.5"
               aria-expanded={ingredientsOpen}
             >
-              Ingredientes {ingredientsOpen ? "−" : "+"}
+              <i className="fas fa-eye" aria-hidden /> Ingredientes
             </button>
             {ingredientsOpen && (
               <div className="mt-0.5 text-sm text-white/90 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
@@ -360,10 +360,10 @@ export function ItemCardDestaque1({
                   e.stopPropagation();
                   setIngredientsOpen((o) => !o);
                 }}
-                className="w-fit text-sm text-white/95 hover:text-white font-medium py-0.5"
+                className="w-fit flex items-center justify-center gap-2 text-sm text-white/95 hover:text-white font-medium py-0.5"
                 aria-expanded={ingredientsOpen}
               >
-                Ingredientes {ingredientsOpen ? "−" : "+"}
+                <i className="fas fa-eye" aria-hidden /> Ingredientes
               </button>
               {ingredientsOpen && (
                 <div className="text-sm text-white/90 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>

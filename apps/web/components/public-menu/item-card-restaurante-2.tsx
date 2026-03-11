@@ -14,9 +14,7 @@ import {
 
 const zoneRowClass = "min-h-0";
 
-/** Altura do card (desktop); imagem quadrada (--card-h). Zona de texto usa flex-1 para se adaptar ao espaço (proporção 5/3 quando há espaço suficiente). */
-const CARD_HEIGHT_PX = 280;
-
+/** Proporção imagem : texto = 1 : 2 (zona de texto = 2× a imagem); flex 1:2 mantém esta proporção de forma dinâmica em qualquer largura. */
 /** Card "Modelo Restaurante 2": imagem à esquerda, conteúdo à direita. inRowCards devolve 8 zonas (subgrid) como Restaurante 1. */
 export function ItemCardRestaurante2({
   item,
@@ -30,6 +28,7 @@ export function ItemCardRestaurante2({
   inRowCards?: boolean;
 }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const imageSrc = getImageSrc(item, imageSource);
   const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
@@ -71,7 +70,18 @@ export function ItemCardRestaurante2({
         </div>
         <div className={`px-3 ${zoneRowClass}`}>
           {item.menu_description ? (
-            <p className="mt-0 text-gray-600 text-sm leading-relaxed text-left m-0">{item.menu_description}</p>
+            <div className="mt-0">
+              <button
+                type="button"
+                onClick={() => setDescriptionOpen((o) => !o)}
+                className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+                aria-expanded={descriptionOpen}
+              >
+                <i className="fas fa-eye" aria-hidden />
+                <span>Descrição</span>
+              </button>
+              {descriptionOpen && <p className="mt-0 text-gray-600 text-sm leading-relaxed text-left m-0">{item.menu_description}</p>}
+            </div>
           ) : (
             <span className="block min-h-0" aria-hidden />
           )}
@@ -81,11 +91,11 @@ export function ItemCardRestaurante2({
             <button
               type="button"
               onClick={() => setIngredientsOpen((o) => !o)}
-              className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+              className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
               aria-expanded={ingredientsOpen}
             >
+              <i className="fas fa-eye" aria-hidden />
               <span>Ingredientes</span>
-              <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
             </button>
             {ingredientsOpen && (
               <div className="mt-0 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
@@ -143,8 +153,7 @@ export function ItemCardRestaurante2({
   return (
     <li className="list-none h-full flex">
       <article
-        className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-row w-full h-full min-h-0 sm:h-[var(--card-h)] sm:min-h-[var(--card-h)]"
-        style={{ ["--card-h" as string]: `${CARD_HEIGHT_PX}px` }}
+        className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-row w-full h-full min-h-0 sm:min-h-[240px]"
       >
         <button
           type="button"
@@ -159,7 +168,7 @@ export function ItemCardRestaurante2({
             onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
           />
         </button>
-        <div className="flex-1 flex flex-col min-w-0 p-3 sm:p-4">
+        <div className="flex-[2_2_0] flex flex-col min-w-0 p-3 sm:p-4">
           <h3 className="font-bold text-lg text-gray-900 text-left mt-0 mb-1">{item.menu_name}</h3>
           <div className="flex items-center justify-between gap-2 flex-wrap min-h-[28px]">
             {item.prep_minutes != null ? (
@@ -176,19 +185,30 @@ export function ItemCardRestaurante2({
               {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
             </div>
           </div>
-          {item.menu_description && (
-            <p className="mt-0 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>
-          )}
+          {item.menu_description ? (
+            <div className="mt-0">
+              <button
+                type="button"
+                onClick={() => setDescriptionOpen((o) => !o)}
+                className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+                aria-expanded={descriptionOpen}
+              >
+                <i className="fas fa-eye" aria-hidden />
+                <span>Descrição</span>
+              </button>
+              {descriptionOpen && <p className="mt-0.5 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>}
+            </div>
+          ) : null}
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
             <div>
               <button
                 type="button"
                 onClick={() => setIngredientsOpen((o) => !o)}
-                className="w-full flex justify-between items-center text-left text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+                className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
                 aria-expanded={ingredientsOpen}
               >
+                <i className="fas fa-eye" aria-hidden />
                 <span>Ingredientes</span>
-                <span className="font-bold shrink-0 ml-2">{ingredientsOpen ? "−" : "+"}</span>
               </button>
               {ingredientsOpen && (
                 <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
