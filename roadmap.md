@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (RLS Security Advisor; Performance Advisor RLS).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Query Performance índices; roadmap e deploy).
 
 ---
 
@@ -181,6 +181,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Destaques (Escolhas do Chef) menores em smartphones:** Em viewports ≤768px o carrossel de destaques usa cartão mais estreito (min(220px, 62vw)), altura 360px e scale/overlap ajustados (0.9, 20px), para os 3 registos (esquerda, centro, direita) serem visíveis na totalidade; desktop mantém 320px/85vw e 504px.
 - **RLS Security Advisor (migration 064):** RLS ativado em `public.app_schema_migrations` e `public.import_field_mappings`; políticas superadmin (FOR ALL TO authenticated, current_user_is_superadmin) em catalog_items, roles, store_domains, store_integration_sessions, store_integrations, user_role_bindings. Erros e sugestões do Supabase Security Advisor resolvidos.
 - **Performance Advisor RLS (migration 065):** Políticas em `public.profiles` passaram a usar `(select auth.uid())` para avaliação única por query (InitPlan); políticas em `public.import_runs` unificadas numa por ação (SELECT com superadmin OR store_access; INSERT/UPDATE/DELETE só superadmin), eliminando múltiplas políticas permissivas para SELECT.
+- **Query Performance índices (migration 066):** Índices em `menu_items(catalog_item_id)` e `menu_category_items(menu_item_id)` para acelerar queries PostgREST (LATERAL join a catalog_items, batch por menu_item_id) e RPCs do menu (public_menu_initial_by_hostname, get_resolved_prices_for_store, etc.).
 
 ---
 
