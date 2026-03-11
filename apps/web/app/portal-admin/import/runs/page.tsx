@@ -1,4 +1,6 @@
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
+import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
 import { ImportRunsTableClient } from "./import-runs-table-client";
 
@@ -17,20 +19,37 @@ export default async function ImportRunsPage() {
     );
   }
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
-  if (!isSuper) {
-    return (
-      <div>
-        <p className="text-slate-400">Acesso reservado a superadmin.</p>
-      </div>
-    );
-  }
+  let list: Awaited<ReturnType<typeof supabase.from<"import_runs">.select>>["data"] = [];
+  let error: { message: string } | null = null;
 
-  const { data: runs, error } = await supabase
-    .from("import_runs")
-    .select("id, source_type, tenant_nif, store_id, file_name, started_at, finished_at, counts, error")
-    .order("started_at", { ascending: false })
-    .limit(100);
-  const list = runs ?? [];
+  if (isSuper) {
+    const result = await supabase
+      .from("import_runs")
+      .select("id, source_type, tenant_nif, store_id, file_name, started_at, finished_at, counts, error")
+      .order("started_at", { ascending: false })
+      .limit(100);
+    list = result.data ?? [];
+    error = result.error;
+  } else {
+    const headersList = await headers();
+    const host = getPortalHost(headersList);
+    const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
+    if (!storeId) {
+      return (
+        <div>
+          <p className="text-slate-400">Acesso ao histórico de importações reservado a superadmin. Para ver o histórico da sua loja, aceda pelo domínio da loja (ex.: 9999999991.menu.bwb.pt).</p>
+        </div>
+      );
+    }
+    const result = await supabase
+      .from("import_runs")
+      .select("id, source_type, tenant_nif, store_id, file_name, started_at, finished_at, counts, error")
+      .eq("store_id", storeId)
+      .order("started_at", { ascending: false })
+      .limit(100);
+    list = result.data ?? [];
+    error = result.error;
+  }
 
   return (
     <div>

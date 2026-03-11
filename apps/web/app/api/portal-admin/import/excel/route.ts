@@ -26,10 +26,6 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
-  if (!isSuper) {
-    return NextResponse.json({ error: "Forbidden: superadmin required" }, { status: 403 });
-  }
 
   let storeId: string;
   let tenantNif: string;
@@ -52,6 +48,14 @@ export async function POST(request: NextRequest) {
     }
   } catch (e) {
     return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
+  }
+
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) {
+    const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Forbidden: no access to this store" }, { status: 403 });
+    }
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -97,6 +101,12 @@ export async function POST(request: NextRequest) {
         error: `A loja está configurada para ${label}. Mude a Origem dos Dados em Definições ou escolha outra loja.`,
       },
       { status: 400 }
+    );
+  }
+  if (!isSuper && storeSourceType === "manual") {
+    return NextResponse.json(
+      { error: "Forbidden: import Excel for manual stores is reserved to superadmin" },
+      { status: 403 }
     );
   }
 
@@ -151,6 +161,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to create import run" }, { status: 500 });
   }
   const runId = runRow.id;
+
+  // Backup estado actual antes de alterar (um backup por loja; sobrescreve o anterior).
+  try {
+    const { data: excelRows } = await admin.from(tableName).select("*").eq("tenant_nif", requestedNif).eq("store_id", storeId);
+    const { data: catalogRows } = await admin.from("catalog_items").select("*").eq("store_id", storeId).eq("source_type", detectedType);
+    const catalogIds = (catalogRows ?? []).map((r) => (r as { id: string }).id);
+    const { data: menuRows } =
+      catalogIds.length > 0
+        ? await admin.from("menu_items").select("*").eq("store_id", storeId).in("catalog_item_id", catalogIds)
+        : { data: [] as Record<string, unknown>[] };
+    const snapshot = {
+      tenant_nif: requestedNif,
+      excel_rows: excelRows ?? [],
+      catalog_items: catalogRows ?? [],
+      menu_items: menuRows ?? [],
+    };
+    await admin.from("store_sync_backups").delete().eq("store_id", storeId);
+    await admin.from("store_sync_backups").insert({
+      store_id: storeId,
+      backup_type: detectedType,
+      created_at: now,
+      snapshot,
+    });
+  } catch (backupErr) {
+    const msg = backupErr instanceof Error ? backupErr.message : String(backupErr);
+    return NextResponse.json({ error: `Backup antes da importação falhou: ${msg}` }, { status: 500 });
+  }
 
   try {
     await admin.from(tableName).update({

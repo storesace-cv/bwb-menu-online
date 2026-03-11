@@ -166,6 +166,21 @@ export async function POST(request: NextRequest) {
       count: products.length,
     });
 
+    // Backup estado actual de catalog_items (netbo) antes de upsert; um backup por loja.
+    const { data: catalogRows } = await supabase
+      .from("catalog_items")
+      .select("*")
+      .eq("store_id", storeId)
+      .eq("source_type", "netbo");
+    const snapshot = { catalog_items: catalogRows ?? [] };
+    await supabase.from("store_sync_backups").delete().eq("store_id", storeId);
+    await supabase.from("store_sync_backups").insert({
+      store_id: storeId,
+      backup_type: "netbo",
+      created_at: startedAt,
+      snapshot,
+    });
+
     for (const p of products) {
       try {
         const row = normalizeProduct(p, storeId, "netbo");

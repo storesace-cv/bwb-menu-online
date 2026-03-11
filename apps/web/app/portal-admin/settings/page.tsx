@@ -59,6 +59,7 @@ export default async function SettingsPage() {
     { href: "/portal-admin/settings/sections", label: "Secções", description: "Gerir secções do menu (ex.: Restaurante, Snack-Bar)." },
     { href: "/portal-admin/settings/categories", label: "Categorias", description: "Gerir categorias do menu (ex.: Entradas, Sobremesas)." },
     { href: "/portal-admin/settings/items", label: "Gestão de Artigos", description: "Criar, editar e apagar artigos do menu." },
+    { href: "/portal-admin/settings/menu-updates", label: "Actualizações ao Menu", description: "Exportar e importar dados do menu em Excel para actualizar nomes, tipos, secções e categorias." },
     { href: "/portal-admin/settings/image-import", label: "Gestão de Imagens", description: "Método de leitura de imagens e importação em lote associada aos artigos pelo código no nome do ficheiro." },
     { href: "/portal-admin/article-types", label: "Tipos de artigo", description: "Ícones e tipos de artigo (peixe, carne, marisco, etc.)." },
     { href: "/portal-admin/settings/app", label: "Parâmetros App", description: "Tema, branding, template e integração NET-BO." },
