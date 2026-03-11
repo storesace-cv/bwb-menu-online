@@ -2,13 +2,15 @@
 
 import { useFormState } from "react-dom";
 import { setStoreDomain } from "../../../../../actions";
-import { Input, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Alert, SubmitButton } from "@/components/admin";
 
 export function SetDomainForm({ storeId }: { storeId: string }) {
   const [state, formAction] = useFormState(setStoreDomain, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
 
   return (
-    <form action={formAction} className="flex flex-wrap gap-4 items-end">
+    <form action={formAction} className="flex flex-wrap gap-4 items-end" {...formBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <Input id="hostname" name="hostname" label="Hostname" type="text" required placeholder="ex: 9999999991.menu.bwb.pt" />
       <div className="mb-4">
@@ -36,7 +38,7 @@ export function SetDomainForm({ storeId }: { storeId: string }) {
         />
         <label htmlFor="is_primary" className="text-sm text-slate-300">Primário</label>
       </div>
-      <Button type="submit" variant="primary">Guardar</Button>
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">Guardar</SubmitButton>
       {state?.error && (
         <div className="w-full mt-2">
           <Alert variant="error">{state.error}</Alert>

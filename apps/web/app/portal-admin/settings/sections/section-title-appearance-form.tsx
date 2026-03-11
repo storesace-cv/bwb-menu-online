@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { updateSectionTitleAppearance, resetSectionTitleAppearance } from "../../actions";
-import { Input, Button, Alert, Select, ColorPickerField } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Button, Alert, Select, ColorPickerField, SubmitButton } from "@/components/admin";
 
 const ALIGN_OPTIONS: { value: string; label: string }[] = [
   { value: "left", label: "Esquerda" },
@@ -27,6 +28,8 @@ export function SectionTitleAppearanceForm({
   const router = useRouter();
   const [state, formAction] = useFormState(updateSectionTitleAppearance, null);
   const [resetState, resetFormAction] = useFormState(resetSectionTitleAppearance, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
+  const [resetSubmitting, resetFormBind] = useFormSubmitLoading(resetState);
 
   useEffect(() => {
     if (resetState?.success) router.refresh();
@@ -76,17 +79,17 @@ export function SectionTitleAppearanceForm({
         placeholder="Deixar vazio para usar a cor normal do tema"
         allowEmpty
       />
-      <Button type="submit" variant="primary">
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
         Guardar
-      </Button>
+      </SubmitButton>
       {state?.error && <Alert variant="error">{state.error}</Alert>}
     </form>
-    <form action={resetFormAction} className="flex flex-col gap-2">
+    <form action={resetFormAction} className="flex flex-col gap-2" {...resetFormBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <p className="text-xs text-slate-500">Volta a aplicar os valores iniciais (ex.: centro, 20px, cor herdada).</p>
-      <Button type="submit" variant="secondary">
+      <SubmitButton variant="secondary" submitting={resetSubmitting} loadingText="A repor…">
         Repor valores por defeito
-      </Button>
+      </SubmitButton>
       {resetState?.error && <Alert variant="error">{resetState.error}</Alert>}
     </form>
     </div>

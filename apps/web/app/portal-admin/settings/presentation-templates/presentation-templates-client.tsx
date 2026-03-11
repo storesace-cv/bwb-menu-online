@@ -4,13 +4,15 @@ import { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
 import Link from "next/link";
 import { copyPresentationTemplate } from "../../actions";
-import { Button, Input, Alert, BwbTable } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Button, Input, Alert, BwbTable, SubmitButton } from "@/components/admin";
 import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 
 type Template = { id: string; name: string; component_key: string };
 
 export function PresentationTemplatesClient({ templates }: { templates: Template[] }) {
   const [copyState, copyFormAction] = useFormState(copyPresentationTemplate, null);
+  const [copySubmitting, copyFormBind] = useFormSubmitLoading(copyState);
   const [copyModalSource, setCopyModalSource] = useState<Template | null>(null);
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export function PresentationTemplatesClient({ templates }: { templates: Template
             <p className="text-slate-400 text-sm mb-4">
               Será criada uma nova entrada com o mesmo aspecto no menu. Indique o nome da cópia (deve ser único).
             </p>
-            <form action={copyFormAction} className="space-y-4">
+            <form action={copyFormAction} className="space-y-4" {...copyFormBind}>
               <input type="hidden" name="source_id" value={copyModalSource.id} />
               <Input
                 id="copy-new-name"
@@ -97,9 +99,9 @@ export function PresentationTemplatesClient({ templates }: { templates: Template
                 <Button type="button" variant="outline" onClick={() => { setCopyModalSource(null); }}>
                   Cancelar
                 </Button>
-                <Button type="submit" variant="primary">
+                <SubmitButton variant="primary" submitting={copySubmitting} loadingText="A criar…">
                   Criar cópia
-                </Button>
+                </SubmitButton>
               </div>
             </form>
           </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, Button, Spinner } from "@/components/admin";
 
 export function MenuUpdatesClient() {
+  const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{
     ok?: boolean;
@@ -67,8 +68,15 @@ export function MenuUpdatesClient() {
         <p className="text-slate-400 text-sm mb-4">
           Descarregue um ficheiro Excel com os artigos do menu. Pode editar nome, tipo, secção, categoria e outros campos permitidos e re-importar em seguida.
         </p>
-        <Button onClick={handleExport} className="px-4 py-2">
-          Exportar Excel
+        <Button onClick={handleExport} className="px-4 py-2" disabled={exporting}>
+          {exporting ? (
+            <>
+              <Spinner className="w-4 h-4 mr-2 inline" />
+              A exportar…
+            </>
+          ) : (
+            "Exportar Excel"
+          )}
         </Button>
       </Card>
 

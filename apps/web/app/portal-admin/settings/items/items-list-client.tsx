@@ -3,9 +3,10 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { ItemActions } from "./item-actions";
 import { MenuIcon } from "@/components/menu-icons";
-import { BwbTable, Button } from "@/components/admin";
+import { BwbTable, Button, SubmitButton } from "@/components/admin";
 import type { ColumnDef, SortRule } from "@/lib/admin/bwbTableSort";
 
 const ITEMS_SORT_STORAGE_KEY = "bwb-portal-settings-items-sort";
@@ -60,7 +61,9 @@ export function ItemsListClient({
   const [mergedSectionCategory, setMergedSectionCategory] = useState<Record<string, { sectionName: string; categoryName: string }>>(initialItemSectionCategory);
   const [mergedFamilia, setMergedFamilia] = useState<Record<string, { familia: string | null; sub_familia: string | null }>>(initialItemFamilia);
   const [restLoading, setRestLoading] = useState(false);
+  const [restLoadError, setRestLoadError] = useState(false);
   const restLoadStarted = useRef(false);
+  const [loadRestTrigger, setLoadRestTrigger] = useState(0);
 
   const [perPage, setPerPage] = useState<number | "all">(50);
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,24 +104,40 @@ export function ItemsListClient({
     if (!hasMore || restLoadStarted.current || initialItems.length === 0) return;
     restLoadStarted.current = true;
     setRestLoading(true);
+    setRestLoadError(false);
     const offset = initialItems.length;
-    fetch(`/api/portal-admin/settings/items?offset=${offset}&limit=5000`)
-      .then((res) => {
-        if (!res.ok) throw new Error(res.statusText);
-        return res.json();
-      })
-      .then((data: { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> }) => {
-        setMergedItems((prev) => [...prev, ...(data.items ?? [])]);
-        setMergedSectionCategory((prev) => ({ ...prev, ...(data.itemSectionCategory ?? {}) }));
-        setMergedFamilia((prev) => ({ ...prev, ...(data.itemFamilia ?? {}) }));
-      })
-      .catch(() => {
+    const url = `/api/portal-admin/settings/items?offset=${offset}&limit=5000`;
+    const maxAttempts = 3;
+    const delayMs = 1500;
+
+    const attempt = (attemptIndex: number): Promise<void> =>
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error(res.statusText);
+          return res.json();
+        })
+        .then((data: { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> }) => {
+          setMergedItems((prev) => [...prev, ...(data.items ?? [])]);
+          setMergedSectionCategory((prev) => ({ ...prev, ...(data.itemSectionCategory ?? {}) }));
+          setMergedFamilia((prev) => ({ ...prev, ...(data.itemFamilia ?? {}) }));
+        });
+
+    const runWithRetry = (n: number): Promise<void> =>
+      attempt(n).catch((err) => {
+        if (n + 1 < maxAttempts) {
+          return new Promise((resolve) => setTimeout(resolve, delayMs)).then(() => runWithRetry(n + 1));
+        }
         restLoadStarted.current = false;
-      })
+        setRestLoadError(true);
+        throw err;
+      });
+
+    runWithRetry(0)
       .finally(() => {
         setRestLoading(false);
-      });
-  }, [hasMore, initialItems.length]);
+      })
+      .catch(() => {});
+  }, [hasMore, initialItems.length, loadRestTrigger]);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchModalOpen, setBatchModalOpen] = useState(false);
@@ -246,6 +265,7 @@ export function ItemsListClient({
 
   const router = useRouter();
   const [batchState, batchFormAction] = useFormState(batchUpdateItemsSectionCategory, null);
+  const [batchSubmitting, batchFormBind] = useFormSubmitLoading(batchState);
 
   useEffect(() => {
     if (batchState?.success) {
@@ -517,8 +537,18 @@ export function ItemsListClient({
           <span>
             A mostrar {totalFiltered === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + perPageNum, totalFiltered)} de {totalFiltered}
             {restLoading && " (a carregar…)"}
-            {!restLoading && hasMore && mergedItems.length < totalCount && totalCount > initialItems.length && " (carregado)"}
+            {!restLoading && hasMore && mergedItems.length < totalCount && totalCount > initialItems.length && !restLoadError && " (carregado)"}
           </span>
+          {hasMore && mergedItems.length < totalCount && (
+            <>
+              {restLoading && <span className="text-slate-400 text-sm ml-2">A carregar restantes artigos…</span>}
+              {restLoadError && (
+                <Button type="button" variant="outline" className="ml-2" onClick={() => { restLoadStarted.current = false; setLoadRestTrigger((t) => t + 1); }}>
+                  Carregar restantes
+                </Button>
+              )}
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-400">
           <button
@@ -573,7 +603,7 @@ export function ItemsListClient({
             {batchState?.error && (
               <p className="text-red-400 text-sm mb-4">{batchState.error}</p>
             )}
-            <form action={batchFormAction} className="space-y-4">
+            <form action={batchFormAction} className="space-y-4" {...batchFormBind}>
               <input type="hidden" name="item_ids" value={JSON.stringify(Array.from(selectedIds))} />
               <label className="block text-sm text-slate-300">
                 Secção
@@ -661,7 +691,7 @@ export function ItemsListClient({
                 <Button type="button" variant="outline" onClick={() => setBatchModalOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">Aplicar</Button>
+                <SubmitButton variant="primary" submitting={batchSubmitting} loadingText="A aplicar…">Aplicar</SubmitButton>
               </div>
             </form>
           </div>

@@ -3,11 +3,13 @@
 import { useRef } from "react";
 import { useFormState } from "react-dom";
 import { clearStoreMenu } from "../actions";
-import { Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Alert, Spinner } from "@/components/admin";
 
 export function ClearStoreMenuButton({ storeId, storeName }: { storeId: string; storeName: string | null }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction] = useFormState(clearStoreMenu, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
 
   const handleClick = () => {
     const name = storeName?.trim() || "esta loja";
@@ -22,14 +24,22 @@ export function ClearStoreMenuButton({ storeId, storeName }: { storeId: string; 
   };
 
   return (
-    <form ref={formRef} action={formAction} className="inline">
+    <form ref={formRef} action={formAction} className="inline" {...formBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <button
         type="button"
         onClick={handleClick}
-        className="px-3 py-1.5 rounded-lg bg-red-600 text-white font-bold hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+        disabled={submitting}
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-600 text-white font-bold hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        Apagar menu da loja
+        {submitting ? (
+          <>
+            <Spinner className="w-4 h-4" />
+            A apagar…
+          </>
+        ) : (
+          "Apagar menu da loja"
+        )}
       </button>
       {state?.error && (
         <div className="mt-2">

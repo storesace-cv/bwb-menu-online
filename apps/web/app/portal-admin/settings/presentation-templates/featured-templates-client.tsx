@@ -3,7 +3,8 @@
 import { useFormState } from "react-dom";
 import Link from "next/link";
 import { createFeaturedTemplateFromRestaurante1 } from "../../actions";
-import { Button, Alert, BwbTable } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Button, Alert, BwbTable, SubmitButton } from "@/components/admin";
 import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 
 type Template = { id: string; name: string; component_key: string };
@@ -16,6 +17,7 @@ export function FeaturedTemplatesClient({
   hasModeloDestaque1: boolean;
 }) {
   const [createState, createFormAction] = useFormState(createFeaturedTemplateFromRestaurante1, null);
+  const [createSubmitting, createFormBind] = useFormSubmitLoading(createState);
 
   const columns: ColumnDef<Template>[] = [
     {
@@ -55,10 +57,10 @@ export function FeaturedTemplatesClient({
           <p className="text-slate-300 text-sm mb-2">
             Pode criar o modelo «Modelo Destaque 1» a partir do layout do «Modelo Restaurante 1» (mesmo canvas e zonas; no menu público o card usa imagem de fundo e overlay).
           </p>
-          <form action={createFormAction}>
-            <Button type="submit" variant="primary">
+          <form action={createFormAction} {...createFormBind}>
+            <SubmitButton variant="primary" submitting={createSubmitting} loadingText="A criar…">
               Criar a partir de Modelo Restaurante 1
-            </Button>
+            </SubmitButton>
           </form>
           {createState?.error && (
             <Alert variant="error" className="mt-2">

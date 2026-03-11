@@ -14,6 +14,9 @@ import {
 
 const zoneRowClass = "min-h-0";
 
+/** Altura do card (desktop); imagem fica quadrada com este lado; texto = 66% desta largura. */
+const CARD_HEIGHT_PX = 280;
+
 /** Card "Modelo Restaurante 2": imagem à esquerda, conteúdo à direita. inRowCards devolve 8 zonas (subgrid) como Restaurante 1. */
 export function ItemCardRestaurante2({
   item,
@@ -139,11 +142,14 @@ export function ItemCardRestaurante2({
 
   return (
     <li className="list-none h-full flex">
-      <article className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col sm:flex-row w-full h-full min-h-0">
+      <article
+        className="rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden flex flex-col sm:flex-row w-full h-full min-h-0 sm:h-[var(--card-h)] sm:min-h-[var(--card-h)]"
+        style={{ ["--card-h" as string]: `${CARD_HEIGHT_PX}px` }}
+      >
         <button
           type="button"
           onClick={() => setImageModalOpen(true)}
-          className="block w-full sm:w-[40%] sm:min-w-[200px] sm:h-full aspect-[4/3] sm:aspect-auto overflow-hidden bg-gray-100 text-left focus:outline-none border-0 shrink-0"
+          className="block w-full sm:w-[var(--card-h)] sm:min-w-[var(--card-h)] sm:h-[var(--card-h)] sm:min-h-[var(--card-h)] aspect-[4/3] sm:aspect-auto overflow-hidden bg-gray-100 text-left focus:outline-none border-0 shrink-0"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
           <img
@@ -153,7 +159,7 @@ export function ItemCardRestaurante2({
             onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
           />
         </button>
-        <div className="flex-1 flex flex-col min-w-0 p-3 sm:p-4">
+        <div className="flex-1 flex flex-col min-w-0 p-3 sm:p-4 sm:flex-none sm:w-[calc(0.66*var(--card-h))]">
           <h3 className="font-bold text-lg text-gray-900 text-left mt-0 mb-1">{item.menu_name}</h3>
           <div className="flex items-center justify-between gap-2 flex-wrap min-h-[28px]">
             {item.prep_minutes != null ? (

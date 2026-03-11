@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useFormState } from "react-dom";
 import { createStore } from "../../../actions";
-import { Input, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Alert, SubmitButton } from "@/components/admin";
 
 export function CreateStoreForm({
   tenantId,
@@ -71,7 +72,7 @@ export function CreateStoreForm({
           placeholder="ex.: menu.restaurante.pt (opcional)"
         />
       )}
-      <Button type="submit" variant="primary">Criar</Button>
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A criar…">Criar</SubmitButton>
       {state?.error && (
         <div className="w-full mt-2">
           <Alert variant="error">{state.error}</Alert>

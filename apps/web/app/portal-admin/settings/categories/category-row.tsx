@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { updateCategory, deleteCategory } from "../../actions";
-import { Input, Select, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Select, Button, Alert, SubmitButton } from "@/components/admin";
 
 type PresentationTemplate = { id: string; name: string };
 type Section = { id: string; name: string; sort_order: number };
@@ -22,6 +23,7 @@ export function CategoryRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateCategory, null);
+  const [updateSubmitting, updateFormBind] = useFormSubmitLoading(updateState);
   const deleteFormRef = useRef<HTMLFormElement>(null);
 
   const handleDeleteClick = () => {
@@ -39,7 +41,7 @@ export function CategoryRow({
   if (editing) {
     return (
       <li className="flex flex-wrap items-center gap-4 py-4 border-b border-slate-700 last:border-b-0">
-        <form action={updateFormAction} className="flex gap-4 flex-wrap items-center">
+        <form action={updateFormAction} className="flex gap-4 flex-wrap items-center" {...updateFormBind}>
           <input type="hidden" name="id" value={category.id} />
           <Input id={`edit-cat-name-${category.id}`} name="name" label="Nome" type="text" required defaultValue={category.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
           <Select id={`edit-cat-section-${category.id}`} name="section_id" label="Secção" wrapperClassName="mb-0" defaultValue={category.section_id ?? ""} required>
@@ -54,7 +56,7 @@ export function CategoryRow({
             ))}
           </Select>
           <Input id={`edit-cat-sort-${category.id}`} name="sort_order" label="Ordem" type="number" defaultValue={category.sort_order} className="w-24" wrapperClassName="mb-0" />
-          <Button type="submit" variant="primary">Guardar</Button>
+          <SubmitButton variant="primary" submitting={updateSubmitting} loadingText="A guardar…">Guardar</SubmitButton>
           <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
         </form>
         {updateState?.error && (

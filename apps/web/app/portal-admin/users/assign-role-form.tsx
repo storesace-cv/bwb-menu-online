@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useFormState } from "react-dom";
 import { assignRole } from "../actions";
-import { Select, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Select, Alert, SubmitButton } from "@/components/admin";
 
 type UserRow = { id: string; email: string | null; bindings: unknown[] };
 type Tenant = { id: string; nif: string; name: string | null };
@@ -69,7 +70,7 @@ export function AssignRoleForm({
           <option key={s.id} value={s.id}>{s.name ?? s.store_number}</option>
         ))}
       </Select>
-      <Button type="submit" variant="primary">Atribuir</Button>
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A atribuir…">Atribuir</SubmitButton>
       {state?.error && (
         <div className="w-full mt-2">
           <Alert variant="error">{state.error}</Alert>

@@ -3,15 +3,17 @@
 import { useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { updateArticleType, deleteArticleType } from "../actions";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { MenuIcon } from "@/components/menu-icons";
 import { ArticleTypeIconPicker } from "./create-article-type-form";
-import { Input, Button, Alert } from "@/components/admin";
+import { Input, Button, Alert, SubmitButton } from "@/components/admin";
 
 type ArticleType = { id: string; name: string; icon_code: string; sort_order: number };
 
 export function ArticleTypeRow({ articleType }: { articleType: ArticleType }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateArticleType, null);
+  const [updateSubmitting, updateFormBind] = useFormSubmitLoading(updateState);
   const deleteFormRef = useRef<HTMLFormElement>(null);
 
   const handleDeleteClick = () => {
@@ -22,12 +24,12 @@ export function ArticleTypeRow({ articleType }: { articleType: ArticleType }) {
   if (editing) {
     return (
       <li className="flex flex-wrap items-center gap-4 py-4 border-b border-slate-700 last:border-b-0">
-        <form action={updateFormAction} className="flex gap-4 flex-wrap items-center">
+        <form action={updateFormAction} className="flex gap-4 flex-wrap items-center" {...updateFormBind}>
           <input type="hidden" name="id" value={articleType.id} />
           <Input id={`edit-at-name-${articleType.id}`} name="name" label="Nome" type="text" required defaultValue={articleType.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
           <ArticleTypeIconPicker name="icon_code" defaultValue={articleType.icon_code} />
           <Input id={`edit-at-sort-${articleType.id}`} name="sort_order" label="Ordem" type="number" defaultValue={articleType.sort_order} className="w-24" wrapperClassName="mb-0" />
-          <Button type="submit" variant="primary">Guardar</Button>
+          <SubmitButton variant="primary" submitting={updateSubmitting} loadingText="A guardar…">Guardar</SubmitButton>
           <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
         </form>
         {updateState?.error && (

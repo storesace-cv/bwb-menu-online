@@ -2,8 +2,9 @@
 
 import { useFormState } from "react-dom";
 import { createArticleType } from "../actions";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { ARTICLE_TYPE_ICON_CODES, MenuIcon } from "@/components/menu-icons";
-import { Input, Button, Alert } from "@/components/admin";
+import { Input, Alert, SubmitButton } from "@/components/admin";
 
 const ICON_LABELS: Record<(typeof ARTICLE_TYPE_ICON_CODES)[number], string> = {
   fish: "Peixe",
@@ -15,14 +16,15 @@ const ICON_LABELS: Record<(typeof ARTICLE_TYPE_ICON_CODES)[number], string> = {
 
 export function CreateArticleTypeForm({ storeId }: { storeId: string }) {
   const [state, formAction] = useFormState(createArticleType, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
 
   return (
-    <form action={formAction} className="flex flex-wrap gap-4 items-end">
+    <form action={formAction} className="flex flex-wrap gap-4 items-end" {...formBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <Input id="at-name" name="name" label="Nome" type="text" required placeholder="ex: Carne" />
       <ArticleTypeIconPicker name="icon_code" defaultValue="fish" />
       <Input id="at-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} className="w-24" />
-      <Button type="submit" variant="primary">Criar tipo</Button>
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A criar…">Criar tipo</SubmitButton>
       {state?.error && (
         <div className="w-full mt-2">
           <Alert variant="error">{state.error}</Alert>

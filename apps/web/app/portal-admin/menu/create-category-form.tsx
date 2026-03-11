@@ -2,16 +2,18 @@
 
 import { useFormState } from "react-dom";
 import { createCategory } from "../actions";
-import { Input, Select, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Select, Alert, SubmitButton } from "@/components/admin";
 
 type Section = { id: string; name: string; sort_order: number };
 type PresentationTemplate = { id: string; name: string };
 
 export function CreateCategoryForm({ storeId, sections, presentationTemplates }: { storeId: string; sections: Section[]; presentationTemplates: PresentationTemplate[] }) {
   const [state, formAction] = useFormState(createCategory, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
 
   return (
-    <form action={formAction} className="flex flex-wrap gap-4 items-end">
+    <form action={formAction} className="flex flex-wrap gap-4 items-end" {...formBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <Input id="cat-name" name="name" label="Nome" type="text" required placeholder="ex: Entradas" />
       <Select id="cat-section" name="section_id" label="Secção" required>
@@ -27,7 +29,7 @@ export function CreateCategoryForm({ storeId, sections, presentationTemplates }:
         ))}
       </Select>
       <Input id="cat-sort" name="sort_order" label="Ordem" type="number" defaultValue={0} />
-      <Button type="submit" variant="primary">Criar categoria</Button>
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A criar…">Criar categoria</SubmitButton>
       {state?.error && (
         <div className="w-full mt-2">
           <Alert variant="error">{state.error}</Alert>

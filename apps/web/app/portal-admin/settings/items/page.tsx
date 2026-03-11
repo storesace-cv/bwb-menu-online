@@ -9,7 +9,7 @@ import { Card } from "@/components/admin";
 
 export const dynamic = "force-dynamic";
 
-const INITIAL_ITEMS_LIMIT = 150;
+const INITIAL_ITEMS_LIMIT = 2000;
 
 export default async function SettingsItemsPage() {
   const headersList = await headers();
@@ -40,13 +40,14 @@ export default async function SettingsItemsPage() {
     .select("id", { count: "exact", head: true })
     .eq("store_id", storeId);
 
+  const initialLimit = Math.min(Math.max(0, totalCount ?? 0), INITIAL_ITEMS_LIMIT);
   const { data: itemsRaw } = await supabase
     .from("menu_items")
     .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order", { ascending: true })
     .order("menu_name", { ascending: true })
-    .range(0, INITIAL_ITEMS_LIMIT - 1);
+    .range(0, Math.max(0, initialLimit - 1));
 
   const { data: resolvedPricesRows } = await supabase.rpc("get_resolved_prices_for_store", { p_store_id: storeId });
   const resolvedPriceByItemId = new Map<string, number>();

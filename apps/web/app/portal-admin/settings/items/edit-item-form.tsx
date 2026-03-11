@@ -5,7 +5,8 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { updateMenuItem, createCategoryAndReturnId } from "../../actions";
-import { Input, Select, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Select, Button, Alert, SubmitButton } from "@/components/admin";
 import { GenerateDescriptionBlock } from "./generate-description-block";
 import { AllergenChecklist, type AllergenOption } from "./allergen-checklist";
 
@@ -87,6 +88,7 @@ export function EditItemForm({
 }) {
   const router = useRouter();
   const [state, formAction] = useFormState(updateMenuItem, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
   const [isPromotion, setIsPromotion] = useState(item.is_promotion);
   const [sectionId, setSectionId] = useState<string>(currentSectionId ?? "");
   const [categoryId, setCategoryId] = useState<string>(highlightCategoryId ?? currentCategoryId ?? "");
@@ -148,7 +150,7 @@ export function EditItemForm({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 max-w-2xl">
+    <form action={formAction} className="flex flex-col gap-4 max-w-2xl" {...formBind}>
       <input type="hidden" name="id" value={item.id} />
 
       {/* 0. Código do artigo (somente leitura) */}
@@ -435,9 +437,9 @@ export function EditItemForm({
         >
           Cancelar
         </Link>
-        <Button type="submit" variant="primary">
+        <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
           Guardar
-        </Button>
+        </SubmitButton>
       </div>
 
       {/* 10. Mensagem de erro */}

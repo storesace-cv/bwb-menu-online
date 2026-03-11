@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { updateCategoryTitleAppearance, resetCategoryTitleAppearance } from "../../actions";
-import { Input, Button, Alert, Select, ColorPickerField } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Button, Alert, Select, ColorPickerField, SubmitButton } from "@/components/admin";
 
 const ALIGN_OPTIONS: { value: string; label: string }[] = [
   { value: "left", label: "Esquerda" },
@@ -28,6 +29,8 @@ export function CategoryTitleAppearanceForm({
   const router = useRouter();
   const [state, formAction] = useFormState(updateCategoryTitleAppearance, null);
   const [resetState, resetFormAction] = useFormState(resetCategoryTitleAppearance, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
+  const [resetSubmitting, resetFormBind] = useFormSubmitLoading(resetState);
 
   useEffect(() => {
     if (resetState?.success) router.refresh();
@@ -35,7 +38,7 @@ export function CategoryTitleAppearanceForm({
 
   return (
     <div className="flex flex-col gap-4 max-w-md">
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="flex flex-col gap-4" {...formBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <Select
         id="category_title_align"
@@ -88,17 +91,17 @@ export function CategoryTitleAppearanceForm({
         defaultHex="#A78F39"
         placeholder="#A78F39"
       />
-      <Button type="submit" variant="primary">
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
         Guardar
-      </Button>
+      </SubmitButton>
       {state?.error && <Alert variant="error">{state.error}</Alert>}
     </form>
-    <form action={resetFormAction} className="flex flex-col gap-2">
+    <form action={resetFormAction} className="flex flex-col gap-2" {...resetFormBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <p className="text-xs text-slate-500">Volta a aplicar os valores iniciais (ex.: esquerda, 15px/16px, avanço 10px, cor dourada).</p>
-      <Button type="submit" variant="secondary">
+      <SubmitButton variant="secondary" submitting={resetSubmitting} loadingText="A repor…">
         Repor valores por defeito
-      </Button>
+      </SubmitButton>
       {resetState?.error && <Alert variant="error">{resetState.error}</Alert>}
     </form>
     </div>

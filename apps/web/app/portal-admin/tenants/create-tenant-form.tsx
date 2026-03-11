@@ -2,14 +2,16 @@
 
 import { useFormState } from "react-dom";
 import { createTenant } from "../actions";
-import { Input, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Alert, SubmitButton } from "@/components/admin";
 import { SOURCE_TYPE_OPTIONS } from "./source-type-options";
 
 export function CreateTenantForm() {
   const [state, formAction] = useFormState(createTenant, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
 
   return (
-    <form action={formAction} className="flex flex-wrap gap-4 items-end">
+    <form action={formAction} className="flex flex-wrap gap-4 items-end" {...formBind}>
       <Input id="nif" name="nif" label="NIF" type="text" required placeholder="123456789" />
       <Input id="tenant-name" name="name" label="Nome" type="text" placeholder="Nome do tenant" />
       <Input id="tenant-contact_email" name="contact_email" label="Email" type="email" required placeholder="email@exemplo.pt" />
@@ -30,7 +32,7 @@ export function CreateTenantForm() {
           ))}
         </select>
       </div>
-      <Button type="submit" variant="primary">Criar</Button>
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A criar…">Criar</SubmitButton>
       {state?.error && (
         <div className="w-full mt-2">
           <Alert variant="error">{state.error}</Alert>

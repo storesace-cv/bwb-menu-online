@@ -2,7 +2,8 @@
 
 import { useFormState } from "react-dom";
 import { updateStoreSettings } from "../actions";
-import { Input, Button, Alert, Select, ColorPickerField, Card } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Alert, Select, ColorPickerField, Card, SubmitButton } from "@/components/admin";
 import { DEFAULT_MENU_TEMPLATE_KEY } from "@/lib/menu-templates";
 
 const FORM_ID = "settings-app-form";
@@ -405,9 +406,9 @@ export function SettingsForm({
       </Card>
 
       <div className="flex flex-col gap-3">
-        <Button type="submit" variant="primary">
+        <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
           Guardar
-        </Button>
+        </SubmitButton>
         {state?.error && <Alert variant="error">{state.error}</Alert>}
       </div>
     </form>

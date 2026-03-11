@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { updateSection, deleteSection, setSectionAsDefault } from "../../actions";
-import { Input, Select, Button, Alert, ColorPickerField } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Select, Button, Alert, ColorPickerField, SubmitButton } from "@/components/admin";
 
 type PresentationTemplate = { id: string; name: string };
 type Section = {
@@ -30,6 +31,8 @@ export function SectionRow({
   const [editing, setEditing] = useState(false);
   const [updateState, updateFormAction] = useFormState(updateSection, null);
   const [defaultState, defaultFormAction] = useFormState(setSectionAsDefault, null);
+  const [updateSubmitting, updateFormBind] = useFormSubmitLoading(updateState);
+  const [defaultSubmitting, defaultFormBind] = useFormSubmitLoading(defaultState);
   const deleteFormRef = useRef<HTMLFormElement>(null);
 
   const handleDeleteClick = () => {
@@ -40,7 +43,7 @@ export function SectionRow({
   if (editing) {
     return (
       <li className="flex flex-wrap items-start gap-4 py-4 border-b border-slate-700 last:border-b-0">
-        <form action={updateFormAction} className="flex flex-col gap-4 flex-1 min-w-0">
+        <form action={updateFormAction} className="flex flex-col gap-4 flex-1 min-w-0" {...updateFormBind}>
           <input type="hidden" name="id" value={section.id} />
           <div className="flex gap-4 flex-wrap items-end">
             <Input id={`edit-sec-name-${section.id}`} name="name" label="Nome" type="text" required defaultValue={section.name} className="min-w-[8rem]" wrapperClassName="mb-0" />
@@ -51,7 +54,7 @@ export function SectionRow({
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </Select>
-            <Button type="submit" variant="primary">Guardar</Button>
+            <SubmitButton variant="primary" submitting={updateSubmitting} loadingText="A guardar…">Guardar</SubmitButton>
             <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
           </div>
           <ColorPickerField
@@ -101,11 +104,11 @@ export function SectionRow({
         <span className="text-slate-500 text-sm">ordem {section.sort_order}</span>
         <span className="text-slate-500 text-sm">modelo: {templateName}</span>
         {!section.is_default && (
-          <form action={defaultFormAction} className="inline">
+          <form action={defaultFormAction} className="inline" {...defaultFormBind}>
             <input type="hidden" name="sectionId" value={section.id} />
-            <Button type="submit" variant="outline" className="py-1 px-2 text-sm">
+            <SubmitButton variant="outline" submitting={defaultSubmitting} loadingText="A aplicar…" className="py-1 px-2 text-sm">
               Definir como apresentada por defeito
-            </Button>
+            </SubmitButton>
           </form>
         )}
         <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm ml-2">

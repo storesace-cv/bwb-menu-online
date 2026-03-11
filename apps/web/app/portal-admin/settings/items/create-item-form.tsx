@@ -2,7 +2,8 @@
 
 import { useFormState } from "react-dom";
 import { createMenuItem } from "../../actions";
-import { Input, Select, Button, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Input, Select, Alert, SubmitButton } from "@/components/admin";
 import { GenerateDescriptionBlock } from "./generate-description-block";
 import { AllergenChecklist, type AllergenOption } from "./allergen-checklist";
 
@@ -23,9 +24,10 @@ export function CreateItemForm({
   allergens?: AllergenOption[];
 }) {
   const [state, formAction] = useFormState(createMenuItem, null);
+  const [submitting, formBind] = useFormSubmitLoading(state);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 max-w-2xl">
+    <form action={formAction} className="flex flex-col gap-4 max-w-2xl" {...formBind}>
       <input type="hidden" name="store_id" value={storeId} />
       <div className="flex flex-wrap gap-4">
         <Input id="item-name" name="menu_name" label="Nome *" type="text" required placeholder="ex: Bifana" />
@@ -89,7 +91,7 @@ export function CreateItemForm({
         />
       </div>
       <AllergenChecklist allergens={allergens} selectedIds={[]} />
-      <Button type="submit" variant="primary">Criar item</Button>
+      <SubmitButton variant="primary" submitting={submitting} loadingText="A criar…">Criar item</SubmitButton>
       {state?.error && <Alert variant="error">{state.error}</Alert>}
     </form>
   );

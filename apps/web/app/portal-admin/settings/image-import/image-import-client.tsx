@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useFormState } from "react-dom";
-import { Button, Card, BwbTable, Select, Alert } from "@/components/admin";
+import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
+import { Button, Card, BwbTable, Select, Alert, SubmitButton } from "@/components/admin";
 import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 import { updateImageSource } from "../../actions";
 
@@ -38,6 +39,7 @@ export function ImageImportClient({
 }) {
   const effectiveImageSource = normalizeImageSource(initialImageSource ?? "storage");
   const [imageSourceState, formAction] = useFormState(updateImageSource, null);
+  const [sourceSubmitting, sourceFormBind] = useFormSubmitLoading(imageSourceState);
   const [overwrite, setOverwrite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<FileResult[] | null>(null);
@@ -92,7 +94,7 @@ export function ImageImportClient({
             <p className="text-slate-200 font-medium">{imageSourceLabel}</p>
           </div>
         ) : (
-          <form action={formAction} className="flex flex-col gap-4 max-w-md mb-0">
+          <form action={formAction} className="flex flex-col gap-4 max-w-md mb-0" {...sourceFormBind}>
             <input type="hidden" name="store_id" value={storeId} />
             <Select
               id="image_source"
@@ -106,7 +108,7 @@ export function ImageImportClient({
                 </option>
               ))}
             </Select>
-            <Button type="submit" variant="primary">Guardar método</Button>
+            <SubmitButton variant="primary" submitting={sourceSubmitting} loadingText="A guardar…">Guardar método</SubmitButton>
             {imageSourceState?.error && <Alert variant="error">{imageSourceState.error}</Alert>}
           </form>
         )}
