@@ -55,7 +55,7 @@ export default async function FeaturedTemplateLayoutPage({ params }: Props) {
   return (
     <div>
       <p className="mb-6">
-        <Link href="/portal-admin/settings/presentation-templates" className="text-emerald-400 hover:text-emerald-300">
+        <Link href="/portal-admin/settings/presentation-templates" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>
           ← Modelos de apresentação
         </Link>
       </p>

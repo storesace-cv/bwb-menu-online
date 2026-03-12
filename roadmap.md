@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Rodapé no fundo do ecrã — sticky footer; roadmap, commit, push, deploy, verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Fix "Fetch failed" em Modelos de apresentação — prefetch=false; roadmap, commit, push, deploy, verificação no container).
 
 ---
 
@@ -208,6 +208,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Definições → Secções: cards, Ordenar secções e drag-and-drop:** Paridade de UI com Definições → Categorias: removida a representação em árvore (`|`, `|-----→`); lista de secções em cards (`bg-slate-800`), cada secção com handle de arraste e botão "Ordenar secções" (ordenação alfabética); categorias da secção em sub-cards read-only (`bg-slate-700/90`); drag-and-drop de secções com persistência via `reorderSections`; nova action `sortSectionsAlphabetically(storeId)`; componente cliente `SectionsListClient` com @dnd-kit; `SectionRow` sem árvore e em `<div>` para uso dentro do card.
 - **Eliminar "Fetch failed" ao abrir Secções e Categorias:** Na página Definições (hub), os links para Secções e Categorias passaram a usar `<a href="...">` em vez de `<Link>`, forçando navegação completa (full page load) e evitando o fetch RSC que falhava ou era abortado e gerava "Fetch failed" na consola do DevTools; mesma abordagem já usada para Gestão de Artigos.
 - **Definições → Categorias: botões Editar e Apagar fora do card e lado a lado:** Em cada card de categoria, os botões Editar e Apagar passaram a estar lado a lado (flex em linha) e fora do card (sibling à direita do card); `CategoryRow` com suporte `contentOnly` e estado de edição controlado pelo pai; `SortableCategoryCard` com `editingId` e formulário de apagar fora do card; fecho do modo edição após guardar com sucesso (useEffect + onCancelClick).
+- **Fix "Fetch failed" em Modelos de apresentação (prefetch):** Em Definições → Modelos de apresentação, os Links para as páginas de edição de layout e para voltar à lista provocavam prefetch RSC que falhava na consola. Adicionado `prefetch={false}` aos Links em `presentation-templates-client.tsx` (Editar layout por template), `featured-templates-client.tsx` (Editar layout por modelo destaque), às páginas `[id]/layout/page.tsx` e `featured/[id]/layout/page.tsx` (link "← Modelos de apresentação") e ao link "Cancelar" em `layout-editor-client.tsx`; mesma abordagem já usada em Tenants.
 
 ---
 

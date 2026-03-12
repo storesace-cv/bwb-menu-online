@@ -44,7 +44,7 @@ export function PresentationTemplatesClient({ templates }: { templates: Template
       headerClassName: "w-48",
       render: (t) => (
         <span className="flex flex-wrap gap-1">
-          <Link href={`/portal-admin/settings/presentation-templates/${t.id}/layout`}>
+          <Link href={`/portal-admin/settings/presentation-templates/${t.id}/layout`} prefetch={false}>
             <Button type="button" variant="outline" className="py-1 px-2 text-sm">
               Editar layout
             </Button>

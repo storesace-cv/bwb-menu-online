@@ -41,7 +41,7 @@ export function FeaturedTemplatesClient({
       sortable: false,
       headerClassName: "w-48",
       render: (t) => (
-        <Link href={`/portal-admin/settings/presentation-templates/featured/${t.id}/layout`}>
+        <Link href={`/portal-admin/settings/presentation-templates/featured/${t.id}/layout`} prefetch={false}>
           <Button type="button" variant="outline" className="py-1 px-2 text-sm">
             Editar layout
           </Button>

@@ -728,7 +728,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         <Button type="button" variant="primary" onClick={handleSave} disabled={saving}>
           {saving ? "A guardar…" : "Guardar"}
         </Button>
-        <Link href="/portal-admin/settings/presentation-templates">
+        <Link href="/portal-admin/settings/presentation-templates" prefetch={false}>
           <Button type="button" variant="outline">
             Cancelar
           </Button>
