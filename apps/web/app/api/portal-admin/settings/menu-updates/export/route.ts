@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
 import { buildMenuUpdatesWorkbook, type MenuExcelRow } from "@/lib/menu-excel-export";
+import { patchMenuExportXlsm } from "@/lib/menu-export-xlsm-patch";
 
 export const dynamic = "force-dynamic";
 
@@ -328,6 +329,20 @@ export async function GET() {
   if (templatePath) {
     try {
       const templateBuffer = fs.readFileSync(templatePath);
+      const patchedBuffer = await patchMenuExportXlsm({
+        templateBuffer,
+        tenantLabel,
+        storeLabel,
+        rows,
+      });
+      if (patchedBuffer) {
+        return new NextResponse(new Uint8Array(patchedBuffer), {
+          headers: {
+            "Content-Type": "application/vnd.ms-excel.sheet.macroEnabled.12",
+            "Content-Disposition": `attachment; filename="${filenameXlsm}"`,
+          },
+        });
+      }
       const wb = XLSX.read(templateBuffer, { type: "buffer", bookVBA: true });
       const wbWithVba = wb as XLSX.WorkBook & { vbaraw?: Buffer | Uint8Array };
       if (!wbWithVba.vbaraw) {

@@ -1,10 +1,10 @@
 # Template .xlsm para export Actualizações ao Menu
 
-O ficheiro exportado em **Definições → Actualizações ao Menu** inclui as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O servidor usa um **template .xlsm** e, quando o template tem VBA ou existe **vbaProject.bin** no repositório, injecta as macros no ficheiro exportado. O resultado é um ficheiro **.xlsm** (Excel Macro-Enabled Workbook) com dados e macros prontos a usar.
+O ficheiro exportado em **Definições → Actualizações ao Menu** inclui as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O servidor usa um **template .xlsm** e, quando o template tem VBA ou existe **vbaProject.bin** no repositório, injecta as macros no ficheiro exportado. O resultado é um ficheiro **.xlsm** (Excel Macro-Enabled Workbook) com dados e macros prontos a usar. **Os botões do template** (Form controls que chamam as macros, ex.: "Tudo Começa por...", "Tudo Termina com...", "Tudo Contém...") são preservados no ficheiro exportado: o export faz um patch ao template como ZIP, substituindo apenas os dados da folha e mantendo desenhos e botões intactos.
 
 ## Utilizador final
 
-**O utilizador final não precisa de abrir o Excel nem de conhecimentos de VBA.** Basta fazer o download do ficheiro .xlsm em Definições → Actualizações ao Menu e usar as macros no Excel (Alt+F8): ReplaceStartsWith, ReplaceEndsWith, ReplaceContains para substituir texto na coluna Nome (D).
+**O utilizador final não precisa de abrir o Excel nem de conhecimentos de VBA.** Basta fazer o download do ficheiro .xlsm em Definições → Actualizações ao Menu. O ficheiro inclui três botões que chamam as macros (ReplaceStartsWith, ReplaceEndsWith, ReplaceContains); pode usar os botões ou executar as macros por Alt+F8 para substituir texto na coluna Nome (D).
 
 ## Como o export inclui as macros
 
