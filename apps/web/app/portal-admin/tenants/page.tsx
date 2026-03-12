@@ -89,6 +89,7 @@ export default async function TenantsPage() {
         <Link
           href="/portal-admin/import/mappings"
           className="text-emerald-400 hover:text-emerald-300 font-medium"
+          prefetch={false}
         >
           Mapeamentos de importação (Excel → catálogo/menu)
         </Link>
@@ -112,7 +113,7 @@ export default async function TenantsPage() {
                 )}
               </div>
               <p className="text-sm text-slate-400 mt-1">
-                <Link href={`/portal-admin/tenants/${t.id}/stores`} className="text-emerald-400 hover:text-emerald-300">
+                <Link href={`/portal-admin/tenants/${t.id}/stores`} className="text-emerald-400 hover:text-emerald-300" prefetch={false}>
                   Abrir lojas em página separada
                 </Link>
               </p>

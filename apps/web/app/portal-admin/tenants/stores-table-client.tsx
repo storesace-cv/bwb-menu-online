@@ -66,6 +66,7 @@ export function StoresTableClient({
           <Link
             href={`/portal-admin/tenants/${tenantId}/stores/${r.store.id}/domains`}
             className="text-emerald-400 hover:text-emerald-300"
+            prefetch={false}
           >
             Domínios
           </Link>
