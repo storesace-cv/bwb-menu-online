@@ -1487,6 +1487,10 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
   const featuredSectionLabel = (formData.get("featured_section_label") as string)?.trim() ?? "";
   const featuredTemplateKey = (formData.get("featured_template_key") as string)?.trim() || "modelo-destaque-1";
+  const featuredCarouselBackgroundColor = (formData.get("featured_carousel_background_color") as string)?.trim() ?? "";
+  const featuredCarouselBackgroundCss = (formData.get("featured_carousel_background_css") as string)?.trim() ?? "";
+  const featuredDotsBackgroundColor = (formData.get("featured_dots_background_color") as string)?.trim() ?? "";
+  const featuredDotsBackgroundCss = (formData.get("featured_dots_background_css") as string)?.trim() ?? "";
   const heroBackgroundColor = (formData.get("hero_background_color") as string)?.trim() ?? "";
   const heroBackgroundCss = (formData.get("hero_background_css") as string)?.trim() ?? "";
   const logoFillColor = (formData.get("logo_fill_color") as string)?.trim() ?? "";
@@ -1620,6 +1624,10 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   merged.reservation_url = reservationUrl;
   merged.featured_section_label = featuredSectionLabel;
   merged.featured_template_key = featuredTemplateKey;
+  merged.featured_carousel_background_color = featuredCarouselBackgroundColor;
+  merged.featured_carousel_background_css = featuredCarouselBackgroundCss;
+  merged.featured_dots_background_color = featuredDotsBackgroundColor;
+  merged.featured_dots_background_css = featuredDotsBackgroundCss;
 
   const { error } = await supabase.from("store_settings").upsert(
     { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },

@@ -125,6 +125,14 @@ export type PublicMenuStoreSettings = {
   featured_section_label?: string;
   /** Chave do modelo de apresentação de destaques (ex.: modelo-destaque-1). */
   featured_template_key?: string;
+  /** Cor de fundo do bloco do carrossel de destaques. Opcional. */
+  featured_carousel_background_color?: string;
+  /** CSS de fundo do carrossel de destaques. Opcional. */
+  featured_carousel_background_css?: string;
+  /** Cor de fundo dos indicadores (dots) do carrossel. Opcional. */
+  featured_dots_background_color?: string;
+  /** CSS de fundo dos indicadores do carrossel. Opcional. */
+  featured_dots_background_css?: string;
   /** Método de leitura de imagens: "storage" | "url" | "legacy_path". Default: "storage". */
   image_source?: string;
 };

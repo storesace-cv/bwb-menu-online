@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import type { PublicMenuItem } from "@/lib/supabase";
 import type { LayoutDefinition } from "@/lib/presentation-templates";
 import { getFeaturedPresentationCardComponent } from "@/lib/presentation-templates";
+import { buildBackgroundStyle } from "@/lib/parse-css-declarations";
 
 export type FeaturedItemWithCategory = {
   item: PublicMenuItem;
@@ -29,6 +30,10 @@ export function FeaturedCarouselSection({
   titleAlign = "center",
   titleMarginBottom = "20",
   titlePaddingTop = "20",
+  carouselBackgroundColor,
+  carouselBackgroundCss,
+  dotsBackgroundColor,
+  dotsBackgroundCss,
 }: {
   featuredItems: FeaturedItemWithCategory[];
   featuredSectionLabel: string;
@@ -39,6 +44,10 @@ export function FeaturedCarouselSection({
   titleAlign?: string;
   titleMarginBottom?: string;
   titlePaddingTop?: string;
+  carouselBackgroundColor?: string;
+  carouselBackgroundCss?: string;
+  dotsBackgroundColor?: string;
+  dotsBackgroundCss?: string;
 }) {
   if (featuredItems.length === 0) return null;
 
@@ -47,6 +56,7 @@ export function FeaturedCarouselSection({
   const [activeIndex, setActiveIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const carouselContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -97,15 +107,22 @@ export function FeaturedCarouselSection({
     [goPrev, goNext]
   );
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => {
+  const handleWheelNative = useCallback(
+    (e: WheelEvent) => {
       if (e.deltaY === 0) return;
+      e.preventDefault();
       if (e.deltaY > 0) goNext();
       else goPrev();
-      e.preventDefault();
     },
     [goPrev, goNext]
   );
+
+  useEffect(() => {
+    const el = carouselContainerRef.current;
+    if (!el) return;
+    el.addEventListener("wheel", handleWheelNative, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheelNative);
+  }, [handleWheelNative]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -154,8 +171,14 @@ export function FeaturedCarouselSection({
   };
 
   const alignClass = titleAlign === "left" ? "text-left" : titleAlign === "right" ? "text-right" : "text-center";
+  const carouselSectionStyle = buildBackgroundStyle(carouselBackgroundColor, carouselBackgroundCss, {});
+  const dotsContainerStyle = buildBackgroundStyle(dotsBackgroundColor, dotsBackgroundCss, {});
   return (
-    <section className="relative z-10 mb-10 overflow-visible" aria-label="Destaques">
+    <section
+      className="relative z-10 mb-10 overflow-visible"
+      aria-label="Destaques"
+      style={Object.keys(carouselSectionStyle).length > 0 ? carouselSectionStyle : undefined}
+    >
       <h2
         className={`section-title mt-0 ${alignClass}`}
         style={{
@@ -168,6 +191,7 @@ export function FeaturedCarouselSection({
       </h2>
       <div className="relative group/carousel flex justify-center">
         <div
+          ref={carouselContainerRef}
           tabIndex={0}
           role="region"
           aria-label="Destaques"
@@ -175,7 +199,6 @@ export function FeaturedCarouselSection({
           style={{ minHeight: `${carouselMinHeight}px` }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          onWheel={handleWheel}
           onKeyDown={handleKeyDown}
         >
           <div className="relative overflow-visible" style={{ width: centerWidth, maxWidth: isSmallScreen ? "62vw" : "85vw", minHeight: `${carouselMinHeight}px` }}>
@@ -194,7 +217,12 @@ export function FeaturedCarouselSection({
 
       {/* Indicadores: um círculo por registo, destacar o activo; área de toque ≥44px (WCAG 2.5.5) */}
       {n >= 1 && (
-        <div className="flex justify-center gap-1.5 mt-3" role="tablist" aria-label="Posição no carrossel">
+        <div
+          className="flex justify-center gap-1.5 mt-3"
+          role="tablist"
+          aria-label="Posição no carrossel"
+          style={Object.keys(dotsContainerStyle).length > 0 ? dotsContainerStyle : undefined}
+        >
           {featuredItems.map((_, index) => (
             <button
               key={index}

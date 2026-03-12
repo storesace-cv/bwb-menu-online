@@ -194,6 +194,10 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const featuredTemplateKey = menu.store_settings?.featured_template_key?.trim() || "modelo-destaque-1";
   const featuredLayoutDefinition = menu.featured_layout_definition ?? null;
   const imageSource = menu.store_settings?.image_source?.trim() || undefined;
+  const carouselBackgroundColor = menu.store_settings?.featured_carousel_background_color?.trim();
+  const carouselBackgroundCss = menu.store_settings?.featured_carousel_background_css?.trim();
+  const dotsBackgroundColor = menu.store_settings?.featured_dots_background_color?.trim();
+  const dotsBackgroundCss = menu.store_settings?.featured_dots_background_css?.trim();
 
   const filteredCategories = useMemo(() => {
     const sections = menu.sections ?? [];
@@ -440,6 +444,10 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         titleAlign={sectionTitleAlign}
         titleMarginBottom={sectionTitleMarginBottom}
         titlePaddingTop={sectionTitlePaddingTop}
+        carouselBackgroundColor={carouselBackgroundColor}
+        carouselBackgroundCss={carouselBackgroundCss}
+        dotsBackgroundColor={dotsBackgroundColor}
+        dotsBackgroundCss={dotsBackgroundCss}
       />
 
       {/* Breadcrumb */}

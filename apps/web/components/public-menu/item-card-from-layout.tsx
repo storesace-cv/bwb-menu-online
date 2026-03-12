@@ -356,7 +356,11 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         layoutDefinition.zoneWidths
       );
     }
-    return groupZonesIntoRows(zoneOrder, layoutDefinition.zoneWidths);
+    const defaultZoneWidthPercent: Record<string, number> = {};
+    if (zoneOrder.includes("name")) defaultZoneWidthPercent["name"] = 75;
+    if (zoneOrder.includes("price")) defaultZoneWidthPercent["price"] = 25;
+    if (zoneOrder.includes("price_old")) defaultZoneWidthPercent["price_old"] = 25;
+    return groupZonesIntoRowsByWidthPercent(zoneOrder, defaultZoneWidthPercent, undefined);
   }, [
     zoneOrder,
     layoutDefinition.zoneWidths,

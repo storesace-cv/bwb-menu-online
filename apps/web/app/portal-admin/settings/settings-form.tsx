@@ -123,6 +123,10 @@ export function SettingsForm({
     reservation_url?: string;
     featured_section_label?: string;
     featured_template_key?: string;
+    featured_carousel_background_color?: string;
+    featured_carousel_background_css?: string;
+    featured_dots_background_color?: string;
+    featured_dots_background_css?: string;
   };
 }) {
   const [state, formAction] = useFormState(updateStoreSettings, null);
@@ -280,6 +284,52 @@ export function SettingsForm({
               <option value="modelo-destaque-1">Modelo Destaque 1</option>
             )}
           </Select>
+          <ColorPickerField
+            id="featured_carousel_background_color"
+            name="featured_carousel_background_color"
+            label="Cor de fundo do bloco do carrossel de destaques"
+            defaultValue={initial.featured_carousel_background_color ?? ""}
+            defaultHex="#F2F2F2"
+            placeholder="#F2F2F2"
+            allowEmpty
+          />
+          <div className="md:col-span-2 flex flex-col gap-2">
+            <label htmlFor="featured_carousel_background_css" className="text-sm font-medium text-slate-300">
+              CSS de fundo do carrossel de destaques (opcional)
+            </label>
+            <textarea
+              id="featured_carousel_background_css"
+              name="featured_carousel_background_css"
+              rows={3}
+              defaultValue={initial.featured_carousel_background_css ?? ""}
+              placeholder="ex: linear-gradient(90deg, rgba(42,123,155,1) 0%, rgba(87,199,133,1) 50%, rgba(237,221,83,1) 100%)"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
+            />
+            <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
+          </div>
+          <ColorPickerField
+            id="featured_dots_background_color"
+            name="featured_dots_background_color"
+            label="Cor de fundo dos indicadores (bolinhas) do carrossel"
+            defaultValue={initial.featured_dots_background_color ?? ""}
+            defaultHex="#F2F2F2"
+            placeholder="#F2F2F2"
+            allowEmpty
+          />
+          <div className="md:col-span-2 flex flex-col gap-2">
+            <label htmlFor="featured_dots_background_css" className="text-sm font-medium text-slate-300">
+              CSS de fundo dos indicadores (opcional)
+            </label>
+            <textarea
+              id="featured_dots_background_css"
+              name="featured_dots_background_css"
+              rows={3}
+              defaultValue={initial.featured_dots_background_css ?? ""}
+              placeholder="ex: linear-gradient(90deg, rgba(42,123,155,1) 0%, rgba(87,199,133,1) 100%)"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
+            />
+            <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
+          </div>
         </div>
       </Card>
 

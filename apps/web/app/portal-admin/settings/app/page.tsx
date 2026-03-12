@@ -79,6 +79,10 @@ export default async function ParamsAppPage() {
             reservation_url: settings.reservation_url ?? "",
             featured_section_label: settings.featured_section_label ?? "",
             featured_template_key: settings.featured_template_key ?? "modelo-destaque-1",
+            featured_carousel_background_color: settings.featured_carousel_background_color ?? "",
+            featured_carousel_background_css: settings.featured_carousel_background_css ?? "",
+            featured_dots_background_color: settings.featured_dots_background_color ?? "",
+            featured_dots_background_css: settings.featured_dots_background_css ?? "",
           }}
       />
 

@@ -75,47 +75,6 @@ function getEffectiveZoneHeight(type: string, zoneHeights: Record<string, number
   return typeof d === "number" ? d : 32;
 }
 
-function getEffectiveWidth(type: string, zoneWidths: Record<string, ZoneWidth | string> | undefined): ZoneWidth {
-  const w = zoneWidths?.[type];
-  if (w === "full" || w === "half" || w === "quarter") return w;
-  return type === "price_old" || type === "price" ? "half" : "full";
-}
-
-function groupZonesIntoRows(
-  zoneOrder: string[],
-  zoneWidths: Record<string, ZoneWidth | string> | undefined
-): string[][] {
-  const rows: string[][] = [];
-  let i = 0;
-  while (i < zoneOrder.length) {
-    const type = zoneOrder[i];
-    const w = getEffectiveWidth(type, zoneWidths);
-    if (w === "full") {
-      rows.push([type]);
-      i += 1;
-    } else if (w === "half") {
-      const group = [type];
-      i += 1;
-      while (i < zoneOrder.length && getEffectiveWidth(zoneOrder[i], zoneWidths) === "half") {
-        group.push(zoneOrder[i]);
-        i += 1;
-        if (group.length >= 2) break;
-      }
-      rows.push(group);
-    } else {
-      const group = [type];
-      i += 1;
-      while (i < zoneOrder.length && getEffectiveWidth(zoneOrder[i], zoneWidths) === "quarter") {
-        group.push(zoneOrder[i]);
-        i += 1;
-        if (group.length >= 4) break;
-      }
-      rows.push(group);
-    }
-  }
-  return rows;
-}
-
 /** Card de destaque "Modelo Destaque 1" — imagem de fundo em cover + overlay em gradiente; conteúdo segue layoutDefinition quando fornecido (ordem e altura do admin). */
 export function ItemCardDestaque1({
   item,
@@ -161,7 +120,11 @@ export function ItemCardDestaque1({
         layoutDefinition.zoneWidths
       );
     }
-    return groupZonesIntoRows(contentZoneOrder, layoutDefinition.zoneWidths);
+    const defaultZoneWidthPercent: Record<string, number> = {};
+    if (contentZoneOrder.includes("name")) defaultZoneWidthPercent["name"] = 75;
+    if (contentZoneOrder.includes("price")) defaultZoneWidthPercent["price"] = 25;
+    if (contentZoneOrder.includes("price_old")) defaultZoneWidthPercent["price_old"] = 25;
+    return groupZonesIntoRowsByWidthPercent(contentZoneOrder, defaultZoneWidthPercent, undefined);
   }, [useLayout, contentZoneOrder, layoutDefinition]);
   const minHeight =
     useLayout &&
