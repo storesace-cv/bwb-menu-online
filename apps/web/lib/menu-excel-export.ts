@@ -1,7 +1,7 @@
 /**
  * Geração do ficheiro Excel para Actualizações ao Menu.
  * Colunas: Tenant, Loja, Código, Nome, Descrição, Ingredientes, Preço, Tipo, Familia, Sub Familia, Secção, Categoria, Promo, TA, Tempo prep., Ordem, Visível, Destaque.
- * Células bloqueadas: Tenant, Loja, Código, Preço, Familia, Sub Familia.
+ * Células bloqueadas: Tenant, Loja, Código, Preço, Familia, Sub Familia. Nome (menu_name) é editável.
  * Validação: listas para Tipo, Secção, Categoria, Promo, TA, Visível, Destaque; numérico para Tempo prep. e Ordem.
  */
 
@@ -28,7 +28,7 @@ const HEADERS = [
   "Destaque",
 ] as const;
 
-/** Colunas bloqueadas (0-based): 0 Tenant, 1 Loja, 2 Código, 6 Preço, 8 Familia, 9 Sub Familia */
+/** Colunas bloqueadas (0-based): 0 Tenant, 1 Loja, 2 Código, 6 Preço, 8 Familia, 9 Sub Familia. Nome (índice 3) não incluído — editável para menu_name. */
 const LOCKED_COLUMNS = new Set([0, 1, 2, 6, 8, 9]);
 
 export type MenuExcelRow = {
