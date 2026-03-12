@@ -1,10 +1,10 @@
 # Template .xlsm para export Actualizações ao Menu
 
-O ficheiro exportado em **Definições → Actualizações ao Menu** deve incluir as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O ExcelJS não suporta escrever VBA; por isso o export usa um **template .xlsm** que já contém o módulo VBA. O servidor preenche o template com os dados e devolve um .xlsm.
+O ficheiro exportado em **Definições → Actualizações ao Menu** deve incluir as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O ExcelJS não suporta escrever VBA; por isso o export usa um **template .xlsm** que já contém o módulo VBA. O servidor lê o template, preenche os dados e devolve um ficheiro **.xls** (Excel 97-2004, formato BIFF8). O formato .xls suporta macros e evita problemas no Excel com ficheiros com macros (em comparação com .xlsm).
 
 ## Template no repositório
 
-O repositório pode já incluir **apps/web/public/templates/menu-export-template.xlsm**, gerado pelo script `apps/web/scripts/create-menu-export-template.mjs` (folha "Menu" e cabeçalhos A–R). Esse ficheiro tem a estrutura correcta mas **sem macros**. Para o export devolver .xlsm com as macros de substituição na coluna D:
+O repositório pode já incluir **apps/web/public/templates/menu-export-template.xlsm**, gerado pelo script `apps/web/scripts/create-menu-export-template.mjs` (folha "Menu" e cabeçalhos A–R). Esse ficheiro tem a estrutura correcta mas **sem macros**. Para o export devolver .xls com as macros de substituição na coluna D:
 
 1. Abra **menu-export-template.xlsm** no Excel (a partir de `apps/web/public/templates/`).
 2. Abra o Editor VBA (Alt+F11), insira um **Módulo** (Insert → Module) e cole o conteúdo de [docs/excel-vba-replace-column-d.bas](excel-vba-replace-column-d.bas). Guarde.
@@ -25,7 +25,7 @@ Para regenerar apenas a estrutura (folha + cabeçalhos), sem VBA: a partir de `a
 7. Coloque o ficheiro em:
    - **apps/web/public/templates/menu-export-template.xlsm**
 
-Se este ficheiro existir, a API de export (`GET /api/portal-admin/settings/menu-updates/export`) devolve um .xlsm preenchido com os dados do menu e com as macros disponíveis. Se o template não existir, o export continua a devolver um .xlsx gerado apenas por ExcelJS (sem macros).
+Se este ficheiro existir, a API de export (`GET /api/portal-admin/settings/menu-updates/export`) devolve um **.xls** (Excel 97-2004) preenchido com os dados do menu e com as macros disponíveis. O servidor lê o template .xlsm e escreve a resposta em formato .xls. Se o template não existir, o export continua a devolver um .xlsx gerado apenas por ExcelJS (sem macros).
 
 ## Estrutura esperada do template
 

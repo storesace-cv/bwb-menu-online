@@ -150,7 +150,7 @@ export async function GET() {
     .join("")
     .concat("_", String(now.getHours()).padStart(2, "0"), String(now.getMinutes()).padStart(2, "0"));
   const filenameXlsx = `${tenantNif}-${storeNumber}_${ddmmaa_hhmm}.xlsx`;
-  const filenameXlsm = `${tenantNif}-${storeNumber}_${ddmmaa_hhmm}.xlsm`;
+  const filenameXls = `${tenantNif}-${storeNumber}_${ddmmaa_hhmm}.xls`;
 
   const { data: articleTypes } = await supabase
     .from("article_types")
@@ -311,7 +311,7 @@ export async function GET() {
   const templatePath = getTemplatePath();
   if (!templatePath && process.env.NODE_ENV === "development") {
     console.warn(
-      "[menu-updates export] Template menu-export-template.xlsm não encontrado; export será .xlsx sem macros. Coloque o ficheiro em public/templates/."
+      "[menu-updates export] Template menu-export-template.xlsm não encontrado; export será .xlsx sem macros. Para .xls com macros, coloque o template em public/templates/."
     );
   }
   if (templatePath) {
@@ -330,13 +330,13 @@ export async function GET() {
         });
         const outBuffer = XLSX.write(wb, {
           type: "buffer",
-          bookType: "xlsm",
+          bookType: "biff8",
           bookVBA: true,
         }) as Buffer;
         return new NextResponse(new Uint8Array(outBuffer), {
           headers: {
-            "Content-Type": "application/vnd.ms-excel.sheet.macroEnabled.12",
-            "Content-Disposition": `attachment; filename="${filenameXlsm}"`,
+            "Content-Type": "application/vnd.ms-excel",
+            "Content-Disposition": `attachment; filename="${filenameXls}"`,
           },
         });
       }

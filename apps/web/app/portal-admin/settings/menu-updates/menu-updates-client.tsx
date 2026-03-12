@@ -25,12 +25,13 @@ export function MenuUpdatesClient() {
     const input = form.querySelector<HTMLInputElement>('input[type="file"]');
     const file = input?.files?.[0];
     if (!file) {
-      setResult({ ok: false, error: "Seleccione um ficheiro .xlsx ou .xlsm" });
+      setResult({ ok: false, error: "Seleccione um ficheiro .xlsx, .xlsm ou .xls" });
       return;
     }
     const name = file.name.toLowerCase();
-    if (!name.endsWith(".xlsx") && !name.endsWith(".xlsm")) {
-      setResult({ ok: false, error: "O ficheiro deve ser .xlsx ou .xlsm" });
+    const isXls = name.endsWith(".xls") && !name.endsWith(".xlsx") && !name.endsWith(".xlsm");
+    if (!name.endsWith(".xlsx") && !name.endsWith(".xlsm") && !isXls) {
+      setResult({ ok: false, error: "O ficheiro deve ser .xlsx, .xlsm ou .xls" });
       return;
     }
     setImporting(true);
@@ -67,8 +68,7 @@ export function MenuUpdatesClient() {
       <Card className="p-5">
         <h2 className="text-lg font-medium text-slate-200 mb-2">Exportar</h2>
         <p className="text-slate-400 text-sm mb-4">
-          Descarregue um ficheiro Excel com os artigos do menu. Pode editar nome, tipo, secção, categoria e outros campos permitidos e re-importar em seguida.
-          Se o ficheiro for .xlsm, inclui macros para substituição em massa na coluna Nome (folha protegida): use Alt+F8 ou Desenvolver → Macros e permita macros ao abrir.
+          Descarregue um ficheiro Excel com os artigos do menu (.xls quando há template, com macros para substituição em massa na coluna Nome). Pode editar e re-importar. O formato .xls evita problemas no Excel com ficheiros com macros. Use Alt+F8 ou Desenvolver → Macros e permita macros ao abrir.
         </p>
         <Button onClick={handleExport} className="px-4 py-2" disabled={exporting}>
           {exporting ? (
@@ -85,12 +85,12 @@ export function MenuUpdatesClient() {
       <Card className="p-5">
         <h2 className="text-lg font-medium text-slate-200 mb-2">Importar</h2>
         <p className="text-slate-400 text-sm mb-4">
-          Carregue um ficheiro .xlsx ou .xlsm exportado por esta página. Os artigos são actualizados pelo código. O ficheiro deve pertencer a este tenant e loja.
+          Carregue um ficheiro .xlsx, .xlsm ou .xls exportado por esta página. Os artigos são actualizados pelo código. O ficheiro deve pertencer a este tenant e loja.
         </p>
         <form onSubmit={handleImport} className="space-y-3">
           <input
             type="file"
-            accept=".xlsx,.xlsm"
+            accept=".xlsx,.xlsm,.xls"
             className="block w-full max-w-md text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-600 file:text-white file:font-medium"
           />
           <Button type="submit" disabled={importing} className="px-4 py-2">

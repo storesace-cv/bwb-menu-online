@@ -98,11 +98,12 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     file = formData.get("file") as File;
     if (!file || !(file instanceof File)) {
-      return NextResponse.json({ error: "Ficheiro Excel (.xlsx ou .xlsm) é obrigatório" }, { status: 400 });
+      return NextResponse.json({ error: "Ficheiro Excel (.xlsx, .xlsm ou .xls) é obrigatório" }, { status: 400 });
     }
     const name = file.name.toLowerCase();
-    if (!name.endsWith(".xlsx") && !name.endsWith(".xlsm")) {
-      return NextResponse.json({ error: "O ficheiro deve ser .xlsx ou .xlsm" }, { status: 400 });
+    const isXls = name.endsWith(".xls") && !name.endsWith(".xlsx") && !name.endsWith(".xlsm");
+    if (!name.endsWith(".xlsx") && !name.endsWith(".xlsm") && !isXls) {
+      return NextResponse.json({ error: "O ficheiro deve ser .xlsx, .xlsm ou .xls" }, { status: 400 });
     }
   } catch {
     return NextResponse.json({ error: "Dados do formulário inválidos" }, { status: 400 });
