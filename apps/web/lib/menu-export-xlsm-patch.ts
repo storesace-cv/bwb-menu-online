@@ -165,13 +165,14 @@ function buildSheetDataXml(
   return `<sheetData>${lines.join("")}</sheetData>`;
 }
 
-/** Permissões da folha: permitir formatar células e colunas (largura), ordenar; não permitir formatar linhas nem AutoFilter (conforme PERMISSÕES_EXCEL). */
+/** Permissões da folha (OOXML: 0=permitir, 1=restringir). Permitir formatar células/colunas e ordenar; restringir linhas, AutoFilter, inserir/apagar. */
 const SHEET_PROTECTION_XML =
-  '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="1" formatColumns="1" formatRows="0" insertColumns="0" insertRows="0" insertHyperlinks="0" deleteColumns="0" deleteRows="0" selectLockedCells="1" selectUnlockedCells="1" sort="1" autoFilter="0"/>';
+  '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="0" formatRows="1" insertColumns="1" insertRows="1" insertHyperlinks="1" deleteColumns="1" deleteRows="1" selectLockedCells="1" selectUnlockedCells="1" sort="0" autoFilter="1"/>';
 
 /**
  * Obtém índices de estilo locked/unlocked a partir de xl/styles.xml.
- * Se não existir um xf com protection locked="0", adiciona um e devolve o novo índice.
+ * Unlocked só conta se o xf tiver applyProtection="1" e <protection locked="0"/> (senão o Excel trata como bloqueado).
+ * Se não existir um xf válido para unlocked, adiciona um e devolve o novo índice.
  */
 function getOrCreateStyleIndices(stylesXml: string): {
   lockedIndex: number;
@@ -188,9 +189,11 @@ function getOrCreateStyleIndices(stylesXml: string): {
   const xfMatches = inner.match(xfRegex) ?? [];
   let unlockedIndex = -1;
   let lockedIndex = -1;
+  const hasUnlockedProtection = (xf: string) =>
+    /applyProtection="1"/.test(xf) && /<protection[^>]*locked="0"/.test(xf);
   for (let i = 0; i < xfMatches.length; i++) {
     const xf = xfMatches[i];
-    if (/<protection[^>]*locked="0"/.test(xf)) unlockedIndex = i;
+    if (hasUnlockedProtection(xf)) unlockedIndex = i;
     if (/<protection[^>]*locked="1"/.test(xf) && lockedIndex < 0) lockedIndex = i;
   }
   if (lockedIndex < 0) lockedIndex = 0;
