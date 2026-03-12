@@ -260,7 +260,7 @@ export function ItemCardDestaque1({
         return (item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null ? (
           <div
             className={[
-              "font-bold text-right shrink-0 text-white",
+              "italic text-right shrink-0 text-white",
               item.is_promotion ? "text-amber-200" : "",
               item.is_promotion ? "text-lg" : priceSizeClass,
               priceLeadClass,
@@ -381,7 +381,7 @@ export function ItemCardDestaque1({
                 </div>
               )}
               {(item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null && (
-                <div className="font-bold text-lg text-white mt-1">
+                <div className="italic text-lg text-white mt-1">
                   {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
                 </div>
               )}

@@ -327,7 +327,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         return (item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null ? (
           <div
             className={[
-              "font-bold text-right shrink-0",
+              "italic text-right shrink-0",
               item.is_promotion ? "text-amber-700" : "text-gray-900",
               item.is_promotion ? "text-lg" : priceSizeClass,
               priceLeadClass,
