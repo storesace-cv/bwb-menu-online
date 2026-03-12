@@ -157,38 +157,19 @@ export async function GET() {
   }
 
   const typeById = new Map((articleTypes ?? []).map((t) => [(t as { id: string }).id, (t as { name: string }).name]));
-  const categoryById = new Map((categories ?? []).map((c) => [(c as { id: string }).id, c as { id: string; name: string; section_id: string | null; sort_order?: number | null }]));
-  const sectionById = new Map((sections ?? []).map((s) => [(s as { id: string }).id, (s as { name: string }).name]));
 
-  const MCI_BATCH = 200;
-  let mciRows: { menu_item_id: string; category_id: string }[] = [];
-  for (let i = 0; i < itemIds.length; i += MCI_BATCH) {
-    const chunk = itemIds.slice(i, i + MCI_BATCH);
-    const { data } = await supabase
-      .from("menu_category_items")
-      .select("menu_item_id, category_id")
-      .in("menu_item_id", chunk);
-    mciRows = mciRows.concat(data ?? []);
-  }
-
-  const categoriesByItem = new Map<string, { category_id: string; sort_order: number; cat_name: string }[]>();
-  for (const row of mciRows) {
-    const cat = categoryById.get(row.category_id);
-    if (!cat) continue;
-    const list = categoriesByItem.get(row.menu_item_id) ?? [];
-    list.push({ category_id: row.category_id, sort_order: cat.sort_order ?? 999, cat_name: cat.name });
-    categoriesByItem.set(row.menu_item_id, list);
-  }
+  const { data: sectionCategoryRows } = await supabase.rpc("get_menu_items_section_category_for_export", {
+    p_store_id: storeId,
+  });
   const itemSectionCategory: Record<string, { sectionName: string; categoryName: string }> = {};
-  for (const [menuItemId, list] of Array.from(categoriesByItem.entries())) {
-    list.sort((a, b) => a.sort_order - b.sort_order);
-    const firstCatId = list[0]?.category_id;
-    const cat = firstCatId ? categoryById.get(firstCatId) : null;
-    const sec = cat?.section_id ? sectionById.get(cat.section_id) : null;
-    itemSectionCategory[menuItemId] = {
-      sectionName: sec ?? "—",
-      categoryName: cat?.name ?? "—",
-    };
+  for (const row of sectionCategoryRows ?? []) {
+    const id = (row as { menu_item_id?: string }).menu_item_id;
+    if (id) {
+      itemSectionCategory[id] = {
+        sectionName: (row as { section_name?: string | null }).section_name ?? "—",
+        categoryName: (row as { category_name?: string | null }).category_name ?? "—",
+      };
+    }
   }
   for (const item of itemsRaw) {
     if (!(item.id in itemSectionCategory)) {
