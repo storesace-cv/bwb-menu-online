@@ -187,10 +187,7 @@ type ItemCardFromLayoutProps = {
   imageSource?: string;
 };
 
-/** Zonas que, se omitidas do layout, são mostradas no fim do card quando há dados (paridade com ItemCardRestaurante1). */
-const FALLBACK_ZONES = ["description", "prep_time", "allergens"] as const;
-
-/** Card de artigo renderizado conforme layout_definition (ordem e visibilidade das zonas). */
+/** Card de artigo renderizado conforme layout_definition (ordem e visibilidade das zonas). Apenas as zonas em zoneOrder são renderizadas. */
 export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, imageSource }: ItemCardFromLayoutProps) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -354,14 +351,6 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     [zoneRows, imageRowIndex]
   );
 
-  const fallbackZonesToShow = useMemo(() => {
-    return FALLBACK_ZONES.filter((type) => {
-      if (zoneOrder.includes(type)) return false;
-      const el = type === "description" ? (item.menu_description ? true : false) : type === "prep_time" ? item.prep_minutes != null : type === "allergens" ? (item.allergens?.length ?? 0) > 0 : false;
-      return el;
-    });
-  }, [zoneOrder, item.menu_description, item.prep_minutes, item.allergens]);
-
   return (
     <li className="list-none h-full flex">
       <article
@@ -404,19 +393,6 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
                     </div>
                   ) : null;
                 })}
-              </div>
-            );
-          })}
-          {fallbackZonesToShow.map((type, idx) => {
-            const el = renderZone(type);
-            if (el == null) return null;
-            const rowStyle: React.CSSProperties = contentRows.length > 0 || idx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
-            const minH = getEffectiveZoneHeight(type, zoneHeights);
-            const wrapperStyle: React.CSSProperties = { ...rowStyle };
-            if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
-            return (
-              <div key={`fallback-${type}`} style={wrapperStyle}>
-                {el}
               </div>
             );
           })}
