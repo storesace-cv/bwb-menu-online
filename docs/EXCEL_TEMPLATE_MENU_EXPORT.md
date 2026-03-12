@@ -2,7 +2,18 @@
 
 O ficheiro exportado em **Definições → Actualizações ao Menu** deve incluir as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O ExcelJS não suporta escrever VBA; por isso o export usa um **template .xlsm** que já contém o módulo VBA. O servidor preenche o template com os dados e devolve um .xlsm.
 
-## Como criar o template (uma vez)
+## Template no repositório
+
+O repositório pode já incluir **apps/web/public/templates/menu-export-template.xlsm**, gerado pelo script `apps/web/scripts/create-menu-export-template.mjs` (folha "Menu" e cabeçalhos A–R). Esse ficheiro tem a estrutura correcta mas **sem macros**. Para o export devolver .xlsm com as macros de substituição na coluna D:
+
+1. Abra **menu-export-template.xlsm** no Excel (a partir de `apps/web/public/templates/`).
+2. Abra o Editor VBA (Alt+F11), insira um **Módulo** (Insert → Module) e cole o conteúdo de [docs/excel-vba-replace-column-d.bas](excel-vba-replace-column-d.bas). Guarde.
+3. (Opcional) Aplique proteção à folha e desbloqueie a coluna D.
+4. Guarde o livro (Ctrl+S). O ficheiro passará a incluir as macros; faça commit e deploy.
+
+Para regenerar apenas a estrutura (folha + cabeçalhos), sem VBA: a partir de `apps/web`, execute `node scripts/create-menu-export-template.mjs`. Depois adicione o VBA no Excel conforme acima.
+
+## Como criar o template do zero (uma vez)
 
 1. Abra o Excel e crie um novo livro.
 2. Renomeie a primeira folha para **Menu**.
