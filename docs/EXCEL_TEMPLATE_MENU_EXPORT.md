@@ -51,3 +51,7 @@ Se o template não existir, a API de export devolve um .xlsx gerado por ExcelJS 
 - **Linhas 2 em diante:** serão sobrescritas com os dados dos artigos (tenant, loja, código, nome, etc.).
 
 O módulo VBA em [docs/excel-vba-replace-column-d.bas](excel-vba-replace-column-d.bas) actua automaticamente na coluna D da folha "Menu".
+
+## Protecção da folha e password
+
+O export aplica proteção à folha "Menu" com uma **password única**: **bwb-naomexer**. Para desproteger a folha (por exemplo para alterar estrutura ou formatação), use no Excel: Rever → Desproteger folha e introduza a password `bwb-naomexer`. Em VBA: `ThisWorkbook.Sheets("Menu").Unprotect "bwb-naomexer"`.

@@ -10,6 +10,30 @@ import type { MenuExcelRow } from "./menu-excel-export";
 
 const MENU_SHEET_NAME = "Menu";
 
+/**
+ * Password única para desproteger a folha "Menu" no Excel (Rever > Desproteger folha ou VBA: Sheets("Menu").Unprotect "bwb-naomexer").
+ */
+const SHEET_PROTECTION_PASSWORD = "bwb-naomexer";
+
+/**
+ * Calcula o hash de password no formato OOXML (algoritmo legado ECMA-376 corrigido; ver Kohei Yoshida).
+ * Entrada tratada como 8-bit (byte = charCode & 0xFF). Devolve 4 dígitos hex em maiúsculas.
+ */
+function getSheetProtectionPasswordHash(password: string): string {
+  const len = password.length;
+  let hash = 0;
+  if (len === 0) return "0000";
+  for (let i = len - 1; i >= 0; i--) {
+    const byte = password.charCodeAt(i) & 0xff;
+    hash = ((hash >> 14) & 0x01) | ((hash << 1) & 0x7fff);
+    hash ^= byte;
+  }
+  hash = ((hash >> 14) & 0x01) | ((hash << 1) & 0x7fff);
+  hash ^= 0x8000 | ("N".charCodeAt(0) << 8) | "K".charCodeAt(0);
+  hash ^= len;
+  return (hash & 0xffff).toString(16).toUpperCase().padStart(4, "0");
+}
+
 /** Colunas bloqueadas (0-based): Tenant, Loja, Código, Preço, Familia, Sub Familia. Alinhado a menu-excel-export LOCKED_COLUMNS. */
 const LOCKED_COLUMNS = new Set([0, 1, 2, 6, 8, 9]);
 
@@ -165,9 +189,11 @@ function buildSheetDataXml(
   return `<sheetData>${lines.join("")}</sheetData>`;
 }
 
-/** Permissões da folha (OOXML: 0=permitir, 1=restringir). Permitir formatar células/colunas e ordenar; restringir linhas, AutoFilter, inserir/apagar. */
+/** Permissões da folha (OOXML: 0=permitir, 1=restringir). Inclui password para desprotecção com SHEET_PROTECTION_PASSWORD. */
 const SHEET_PROTECTION_XML =
-  '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="0" formatRows="1" insertColumns="1" insertRows="1" insertHyperlinks="1" deleteColumns="1" deleteRows="1" selectLockedCells="1" selectUnlockedCells="1" sort="0" autoFilter="1"/>';
+  '<sheetProtection password="' +
+  getSheetProtectionPasswordHash(SHEET_PROTECTION_PASSWORD) +
+  '" sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="0" formatRows="1" insertColumns="1" insertRows="1" insertHyperlinks="1" deleteColumns="1" deleteRows="1" selectLockedCells="1" selectUnlockedCells="1" sort="0" autoFilter="1"/>';
 
 /**
  * Obtém índices de estilo locked/unlocked a partir de xl/styles.xml.
