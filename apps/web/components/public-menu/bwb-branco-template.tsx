@@ -156,6 +156,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const [activeSectionId, setActiveSectionId] = useState<string | null>(() =>
     (menu.sections?.length ? menu.sections[0].id : null)
   );
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const [loadingSectionId, setLoadingSectionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -295,44 +297,51 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   }, [pendingScrollSectionId, filteredCategories]);
 
   const handleOpenSections = () => setSectionsSheetOpen(true);
-  const handleSelectSection = async (sectionId: string | null) => {
-    const id = sectionId ?? "none";
-    setSectionsSheetOpen(false);
-    setActiveSectionId(sectionId);
-    setSearchQuery("");
 
+  /** Fetch categorias de uma secção (lazy load). Retorna true se já tinha dados ou carregou com sucesso. */
+  const ensureSectionCategoriesLoaded = async (sectionId: string | null): Promise<boolean> => {
+    const id = sectionId ?? "none";
     const sections = menu.sections ?? [];
     const initial = menu.categories ?? [];
-    const alreadyHaveSection = id === "none"
-      ? initial.some((c) => !c.section_id)
-      : initial.some((c) => c.section_id === id) || (extraSectionCategories[id]?.length ?? 0) > 0;
-
-    if (alreadyHaveSection) {
-      setPendingScrollSectionId(id);
-      return;
-    }
-
-    if (id === "none") {
-      setPendingScrollSectionId(null);
-      return;
-    }
-
-    setPendingScrollSectionId(id);
+    const alreadyHaveSection =
+      id === "none"
+        ? initial.some((c) => !c.section_id)
+        : initial.some((c) => c.section_id === id) || (extraSectionCategories[id]?.length ?? 0) > 0;
+    if (alreadyHaveSection) return true;
+    if (id === "none") return false;
+    setLoadingSectionId(id);
     const host = typeof window !== "undefined" ? window.location.hostname : "";
     const params = new URLSearchParams({ host, sectionId: id, currencyCode: currencyCode ?? "" });
     try {
       const res = await fetch(`/api/public-menu/section-categories?${params}`);
-      if (!res.ok) return;
+      if (!res.ok) return false;
       const { categories } = (await res.json()) as { categories: PublicMenuCategory[] };
       if (Array.isArray(categories) && categories.length > 0) {
         setExtraSectionCategories((prev) => ({ ...prev, [id]: categories }));
-      } else {
-        setPendingScrollSectionId(null);
+        return true;
       }
+      return false;
     } catch {
-      setPendingScrollSectionId(null);
+      return false;
+    } finally {
+      setLoadingSectionId(null);
     }
   };
+
+  const handleSelectSection = async (sectionId: string | null) => {
+    const id = sectionId ?? "none";
+    setSectionsSheetOpen(false);
+    setActiveSectionId(sectionId);
+    setExpandedCategoryId(null);
+    setSearchQuery("");
+    const ok = await ensureSectionCategoriesLoaded(sectionId);
+    if (ok) setPendingScrollSectionId(id);
+  };
+
+  const handleExpandCategory = (categoryId: string) => {
+    setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
+  };
+
   const handleOpenLanguage = () => setLanguageSheetOpen(true);
   // TODO: idioma — funcionalidade futura; por agora só UI "Em breve".
   const handleReserveTable = () => setReservationModalOpen(true);
@@ -439,7 +448,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         {currentSectionName && ` / ${currentSectionName}`}
       </nav>
 
-      {/* Sections & categories: mostrar apenas a secção ativa; filtro de pesquisa só na secção activa */}
+      {/* Sections: uma secção activa; categorias em accordion (colapsadas por defeito, fa-eye no cabeçalho) */}
       {filteredCategories.length === 0 ? (
         <p className="text-gray-600">Nenhum item corresponde aos filtros.</p>
       ) : (
@@ -463,12 +472,17 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           }
           const group = activeGroup;
           const section = (menu.sections ?? []).find((s) => s.id === group.sectionId);
-          const sectionStyle = section && (section.background_color || section.background_css)
-            ? buildBackgroundStyle(section.background_color, section.background_css)
-            : undefined;
+          const sectionStyle =
+            section && (section.background_color || section.background_css)
+              ? buildBackgroundStyle(section.background_color, section.background_css)
+              : undefined;
+          const sectionAlignClass =
+            sectionTitleAlign === "left" ? "text-left" : sectionTitleAlign === "right" ? "text-right" : "text-center";
+          const categoryAlignClass =
+            categoryTitleAlign === "left" ? "text-left" : categoryTitleAlign === "right" ? "text-right" : "text-center";
           const h1El = (
             <h1
-              className={`mt-0 title ${sectionTitleAlign === "left" ? "text-left" : sectionTitleAlign === "right" ? "text-right" : "text-center"}`}
+              className={`section-title mt-0 ${sectionAlignClass}`}
               style={{
                 marginBottom: `${sectionTitleMarginBottom}px`,
                 paddingTop: `${sectionTitlePaddingTop}px`,
@@ -479,70 +493,114 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
             </h1>
           );
           return (
-          <div
-            key={group.sectionId ?? "_none"}
-            id={`section-${group.sectionId ?? "none"}`}
-            className="mb-10"
-          >
-            {sectionStyle ? (
-              <div style={sectionStyle} className="rounded-xl p-4">
-                {h1El}
+            <div key={group.sectionId ?? "_none"} id={`section-${group.sectionId ?? "none"}`} className="mb-10">
+              {sectionStyle ? (
+                <div style={sectionStyle} className="rounded-xl p-4">
+                  {h1El}
+                </div>
+              ) : (
+                h1El
+              )}
+              <div className="space-y-2">
+                {activeSectionFilteredCategories.map((cat) => {
+                  const isExpanded = expandedCategoryId === cat.id;
+                  return (
+                    <section key={cat.id} className="mb-4" style={{ marginLeft: `${categoryTitleIndentPx}px` }}>
+                      <button
+                        type="button"
+                        onClick={() => handleExpandCategory(cat.id)}
+                        aria-expanded={isExpanded}
+                        aria-controls={`category-content-${cat.id}`}
+                        id={`category-${cat.id}`}
+                        className={`category-title w-full flex items-center gap-[0.4em] min-h-[44px] mt-0 border-0 bg-transparent cursor-pointer rounded-xl p-2 -m-2 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 ${categoryAlignClass}`}
+                        style={{
+                          marginBottom: `${categoryTitleMarginBottom}px`,
+                          paddingTop: `${categoryTitlePaddingTop}px`,
+                          color: categoryTitleColor,
+                        }}
+                      >
+                        <i className="fas fa-eye flex-shrink-0" style={{ fontSize: "1em" }} aria-hidden />
+                        <span className="mt-0">{cat.name}</span>
+                      </button>
+                      {isExpanded && (
+                        <div
+                          id={`category-content-${cat.id}`}
+                          role="region"
+                          aria-labelledby={`category-${cat.id}`}
+                        >
+                          {cat.description && (
+                            <p className="text-gray-600 text-sm mb-4">{cat.description}</p>
+                          )}
+                          <div className="block sm:hidden">
+                            <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
+                              {(cat.items ?? []).map((item) => {
+                                const layoutDef = cat.presentation_layout_definition;
+                                const useLayout =
+                                  layoutDef != null &&
+                                  Array.isArray(layoutDef.zoneOrder) &&
+                                  layoutDef.zoneOrder.length > 0;
+                                const CardComponent = getPresentationCardComponent(cat.presentation_component_key);
+                                return useLayout ? (
+                                  <ItemCardFromLayout
+                                    key={item.id}
+                                    item={item}
+                                    layoutDefinition={layoutDef as LayoutDefinition}
+                                    currencyCode={currencyCode}
+                                    imageSource={imageSource}
+                                  />
+                                ) : (
+                                  <CardComponent
+                                    key={item.id}
+                                    item={item}
+                                    currencyCode={currencyCode}
+                                    imageSource={imageSource}
+                                  />
+                                );
+                              })}
+                            </ul>
+                          </div>
+                          <div className="hidden sm:block">
+                            <ul
+                              className="p-0 m-0 list-none grid gap-6"
+                              style={{
+                                gridTemplateColumns: `repeat(auto-fill, minmax(${CARD_MIN_WIDTH_PX}px, 1fr))`,
+                              }}
+                            >
+                              {(cat.items ?? []).map((item) => {
+                                const layoutDef = cat.presentation_layout_definition;
+                                const useLayout =
+                                  layoutDef != null &&
+                                  Array.isArray(layoutDef.zoneOrder) &&
+                                  layoutDef.zoneOrder.length > 0;
+                                const CardComponent = getPresentationCardComponent(cat.presentation_component_key);
+                                return (
+                                  <li key={item.id} className="list-none">
+                                    {useLayout ? (
+                                      <ItemCardFromLayout
+                                        item={item}
+                                        layoutDefinition={layoutDef as LayoutDefinition}
+                                        currencyCode={currencyCode}
+                                        imageSource={imageSource}
+                                      />
+                                    ) : (
+                                      <CardComponent
+                                        item={item}
+                                        currencyCode={currencyCode}
+                                        imageSource={imageSource}
+                                      />
+                                    )}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
               </div>
-            ) : (
-              h1El
-            )}
-            {activeSectionFilteredCategories.map((cat) => {
-              const layoutDef = cat.presentation_layout_definition;
-              const useLayout = layoutDef != null && Array.isArray(layoutDef.zoneOrder) && layoutDef.zoneOrder.length > 0;
-              const CardComponent = getPresentationCardComponent(cat.presentation_component_key);
-              return (
-                <section key={cat.id} className="mb-8" style={{ marginLeft: `${categoryTitleIndentPx}px` }}>
-                  <h3
-                    className={`mt-0 title ${categoryTitleAlign === "left" ? "text-left" : categoryTitleAlign === "right" ? "text-right" : "text-center"}`}
-                    style={{
-                      marginBottom: `${categoryTitleMarginBottom}px`,
-                      paddingTop: `${categoryTitlePaddingTop}px`,
-                      color: categoryTitleColor,
-                    }}
-                  >
-                    {cat.name}
-                  </h3>
-                  {cat.description && (
-                    <p className="text-gray-600 text-sm mb-4">{cat.description}</p>
-                  )}
-                  <div className="block sm:hidden">
-                    <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
-                      {cat.items?.map((item) =>
-                        useLayout ? (
-                          <ItemCardFromLayout key={item.id} item={item} layoutDefinition={layoutDef as LayoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
-                        ) : (
-                          <CardComponent key={item.id} item={item} currencyCode={currencyCode} imageSource={imageSource} />
-                        )
-                      )}
-                    </ul>
-                  </div>
-                  <div className="hidden sm:block">
-                    <ul
-                      className="p-0 m-0 list-none grid gap-6"
-                      style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${CARD_MIN_WIDTH_PX}px, 1fr))` }}
-                    >
-                      {cat.items?.map((item) =>
-                        useLayout ? (
-                          <li key={item.id} className="list-none">
-                            <ItemCardFromLayout item={item} layoutDefinition={layoutDef as LayoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
-                          </li>
-                        ) : (
-                          <li key={item.id} className="list-none">
-                            <CardComponent item={item} currencyCode={currencyCode} imageSource={imageSource} />
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                </section>
-              );
-            })}
-          </div>
+            </div>
           );
         })()
       )}

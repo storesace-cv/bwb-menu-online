@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Export .xlsm: permissões Select locked/unlocked cells; roadmap, commit, push, deploy, verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Menu público: tipografia secções/categorias e categorias colapsáveis; roadmap, commit, push, deploy, verificação no container).
 
 ---
 
@@ -186,6 +186,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Modelo Restaurante 2: coluna de texto dinâmica:** Em vista de 2 ou mais colunas, o card com larguras fixas (280+467px) era cortado pela célula da grelha, truncando título e descrição. A coluna de texto passou a usar sempre `flex-1 min-w-0` (removido `sm:flex-none sm:w-[calc(5/3*var(--card-h))]`), adaptando-se à largura da célula e eliminando o truncamento.
 - **Menu público: responsividade completa (WCAG Reflow, Target Size):** Todo o menu público alinhado com boas práticas internacionais: carrossel de destaques com dots com área de toque 44×44px (WCAG 2.5.5); ItemCardFromLayout e ItemCardRestaurante1 com `min-w-0`/`max-w-full` para reflow sem scroll horizontal; ItemCardDestaque1 com overlay `min-w-0`, `break-words` no nome/descrição; template com contentor `min-w-0 max-w-full` e modal de reserva `max-w-[min(400px,90vw)] md:max-w-[min(400px,25vw)]`; rodapé com `min-w-0 max-w-full`. Documentação em [docs/MENU_PUBLIC_RESPONSIVIDADE.md](docs/MENU_PUBLIC_RESPONSIVIDADE.md).
 - **Carrossel Destaques: restaurar efeito Apple (peek):** O efeito coverflow (cartão central em destaque, laterais parcialmente visíveis) tinha ficado cortado após alterações de responsividade. Correcção: `overflow-visible` na secção, no wrapper e no contentor dos slots em `FeaturedCarouselSection`; `overflow-x-visible` em `menu-public-contents` no template BWB - Branco, para que nenhum ascendente corte os “peeks” dos cartões esquerdo e direito.
+- **Menu público: tipografia secções/categorias e categorias colapsáveis:** Tipografia definida em `globals.css` (scope `.menu-public-contents`): secções com `.section-title` (32px, font-weight 800, line-height 1.15, letter-spacing -0.01em, fonte system-ui/-apple-system/"Segoe UI"/Roboto); categorias com `.category-title` (22px, font-weight 700, line-height 1.25, letter-spacing 0.005em). Secções mantêm-se uma activa de cada vez (escolha no sheet "Menus"); **categorias** da secção activa passam a ser colapsáveis (accordion): cabeçalho clicável com ícone Font Awesome `fa-eye` (mesmo tamanho do texto, gap 0.4em) e nome da categoria; uma categoria expandida de cada vez; clique na mesma colapsa. Template `bwb-branco-template.tsx` e rótulo "Escolhas do Chefe" em `featured-carousel-section.tsx` com as novas classes.
 
 ---
 

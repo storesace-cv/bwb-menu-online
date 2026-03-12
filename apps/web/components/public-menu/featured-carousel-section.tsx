@@ -157,7 +157,7 @@ export function FeaturedCarouselSection({
   return (
     <section className="relative z-10 mb-10 overflow-visible" aria-label="Destaques">
       <h2
-        className={`mt-0 title ${alignClass}`}
+        className={`section-title mt-0 ${alignClass}`}
         style={{
           marginBottom: `${titleMarginBottom}px`,
           paddingTop: `${titlePaddingTop}px`,
