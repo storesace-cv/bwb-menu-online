@@ -1,5 +1,8 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import path from "path";
+import fs from "fs";
+import * as XLSX from "xlsx";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
 import { buildMenuUpdatesWorkbook, type MenuExcelRow } from "@/lib/menu-excel-export";
@@ -7,6 +10,82 @@ import { buildMenuUpdatesWorkbook, type MenuExcelRow } from "@/lib/menu-excel-ex
 export const dynamic = "force-dynamic";
 
 const MAX_ITEMS = 10000;
+
+const MENU_EXPORT_HEADERS = [
+  "Tenant",
+  "Loja",
+  "Código",
+  "Nome",
+  "Descrição",
+  "Ingredientes",
+  "Preço",
+  "Tipo",
+  "Familia",
+  "Sub Familia",
+  "Secção",
+  "Categoria",
+  "Promo",
+  "TA",
+  "Tempo prep.",
+  "Ordem",
+  "Visível",
+  "Destaque",
+];
+
+function getTemplatePath(): string | null {
+  const candidates = [
+    path.join(process.cwd(), "public", "templates", "menu-export-template.xlsm"),
+    path.join(process.cwd(), "apps", "web", "public", "templates", "menu-export-template.xlsm"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+function fillMenuSheetFromRows(
+  sheet: XLSX.WorkSheet,
+  tenantLabel: string,
+  storeLabel: string,
+  rows: MenuExcelRow[]
+): void {
+  for (let c = 0; c < MENU_EXPORT_HEADERS.length; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 0, c });
+    if (!sheet[ref]) sheet[ref] = { t: "s", v: "" };
+    sheet[ref].v = MENU_EXPORT_HEADERS[c];
+    sheet[ref].t = "s";
+  }
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    const values: (string | number | null)[] = [
+      tenantLabel,
+      storeLabel,
+      row.item_code ?? "",
+      row.menu_name ?? "",
+      row.description ?? "",
+      row.ingredients ?? "",
+      row.price != null ? row.price : "",
+      row.type_name,
+      row.familia,
+      row.sub_familia,
+      row.section_name,
+      row.category_name,
+      row.promo,
+      row.ta,
+      row.prep_minutes != null ? row.prep_minutes : "",
+      row.sort_order != null ? row.sort_order : "",
+      row.is_visible,
+      row.is_featured,
+    ];
+    for (let c = 0; c < values.length; c++) {
+      const ref = XLSX.utils.encode_cell({ r: r + 1, c });
+      const v = values[c];
+      if (!sheet[ref]) sheet[ref] = { t: "s", v: "" };
+      sheet[ref].v = v === null || v === "" ? "" : v;
+      sheet[ref].t = typeof v === "number" ? "n" : "s";
+    }
+  }
+}
 
 export async function GET() {
   const headersList = await headers();
@@ -70,7 +149,8 @@ export async function GET() {
   ]
     .join("")
     .concat("_", String(now.getHours()).padStart(2, "0"), String(now.getMinutes()).padStart(2, "0"));
-  const filename = `${tenantNif}-${storeNumber}_${ddmmaa_hhmm}.xlsx`;
+  const filenameXlsx = `${tenantNif}-${storeNumber}_${ddmmaa_hhmm}.xlsx`;
+  const filenameXlsm = `${tenantNif}-${storeNumber}_${ddmmaa_hhmm}.xlsm`;
 
   const { data: articleTypes } = await supabase
     .from("article_types")
@@ -228,6 +308,32 @@ export async function GET() {
     return na.localeCompare(nb, "pt");
   });
 
+  const templatePath = getTemplatePath();
+  if (templatePath) {
+    try {
+      const templateBuffer = fs.readFileSync(templatePath);
+      const wb = XLSX.read(templateBuffer, { type: "buffer", bookVBA: true });
+      const sheetName = wb.SheetNames.find((n) => n === "Menu") ?? wb.SheetNames[0];
+      if (sheetName && wb.Sheets[sheetName]) {
+        fillMenuSheetFromRows(wb.Sheets[sheetName], tenantLabel, storeLabel, rows);
+        const outWb = wb as XLSX.WorkBook & { vbaraw?: unknown };
+        const outBuffer = XLSX.write(wb, {
+          type: "buffer",
+          bookType: "xlsm",
+          bookVBA: outWb.vbaraw ?? true,
+        }) as Buffer;
+        return new NextResponse(new Uint8Array(outBuffer), {
+          headers: {
+            "Content-Type": "application/vnd.ms-excel.sheet.macroEnabled.12",
+            "Content-Disposition": `attachment; filename="${filenameXlsm}"`,
+          },
+        });
+      }
+    } catch (_e) {
+      // fallback to xlsx
+    }
+  }
+
   const buffer = await buildMenuUpdatesWorkbook({
     tenantLabel,
     storeLabel,
@@ -241,7 +347,7 @@ export async function GET() {
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Disposition": `attachment; filename="${filenameXlsx}"`,
     },
   });
 }
