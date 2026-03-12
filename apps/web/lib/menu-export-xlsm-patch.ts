@@ -51,6 +51,54 @@ function colLetter(colIndex: number): string {
   );
 }
 
+/** Lista para validação tipo list: limite 255 caracteres; escape para fórmula Excel. */
+function listFormulaForValidation(values: string[]): string {
+  const escaped = values.map((v) => (v.includes(",") || v.includes('"') ? `"${v.replace(/"/g, '""')}"` : v));
+  const s = escaped.join(",");
+  if (s.length <= 255) return `"${s}"`;
+  return `"${escaped.slice(0, 20).join(",")}"`;
+}
+
+/** Colunas de validação (0-based): H=7 Tipo, K=10 Secção, L=11 Categoria, M=12 Promo, N=13 TA, O=14 Tempo, P=15 Ordem, Q=16 Visível, R=17 Destaque. */
+const COL_TIPO = 7;
+const COL_SECCAO = 10;
+const COL_CATEGORIA = 11;
+const COL_PROMO = 12;
+const COL_TA = 13;
+const COL_TEMPO_PREP = 14;
+const COL_ORDEM = 15;
+const COL_VISIVEL = 16;
+const COL_DESTAQUE = 17;
+
+function buildDataValidationsXml(
+  lastDataRow: number,
+  typeNames: string[],
+  sectionNames: string[],
+  categoryNames: string[]
+): string {
+  if (lastDataRow < 2) return "";
+  const sqref = (colIdx: number) => {
+    const letter = colLetter(colIdx);
+    return `${letter}2:${letter}${lastDataRow}`;
+  };
+  const typeList = listFormulaForValidation(typeNames.length ? typeNames : ["—"]);
+  const sectionList = listFormulaForValidation(sectionNames.length ? sectionNames : ["—"]);
+  const categoryList = listFormulaForValidation(categoryNames.length ? categoryNames : ["—"]);
+  const simNao = '"Sim,Não"';
+  const validations: string[] = [
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_TIPO)}"><formula1>${escapeXml(typeList)}</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_SECCAO)}"><formula1>${escapeXml(sectionList)}</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_CATEGORIA)}"><formula1>${escapeXml(categoryList)}</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_PROMO)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_TA)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
+    `<dataValidation type="whole" operator="greaterThanOrEqual" allowBlank="1" sqref="${sqref(COL_TEMPO_PREP)}"><formula1>0</formula1></dataValidation>`,
+    `<dataValidation type="whole" operator="greaterThanOrEqual" allowBlank="1" sqref="${sqref(COL_ORDEM)}"><formula1>0</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_VISIVEL)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_DESTAQUE)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
+  ];
+  return `<dataValidations count="${validations.length}">${validations.join("")}</dataValidations>`;
+}
+
 function buildSheetDataXml(
   tenantLabel: string,
   storeLabel: string,
@@ -117,9 +165,9 @@ function buildSheetDataXml(
   return `<sheetData>${lines.join("")}</sheetData>`;
 }
 
-/** Opções de proteção alinhadas ao sheet.protect() do ExcelJS (menu-excel-export). */
+/** Permissões da folha: permitir formatar células e colunas (largura), ordenar; não permitir formatar linhas nem AutoFilter (conforme PERMISSÕES_EXCEL). */
 const SHEET_PROTECTION_XML =
-  '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="1" formatRows="1" insertColumns="0" insertRows="0" insertHyperlinks="0" deleteColumns="0" deleteRows="0" selectLockedCells="1" selectUnlockedCells="1" sort="1" autoFilter="1"/>';
+  '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="1" formatColumns="1" formatRows="0" insertColumns="0" insertRows="0" insertHyperlinks="0" deleteColumns="0" deleteRows="0" selectLockedCells="1" selectUnlockedCells="1" sort="1" autoFilter="0"/>';
 
 /**
  * Obtém índices de estilo locked/unlocked a partir de xl/styles.xml.
@@ -211,6 +259,9 @@ export type PatchXlsmParams = {
   tenantLabel: string;
   storeLabel: string;
   rows: MenuExcelRow[];
+  typeNames: string[];
+  sectionNames: string[];
+  categoryNames: string[];
 };
 
 /**
@@ -220,7 +271,7 @@ export type PatchXlsmParams = {
 export async function patchMenuExportXlsm(
   params: PatchXlsmParams
 ): Promise<Buffer | null> {
-  const { templateBuffer, tenantLabel, storeLabel, rows } = params;
+  const { templateBuffer, tenantLabel, storeLabel, rows, typeNames, sectionNames, categoryNames } = params;
 
   try {
     const zip = await JSZip.loadAsync(templateBuffer);
@@ -279,6 +330,20 @@ export async function patchMenuExportXlsm(
         /(<\/sheetData>)/,
         `$1${SHEET_PROTECTION_XML}`
       );
+    }
+
+    const lastDataRow = rows.length + 1;
+    const dataValidationsXml = buildDataValidationsXml(lastDataRow, typeNames, sectionNames, categoryNames);
+    if (dataValidationsXml) {
+      if (sheetXml.includes("<dataValidations")) {
+        sheetXml = sheetXml.replace(/<dataValidations[^>]*>[\s\S]*?<\/dataValidations>/, dataValidationsXml);
+      } else {
+        if (sheetXml.includes("<sheetProtection")) {
+          sheetXml = sheetXml.replace(/(<sheetProtection[^/]*\/>)/, `$1${dataValidationsXml}`);
+        } else {
+          sheetXml = sheetXml.replace(/(<\/sheetData>)/, `$1${dataValidationsXml}`);
+        }
+      }
     }
 
     zip.file(sheetPath, sheetXml);

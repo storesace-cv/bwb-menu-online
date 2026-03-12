@@ -334,6 +334,9 @@ export async function GET() {
         tenantLabel,
         storeLabel,
         rows,
+        typeNames,
+        sectionNames,
+        categoryNames,
       });
       if (patchedBuffer) {
         return new NextResponse(new Uint8Array(patchedBuffer), {
