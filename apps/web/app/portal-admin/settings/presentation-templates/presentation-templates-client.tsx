@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
-import Link from "next/link";
 import { copyPresentationTemplate } from "../../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { Button, Input, Alert, BwbTable, SubmitButton } from "@/components/admin";
@@ -44,11 +43,11 @@ export function PresentationTemplatesClient({ templates }: { templates: Template
       headerClassName: "w-48",
       render: (t) => (
         <span className="flex flex-wrap gap-1">
-          <Link href={`/portal-admin/settings/presentation-templates/${t.id}/layout`} prefetch={false}>
+          <a href={`/portal-admin/settings/presentation-templates/${t.id}/layout`}>
             <Button type="button" variant="outline" className="py-1 px-2 text-sm">
               Editar layout
             </Button>
-          </Link>
+          </a>
           <Button type="button" variant="outline" className="py-1 px-2 text-sm" onClick={() => setCopyModalSource(t)}>
             Copiar
           </Button>

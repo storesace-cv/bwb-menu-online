@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import Link from "next/link";
 import {
   LAYOUT_ZONE_TYPES,
   LAYOUT_ZONE_LABELS,
@@ -728,11 +727,11 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         <Button type="button" variant="primary" onClick={handleSave} disabled={saving}>
           {saving ? "A guardar…" : "Guardar"}
         </Button>
-        <Link href="/portal-admin/settings/presentation-templates" prefetch={false}>
+        <a href="/portal-admin/settings/presentation-templates">
           <Button type="button" variant="outline">
             Cancelar
           </Button>
-        </Link>
+        </a>
       </div>
     </div>
   );

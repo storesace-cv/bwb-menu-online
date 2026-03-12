@@ -26,7 +26,7 @@ export default async function PresentationTemplatesPage() {
       <div>
         <p className="text-slate-400">Acesso reservado a superadmin.</p>
         <p className="mt-4">
-          <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
+          <a href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</a>
         </p>
       </div>
     );
@@ -47,7 +47,7 @@ export default async function PresentationTemplatesPage() {
   return (
     <div>
       <p className="mb-6">
-        <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
+        <a href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</a>
       </p>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Modelos de apresentação</h1>
 

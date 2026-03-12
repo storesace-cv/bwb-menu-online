@@ -31,7 +31,7 @@ export default async function FeaturedTemplateLayoutPage({ params }: Props) {
       <div>
         <p className="text-slate-400">Acesso reservado a superadmin.</p>
         <p className="mt-4">
-          <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
+          <a href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</a>
         </p>
       </div>
     );
@@ -55,9 +55,9 @@ export default async function FeaturedTemplateLayoutPage({ params }: Props) {
   return (
     <div>
       <p className="mb-6">
-        <Link href="/portal-admin/settings/presentation-templates" className="text-emerald-400 hover:text-emerald-300" prefetch={false}>
+        <a href="/portal-admin/settings/presentation-templates" className="text-emerald-400 hover:text-emerald-300">
           ← Modelos de apresentação
-        </Link>
+        </a>
       </p>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Editar layout (Destaques) — {template.name}</h1>
       <p className="text-slate-400 mb-6">

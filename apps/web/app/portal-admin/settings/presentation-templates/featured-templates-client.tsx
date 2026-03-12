@@ -1,7 +1,6 @@
 "use client";
 
 import { useFormState } from "react-dom";
-import Link from "next/link";
 import { createFeaturedTemplateFromRestaurante1 } from "../../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { Button, Alert, BwbTable, SubmitButton } from "@/components/admin";
@@ -41,11 +40,11 @@ export function FeaturedTemplatesClient({
       sortable: false,
       headerClassName: "w-48",
       render: (t) => (
-        <Link href={`/portal-admin/settings/presentation-templates/featured/${t.id}/layout`} prefetch={false}>
+        <a href={`/portal-admin/settings/presentation-templates/featured/${t.id}/layout`}>
           <Button type="button" variant="outline" className="py-1 px-2 text-sm">
             Editar layout
           </Button>
-        </Link>
+        </a>
       ),
     },
   ];
