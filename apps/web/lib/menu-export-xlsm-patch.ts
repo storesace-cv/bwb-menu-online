@@ -189,11 +189,11 @@ function buildSheetDataXml(
   return `<sheetData>${lines.join("")}</sheetData>`;
 }
 
-/** Permissões da folha (OOXML: 0=permitir, 1=restringir). Inclui password para desprotecção com SHEET_PROTECTION_PASSWORD. */
+/** Permissões da folha (OOXML: 0=permitir, 1=restringir). selectLockedCells/selectUnlockedCells: 0=permitir seleção. Inclui password. */
 const SHEET_PROTECTION_XML =
   '<sheetProtection password="' +
   getSheetProtectionPasswordHash(SHEET_PROTECTION_PASSWORD) +
-  '" sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="0" formatRows="1" insertColumns="1" insertRows="1" insertHyperlinks="1" deleteColumns="1" deleteRows="1" selectLockedCells="1" selectUnlockedCells="1" sort="0" autoFilter="1"/>';
+  '" sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="0" formatRows="1" insertColumns="1" insertRows="1" insertHyperlinks="1" deleteColumns="1" deleteRows="1" selectLockedCells="0" selectUnlockedCells="0" sort="0" autoFilter="1"/>';
 
 /**
  * Obtém índices de estilo locked/unlocked a partir de xl/styles.xml.
