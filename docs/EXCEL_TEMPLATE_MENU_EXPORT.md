@@ -1,14 +1,14 @@
 # Template .xlsm para export Actualizações ao Menu
 
-O ficheiro exportado em **Definições → Actualizações ao Menu** inclui as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O servidor usa um **template .xlsm** e, quando existe **vbaProject.bin** no repositório, injecta as macros no ficheiro .xls exportado. O resultado é um ficheiro **.xls** (Excel 97-2004, BIFF8) com dados e macros prontos a usar.
+O ficheiro exportado em **Definições → Actualizações ao Menu** inclui as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O servidor usa um **template .xlsm** e, quando o template tem VBA ou existe **vbaProject.bin** no repositório, injecta as macros no ficheiro exportado. O resultado é um ficheiro **.xlsm** (Excel Macro-Enabled Workbook) com dados e macros prontos a usar.
 
 ## Utilizador final
 
-**O utilizador final não precisa de abrir o Excel nem de conhecimentos de VBA.** Basta fazer o download do ficheiro .xls em Definições → Actualizações ao Menu e usar as macros no Excel (Alt+F8): ReplaceStartsWith, ReplaceEndsWith, ReplaceContains para substituir texto na coluna Nome (D).
+**O utilizador final não precisa de abrir o Excel nem de conhecimentos de VBA.** Basta fazer o download do ficheiro .xlsm em Definições → Actualizações ao Menu e usar as macros no Excel (Alt+F8): ReplaceStartsWith, ReplaceEndsWith, ReplaceContains para substituir texto na coluna Nome (D).
 
 ## Como o export inclui as macros
 
-A API de export (`GET /api/portal-admin/settings/menu-updates/export`) devolve .xls com macros quando existe o ficheiro **vbaProject.bin** em **apps/web/public/templates/**. Se o template .xlsm não tiver VBA embutido, o servidor carrega esse blob e injecta-o no ficheiro exportado; assim o .xls inclui sempre as macros quando o projeto tiver o blob no repositório.
+A API de export (`GET /api/portal-admin/settings/menu-updates/export`) devolve **.xlsm** com macros quando o template .xlsm tem VBA embutido ou quando existe o ficheiro **vbaProject.bin** em **apps/web/public/templates/**. Se o template não tiver VBA, o servidor tenta carregar esse blob e injectá-lo no ficheiro exportado; assim o .xlsm inclui as macros quando o template já as tem ou quando o projeto tiver o blob no repositório.
 
 ## Setup do projeto (uma vez)
 
@@ -23,13 +23,13 @@ Para que o ficheiro exportado inclua as macros, quem mantém o projeto deve gera
    Ou a partir de `apps/web`: `node scripts/extract-vba-from-template.mjs`
 4. Faça commit de **apps/web/public/templates/vbaProject.bin**.
 
-Depois disso, todos os deploys e utilizadores recebem o .xls com macros; não é necessário voltar a abrir o Excel para configurar nada.
+Depois disso, todos os deploys e utilizadores recebem o .xlsm com macros; não é necessário voltar a abrir o Excel para configurar nada.
 
 ## Template no repositório
 
-O repositório inclui **apps/web/public/templates/menu-export-template.xlsm**, gerado pelo script `apps/web/scripts/create-menu-export-template.mjs` (folha "Menu" e cabeçalhos A–R). Esse ficheiro tem a estrutura correcta e pode não ter macros; as macros são injectadas a partir de **vbaProject.bin** quando este existe (ver secção anterior).
+O repositório inclui **apps/web/public/templates/menu-export-template.xlsm**, gerado pelo script `apps/web/scripts/create-menu-export-template.mjs` (folha "Menu" e cabeçalhos A–R). O template pode já incluir macros (por exemplo, copiando de `local/templates/` após edição no Excel); nesse caso o export devolve .xlsm com macros sem depender de vbaProject.bin. Se o ficheiro não tiver VBA, as macros são injectadas a partir de **vbaProject.bin** quando este existe (ver secção anterior).
 
-Para regenerar apenas a estrutura (folha + cabeçalhos), sem VBA: execute `node apps/web/scripts/create-menu-export-template.mjs` (ou a partir de `apps/web`: `node scripts/create-menu-export-template.mjs`). Para voltar a ter macros no export, é necessário ter **vbaProject.bin**; se o tiver já commitado, não precisa de fazer mais nada.
+Para regenerar apenas a estrutura (folha + cabeçalhos), sem VBA: execute `node apps/web/scripts/create-menu-export-template.mjs` (ou a partir de `apps/web`: `node scripts/create-menu-export-template.mjs`). Para voltar a ter macros no export, copie para o repo o template com macros (ex.: de `local/templates/`) ou tenha **vbaProject.bin** commitado.
 
 ## Como criar o template do zero (uma vez)
 

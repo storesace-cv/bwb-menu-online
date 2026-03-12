@@ -68,7 +68,7 @@ export function MenuUpdatesClient() {
       <Card className="p-5">
         <h2 className="text-lg font-medium text-slate-200 mb-2">Exportar</h2>
         <p className="text-slate-400 text-sm mb-4">
-          Descarregue um ficheiro Excel com os artigos do menu (.xls quando há template, com macros para substituição em massa na coluna Nome). Pode editar e re-importar. O formato .xls evita problemas no Excel com ficheiros com macros. Use Alt+F8 ou Desenvolver → Macros e permita macros ao abrir.
+          Descarregue um ficheiro Excel com os artigos do menu. Quando há template, o ficheiro é .xlsm com macros para substituição em massa na coluna Nome. Pode editar e re-importar. Use Alt+F8 ou Desenvolver → Macros e permita macros ao abrir.
         </p>
         <Button onClick={handleExport} className="px-4 py-2" disabled={exporting}>
           {exporting ? (
