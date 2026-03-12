@@ -14,6 +14,9 @@ import {
   CONTENT_FONT_SIZE_LABELS,
   CONTENT_FONT_WEIGHT_LABELS,
   CONTENT_LINE_HEIGHT_LABELS,
+  parseZoneWidthPercent,
+  groupZonesIntoRowsByLineNumber,
+  groupZonesIntoRowsByWidthPercent,
   type LayoutDefinition,
   type LayoutZoneType,
   type ZoneWidth,
@@ -129,6 +132,43 @@ function getDefaultZoneWidths(zoneOrder: string[]): Record<string, ZoneWidth> {
   return out;
 }
 
+function getDefaultWidthPercent(type: string): number {
+  return type === "price_old" || type === "price" ? 50 : 100;
+}
+
+/** Deriva zoneWidthPercent a partir de initialLayout (zoneWidthPercent ou zoneWidths). */
+function getInitialZoneWidthPercent(
+  order: string[],
+  initialLayout: LayoutDefinition | null
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (initialLayout?.zoneWidthPercent && typeof initialLayout.zoneWidthPercent === "object") {
+    order.forEach((z) => {
+      const p = initialLayout.zoneWidthPercent![z];
+      if (typeof p === "number" && p >= 1 && p <= 100) out[z] = Math.round(p);
+      else out[z] = getDefaultWidthPercent(z);
+    });
+    return out;
+  }
+  if (initialLayout?.zoneWidths && typeof initialLayout.zoneWidths === "object") {
+    const map: Record<string, number> = { full: 100, half: 50, quarter: 25 };
+    order.forEach((z) => {
+      const w = initialLayout.zoneWidths![z];
+      out[z] = w && map[w] != null ? map[w] : getDefaultWidthPercent(z);
+    });
+    return out;
+  }
+  order.forEach((z) => { out[z] = getDefaultWidthPercent(z); });
+  return out;
+}
+
+/** Converte percent (1-100) em ZoneWidth para payload de compatibilidade. */
+function percentToZoneWidth(p: number): ZoneWidth {
+  if (p <= 25) return "quarter";
+  if (p <= 50) return "half";
+  return "full";
+}
+
 function getDefaultZoneHeights(zoneOrder: string[]): Record<string, number> {
   const out: Record<string, number> = {};
   zoneOrder.forEach((z) => {
@@ -177,6 +217,21 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
       if (Object.keys(valid).length > 0) return valid;
     }
     return getDefaultZoneWidths(order);
+  });
+  const [zoneWidthPercent, setZoneWidthPercent] = useState<Record<string, number>>(() => {
+    const order = initialLayout?.zoneOrder?.length ? initialLayout.zoneOrder : defaultLayout.zoneOrder;
+    return getInitialZoneWidthPercent(order, initialLayout);
+  });
+  const [zoneLineNumbers, setZoneLineNumbers] = useState<Record<string, number>>(() => {
+    const order = initialLayout?.zoneOrder?.length ? initialLayout.zoneOrder : defaultLayout.zoneOrder;
+    const out: Record<string, number> = {};
+    if (initialLayout?.zoneLineNumbers && typeof initialLayout.zoneLineNumbers === "object") {
+      order.forEach((z) => {
+        const n = initialLayout.zoneLineNumbers![z];
+        if (typeof n === "number" && n >= 1) out[z] = Math.round(n);
+      });
+    }
+    return out;
   });
   const [rowSpacingPx, setRowSpacingPx] = useState<number>(
     initialLayout?.rowSpacingPx ?? DEFAULT_ROW_SPACING_PX
@@ -254,11 +309,16 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
   const addZone = useCallback((type: LayoutZoneType) => {
     if (zoneOrder.includes(type)) return;
     setZoneOrder((prev) => [...prev, type]);
+    setZoneWidthPercent((prev) => ({ ...prev, [type]: getDefaultWidthPercent(type) }));
   }, [zoneOrder]);
 
   const availableToAdd = LAYOUT_ZONE_TYPES.filter((t) => !zoneOrder.includes(t));
 
-  const zoneRows = useMemo(() => groupZonesIntoRows(zoneOrder, zoneWidths), [zoneOrder, zoneWidths]);
+  const zoneRows = useMemo(() => {
+    const byLine = groupZonesIntoRowsByLineNumber(zoneOrder, zoneLineNumbers);
+    if (byLine != null && byLine.length > 0) return byLine;
+    return groupZonesIntoRowsByWidthPercent(zoneOrder, zoneWidthPercent, zoneWidths);
+  }, [zoneOrder, zoneLineNumbers, zoneWidthPercent, zoneWidths]);
 
   const computeSuggestedHeight = useCallback(() => {
     let total = 0;
@@ -277,6 +337,24 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
 
   const setZoneWidth = useCallback((type: string, width: ZoneWidth) => {
     setZoneWidths((prev) => ({ ...prev, [type]: width }));
+  }, []);
+
+  const setZoneWidthPercentValue = useCallback((type: string, percent: number) => {
+    const p = Math.max(1, Math.min(100, Math.round(percent)));
+    setZoneWidthPercent((prev) => ({ ...prev, [type]: p }));
+    setZoneWidths((prev) => ({ ...prev, [type]: percentToZoneWidth(p) }));
+  }, []);
+
+  const setZoneLineNumber = useCallback((type: string, value: number) => {
+    if (value < 1) {
+      setZoneLineNumbers((prev) => {
+        const next = { ...prev };
+        delete next[type];
+        return next;
+      });
+    } else {
+      setZoneLineNumbers((prev) => ({ ...prev, [type]: Math.round(value) }));
+    }
   }, []);
 
   const setZoneHeight = useCallback((type: string, value: number) => {
@@ -306,11 +384,21 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         priceLineHeight,
       };
       const widthsToSave: Record<string, ZoneWidth> = {};
+      const percentsToSave: Record<string, number> = {};
       zoneOrder.forEach((z) => {
-        const w = zoneWidths[z] ?? (z === "price_old" || z === "price" ? "half" : "full");
+        const p = zoneWidthPercent[z] ?? getDefaultWidthPercent(z);
+        const w = percentToZoneWidth(p);
         if (w !== "full") widthsToSave[z] = w;
+        if (p !== 100) percentsToSave[z] = p;
       });
       if (Object.keys(widthsToSave).length > 0) payload.zoneWidths = widthsToSave;
+      if (Object.keys(percentsToSave).length > 0) payload.zoneWidthPercent = percentsToSave;
+      const lineNumbersToSave: Record<string, number> = {};
+      zoneOrder.forEach((z) => {
+        const n = zoneLineNumbers[z];
+        if (typeof n === "number" && n >= 1) lineNumbersToSave[z] = Math.round(n);
+      });
+      if (Object.keys(lineNumbersToSave).length > 0) payload.zoneLineNumbers = lineNumbersToSave;
       const heightsToSave: Record<string, number> = {};
       zoneOrder.forEach((z) => {
         const effective = getEffectiveZoneHeight(z, zoneHeights);
@@ -334,6 +422,8 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     canvasHeight,
     zoneOrder,
     zoneWidths,
+    zoneWidthPercent,
+    zoneLineNumbers,
     zoneHeights,
     rowSpacingPx,
     contentPaddingPx,
@@ -344,17 +434,19 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     priceLineHeight,
   ]);
 
-  const renderPreviewBlock = (type: string, inRow: boolean) => {
+  const renderPreviewBlock = (type: string, inRow: boolean, widthPercent?: number) => {
     const label = PREVIEW_ZONE_LABELS[type as LayoutZoneType] ?? LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type;
     const style = PREVIEW_ZONE_STYLES[type as LayoutZoneType] ?? "bg-slate-200/80 border-slate-400 border-dashed";
-    const baseClass = inRow ? "flex-1 min-w-0 border-2 flex items-center justify-center px-2 py-1.5" : "w-full border-2 flex items-center justify-center px-2 py-1.5";
+    const p = widthPercent ?? parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths);
+    const rowWidthStyle: React.CSSProperties = inRow && p > 0 ? { flex: `0 0 ${p}%`, boxSizing: "border-box" } : {};
+    const baseClass = inRow ? "min-w-0 border-2 flex items-center justify-center px-2 py-1.5" : "w-full border-2 flex items-center justify-center px-2 py-1.5";
     const heightPx = getEffectiveZoneHeight(type, zoneHeights);
-    const zoneStyle: React.CSSProperties = heightPx > 0 ? (type === "image" ? { height: `${heightPx}px`, minHeight: `${heightPx}px` } : { minHeight: `${heightPx}px` }) : (type === "image" ? { minHeight: "24px" } : {});
+    const zoneStyle: React.CSSProperties = { ...rowWidthStyle, ...(heightPx > 0 ? (type === "image" ? { height: `${heightPx}px`, minHeight: `${heightPx}px` } : { minHeight: `${heightPx}px` }) : (type === "image" ? { minHeight: "24px" } : {})) };
     if (type === "image") {
       return (
         <div
           key={type}
-          className={`${inRow ? "flex-1 min-w-0" : "w-full"} flex items-center justify-center border-2 ${style}`}
+          className={`${inRow ? "min-w-0" : "w-full"} flex items-center justify-center border-2 ${style}`}
           style={zoneStyle}
         >
           <span className="text-sm font-medium text-slate-600">{label}</span>
@@ -401,7 +493,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                   ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}),
                 }}
               >
-                {row.map((type) => renderPreviewBlock(type, row.length > 1))}
+                {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
               </div>
             ))}
           </div>
@@ -620,16 +712,37 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
             >
               <span className="flex-1 min-w-0 text-slate-200">{LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type}</span>
               <div className="flex items-center gap-2 flex-wrap">
-                <label className="text-slate-400 text-xs">Largura</label>
-                <select
-                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-xs"
-                  value={zoneWidths[type] ?? (type === "price_old" || type === "price" ? "half" : "full")}
-                  onChange={(e) => setZoneWidth(type, e.target.value as ZoneWidth)}
-                >
-                  {(["full", "half", "quarter"] as const).map((w) => (
-                    <option key={w} value={w}>{ZONE_WIDTH_LABELS[w]}</option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="text-slate-400 text-xs">Largura</label>
+                  <input
+                    type="range"
+                    min={1}
+                    max={100}
+                    value={zoneWidthPercent[type] ?? getDefaultWidthPercent(type)}
+                    onChange={(e) => setZoneWidthPercentValue(type, Number(e.target.value))}
+                    className="w-20 h-2 rounded accent-emerald-500"
+                    aria-label={`Largura ${LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type}`}
+                  />
+                  <span className="text-slate-300 text-xs w-8 tabular-nums">
+                    {zoneWidthPercent[type] ?? getDefaultWidthPercent(type)} %
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="text-slate-400 text-xs">Nº Linha</label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-14 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-xs"
+                    value={zoneLineNumbers[type] ?? ""}
+                    placeholder="auto"
+                    onChange={(e) => {
+                      const v = e.target.value.trim();
+                      const n = v === "" ? 0 : parseInt(v, 10);
+                      setZoneLineNumber(type, Number.isFinite(n) ? n : 0);
+                    }}
+                    aria-label={`Número da linha ${LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type}`}
+                  />
+                </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-slate-400 text-xs">Altura</span>
                   <label className="flex items-center gap-1 cursor-pointer">

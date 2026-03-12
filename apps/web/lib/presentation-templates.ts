@@ -38,6 +38,10 @@ export interface LayoutDefinition {
   zoneOrder: string[];
   /** Opcional: largura por tipo de zona. Omitido = "full". Consecutivos "half" formam uma linha de 2; "quarter" até 4. */
   zoneWidths?: Record<string, ZoneWidth>;
+  /** Opcional: largura em percentagem 1–100 por tipo de zona. Quando definido, tem prioridade sobre zoneWidths. */
+  zoneWidthPercent?: Record<string, number>;
+  /** Opcional: número de linha (1-based) por tipo de zona; define explicitamente a que linha pertence cada zona. */
+  zoneLineNumbers?: Record<string, number>;
   /** Espaçamento em px entre linhas de conteúdo do card; default 8. */
   rowSpacingPx?: number;
   /** Opcional: altura mínima por tipo de zona. 0 = automática (conteúdo); > 0 = altura mínima em px. Omitido = DEFAULT_ZONE_HEIGHTS[type]. */
@@ -122,6 +126,78 @@ export function getDefaultLayoutDefinition(): LayoutDefinition {
     canvasHeight: DEFAULT_CANVAS_HEIGHT,
     zoneOrder: [...DEFAULT_LAYOUT_ZONE_ORDER],
   };
+}
+
+const ZONE_WIDTH_TO_PERCENT: Record<ZoneWidth, number> = {
+  full: 100,
+  half: 50,
+  quarter: 25,
+};
+
+/**
+ * Devolve a largura efectiva da zona em percentagem (1–100).
+ * Prioridade: zoneWidthPercent[type] se em 1–100; senão zoneWidths[type] mapeado (full→100, half→50, quarter→25); fallback por tipo (price/price_old→50, resto→100).
+ */
+export function parseZoneWidthPercent(
+  type: string,
+  zoneWidthPercent?: Record<string, number> | null,
+  zoneWidths?: Record<string, ZoneWidth> | null
+): number {
+  const p = zoneWidthPercent?.[type];
+  if (typeof p === "number" && p >= 1 && p <= 100) return Math.round(p);
+  const w = zoneWidths?.[type];
+  if (w && ZONE_WIDTH_TO_PERCENT[w] != null) return ZONE_WIDTH_TO_PERCENT[w];
+  return type === "price_old" || type === "price" ? 50 : 100;
+}
+
+/**
+ * Agrupa zoneOrder em linhas pelo número de linha (zoneLineNumbers).
+ * Se zoneLineNumbers existir e tiver pelo menos uma entrada, devolve linhas ordenadas por número de linha e depois por ordem em zoneOrder; senão devolve null.
+ */
+export function groupZonesIntoRowsByLineNumber(
+  zoneOrder: string[],
+  zoneLineNumbers?: Record<string, number> | null
+): string[][] | null {
+  if (!zoneLineNumbers || Object.keys(zoneLineNumbers).length === 0) return null;
+  const orderIndex = new Map(zoneOrder.map((z, i) => [z, i]));
+  const withLine = zoneOrder
+    .map((type) => ({ type, line: zoneLineNumbers[type] ?? 1, index: orderIndex.get(type) ?? 0 }))
+    .sort((a, b) => a.line - b.line || a.index - b.index);
+  const rows: string[][] = [];
+  let currentLine = -1;
+  for (const { type, line } of withLine) {
+    if (line !== currentLine) {
+      rows.push([]);
+      currentLine = line;
+    }
+    rows[rows.length - 1].push(type);
+  }
+  return rows;
+}
+
+/**
+ * Agrupa zoneOrder em linhas "a encher": soma percentagens até ≥100% (ou fim da lista). Cada linha é um array de tipos.
+ */
+export function groupZonesIntoRowsByWidthPercent(
+  zoneOrder: string[],
+  zoneWidthPercent?: Record<string, number> | null,
+  zoneWidths?: Record<string, ZoneWidth> | null
+): string[][] {
+  const rows: string[][] = [];
+  let current: string[] = [];
+  let sum = 0;
+  for (const type of zoneOrder) {
+    const p = parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths);
+    if (current.length > 0 && sum + p > 100) {
+      rows.push(current);
+      current = [];
+      sum = 0;
+    }
+    current.push(type);
+    sum += p;
+  }
+  if (current.length > 0) rows.push(current);
+  return rows;
 }
 
 export type PresentationCardProps = {

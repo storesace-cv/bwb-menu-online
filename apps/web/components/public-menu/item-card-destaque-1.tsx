@@ -15,6 +15,9 @@ import {
   DEFAULT_CANVAS_HEIGHT,
   DEFAULT_CONTENT_PADDING_PX,
   DEFAULT_CONTENT_ROW_GAP_PX as DEFAULT_ROW_GAP_PX,
+  parseZoneWidthPercent,
+  groupZonesIntoRowsByLineNumber,
+  groupZonesIntoRowsByWidthPercent,
 } from "@/lib/presentation-templates";
 import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
@@ -144,10 +147,22 @@ export function ItemCardDestaque1({
     () => (useLayout ? layoutDefinition!.zoneOrder.filter((z) => z !== "image") : []),
     [useLayout, layoutDefinition]
   );
-  const zoneRows = useMemo(
-    () => (useLayout ? groupZonesIntoRows(contentZoneOrder, layoutDefinition!.zoneWidths) : []),
-    [useLayout, contentZoneOrder, layoutDefinition]
-  );
+  const zoneRows = useMemo(() => {
+    if (!useLayout || !layoutDefinition) return [];
+    const byLine = groupZonesIntoRowsByLineNumber(contentZoneOrder, layoutDefinition.zoneLineNumbers);
+    if (byLine != null && byLine.length > 0) return byLine;
+    if (
+      (layoutDefinition.zoneWidthPercent && Object.keys(layoutDefinition.zoneWidthPercent).length > 0) ||
+      (layoutDefinition.zoneWidths && Object.keys(layoutDefinition.zoneWidths).length > 0)
+    ) {
+      return groupZonesIntoRowsByWidthPercent(
+        contentZoneOrder,
+        layoutDefinition.zoneWidthPercent,
+        layoutDefinition.zoneWidths
+      );
+    }
+    return groupZonesIntoRows(contentZoneOrder, layoutDefinition.zoneWidths);
+  }, [useLayout, contentZoneOrder, layoutDefinition]);
   const minHeight =
     useLayout &&
     layoutDefinition!.canvasHeight != null &&
@@ -328,16 +343,21 @@ export function ItemCardDestaque1({
                 return (
                   <div
                     key={`r-${rowIdx}`}
-                    className={`flex items-center ${row.length === 2 ? "" : "flex-wrap"}`}
+                    className="flex items-center flex-wrap"
                     style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
                   >
                     {row.map((type) => {
                       const el = renderZoneDestaque(type);
                       const minH = getEffectiveZoneHeight(type, zoneHeights);
-                      const wrapperStyle: React.CSSProperties = {};
+                      const pct = parseZoneWidthPercent(
+                        type,
+                        layoutDefinition?.zoneWidthPercent,
+                        layoutDefinition?.zoneWidths
+                      );
+                      const wrapperStyle: React.CSSProperties = { flex: `0 0 ${pct}%`, boxSizing: "border-box" };
                       if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
                       return el != null ? (
-                        <div key={type} className="flex-1 min-w-0" style={wrapperStyle}>
+                        <div key={type} className="min-w-0" style={wrapperStyle}>
                           {el}
                         </div>
                       ) : null;

@@ -812,6 +812,8 @@ export async function updatePresentationTemplateLayout(
     canvasHeight?: number;
     zoneOrder: string[];
     zoneWidths?: Record<string, string>;
+    zoneWidthPercent?: Record<string, number>;
+    zoneLineNumbers?: Record<string, number>;
     zoneHeights?: Record<string, number>;
     rowSpacingPx?: number;
     contentPaddingPx?: number;
@@ -843,6 +845,26 @@ export async function updatePresentationTemplateLayout(
       zoneWidths[key] = val;
     }
     if (Object.keys(zoneWidths).length === 0) zoneWidths = undefined;
+  }
+  let zoneWidthPercent: Record<string, number> | undefined;
+  if (layoutDefinition.zoneWidthPercent && typeof layoutDefinition.zoneWidthPercent === "object") {
+    zoneWidthPercent = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneWidthPercent)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "number" || !Number.isFinite(val)) continue;
+      const n = Math.round(Number(val));
+      if (n >= 1 && n <= 100) zoneWidthPercent[key] = n;
+    }
+    if (Object.keys(zoneWidthPercent).length === 0) zoneWidthPercent = undefined;
+  }
+  let zoneLineNumbers: Record<string, number> | undefined;
+  if (layoutDefinition.zoneLineNumbers && typeof layoutDefinition.zoneLineNumbers === "object") {
+    zoneLineNumbers = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneLineNumbers)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "number" || !Number.isFinite(val)) continue;
+      const n = Math.round(Number(val));
+      if (n >= 1) zoneLineNumbers[key] = n;
+    }
+    if (Object.keys(zoneLineNumbers).length === 0) zoneLineNumbers = undefined;
   }
   let rowSpacingPx: number | null = null;
   if (layoutDefinition.rowSpacingPx != null && Number.isFinite(Number(layoutDefinition.rowSpacingPx))) {
@@ -890,6 +912,8 @@ export async function updatePresentationTemplateLayout(
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
     ...(zoneWidths ? { zoneWidths } : {}),
+    ...(zoneWidthPercent ? { zoneWidthPercent } : {}),
+    ...(zoneLineNumbers ? { zoneLineNumbers } : {}),
     ...(zoneHeights ? { zoneHeights } : {}),
     ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
     ...(contentPaddingPx !== null ? { contentPaddingPx } : {}),
@@ -936,6 +960,26 @@ export async function updateFeaturedPresentationTemplateLayout(
     }
     if (Object.keys(zoneWidths).length === 0) zoneWidths = undefined;
   }
+  let zoneWidthPercentFeat: Record<string, number> | undefined;
+  if (layoutDefinition.zoneWidthPercent && typeof layoutDefinition.zoneWidthPercent === "object") {
+    zoneWidthPercentFeat = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneWidthPercent)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "number" || !Number.isFinite(val)) continue;
+      const n = Math.round(Number(val));
+      if (n >= 1 && n <= 100) zoneWidthPercentFeat[key] = n;
+    }
+    if (Object.keys(zoneWidthPercentFeat).length === 0) zoneWidthPercentFeat = undefined;
+  }
+  let zoneLineNumbersFeat: Record<string, number> | undefined;
+  if (layoutDefinition.zoneLineNumbers && typeof layoutDefinition.zoneLineNumbers === "object") {
+    zoneLineNumbersFeat = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneLineNumbers)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "number" || !Number.isFinite(val)) continue;
+      const n = Math.round(Number(val));
+      if (n >= 1) zoneLineNumbersFeat[key] = n;
+    }
+    if (Object.keys(zoneLineNumbersFeat).length === 0) zoneLineNumbersFeat = undefined;
+  }
   let rowSpacingPx: number | null = null;
   if (layoutDefinition.rowSpacingPx != null && Number.isFinite(Number(layoutDefinition.rowSpacingPx))) {
     const n = Math.round(Number(layoutDefinition.rowSpacingPx));
@@ -982,6 +1026,8 @@ export async function updateFeaturedPresentationTemplateLayout(
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
     ...(zoneWidths ? { zoneWidths } : {}),
+    ...(zoneWidthPercentFeat ? { zoneWidthPercent: zoneWidthPercentFeat } : {}),
+    ...(zoneLineNumbersFeat ? { zoneLineNumbers: zoneLineNumbersFeat } : {}),
     ...(zoneHeights ? { zoneHeights } : {}),
     ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
     ...(contentPaddingPx !== null ? { contentPaddingPx } : {}),

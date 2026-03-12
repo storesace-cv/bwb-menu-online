@@ -14,6 +14,9 @@ import {
   DEFAULT_ZONE_HEIGHTS,
   DEFAULT_CONTENT_PADDING_PX,
   DEFAULT_CONTENT_ROW_GAP_PX,
+  parseZoneWidthPercent,
+  groupZonesIntoRowsByLineNumber,
+  groupZonesIntoRowsByWidthPercent,
 } from "@/lib/presentation-templates";
 import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
@@ -340,10 +343,26 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     }
   };
 
-  const zoneRows = useMemo(
-    () => groupZonesIntoRows(zoneOrder, layoutDefinition.zoneWidths),
-    [zoneOrder, layoutDefinition.zoneWidths]
-  );
+  const zoneRows = useMemo(() => {
+    const byLine = groupZonesIntoRowsByLineNumber(zoneOrder, layoutDefinition.zoneLineNumbers);
+    if (byLine != null && byLine.length > 0) return byLine;
+    if (
+      (layoutDefinition.zoneWidthPercent && Object.keys(layoutDefinition.zoneWidthPercent).length > 0) ||
+      (layoutDefinition.zoneWidths && Object.keys(layoutDefinition.zoneWidths).length > 0)
+    ) {
+      return groupZonesIntoRowsByWidthPercent(
+        zoneOrder,
+        layoutDefinition.zoneWidthPercent,
+        layoutDefinition.zoneWidths
+      );
+    }
+    return groupZonesIntoRows(zoneOrder, layoutDefinition.zoneWidths);
+  }, [
+    zoneOrder,
+    layoutDefinition.zoneWidths,
+    layoutDefinition.zoneWidthPercent,
+    layoutDefinition.zoneLineNumbers,
+  ]);
   const hasImage = zoneOrder.includes("image");
   const imageRowIndex = zoneRows.findIndex((row) => row.length === 1 && row[0] === "image");
   const contentRows = useMemo(
@@ -379,16 +398,21 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             return (
               <div
                 key={`r-${rowIdx}`}
-                className={`flex items-center ${row.length === 2 ? "" : "flex-wrap"}`}
+                className="flex items-center flex-wrap"
                 style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
               >
                 {row.map((type) => {
                   const el = renderZone(type);
                   const minH = getEffectiveZoneHeight(type, zoneHeights);
-                  const wrapperStyle: React.CSSProperties = {};
+                  const pct = parseZoneWidthPercent(
+                    type,
+                    layoutDefinition.zoneWidthPercent,
+                    layoutDefinition.zoneWidths
+                  );
+                  const wrapperStyle: React.CSSProperties = { flex: `0 0 ${pct}%`, boxSizing: "border-box" };
                   if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
                   return el != null ? (
-                    <div key={type} className="flex-1 min-w-0" style={wrapperStyle}>
+                    <div key={type} className="min-w-0" style={wrapperStyle}>
                       {el}
                     </div>
                   ) : null;

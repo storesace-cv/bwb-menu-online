@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Fix Fetch failed Link→a em presentation-templates; slider 0–100% doc no roadmap; commit, push, deploy, verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Slider 0–100% e Nº Linha no editor de layout; commit, push, deploy, verificação no container).
 
 ---
 
@@ -211,6 +211,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Fix "Fetch failed" em Modelos de apresentação (prefetch):** Em Definições → Modelos de apresentação, os Links para as páginas de edição de layout e para voltar à lista provocavam prefetch RSC que falhava na consola. Adicionado `prefetch={false}` aos Links em `presentation-templates-client.tsx` (Editar layout por template), `featured-templates-client.tsx` (Editar layout por modelo destaque), às páginas `[id]/layout/page.tsx` e `featured/[id]/layout/page.tsx` (link "← Modelos de apresentação") e ao link "Cancelar" em `layout-editor-client.tsx`; mesma abordagem já usada em Tenants.
 - **Error boundary Modelos de apresentação:** Componente `error.tsx` em `/portal-admin/settings/presentation-templates` para capturar erros de renderização na página Modelos de apresentação e mostrar UI de fallback (Tentar de novo, link ← Definições); reduz impacto de "Fetch failed" ou 500 na experiência do utilizador.
 - **Eliminar "Fetch failed" ao abrir Modelos de apresentação e Editar layout:** Links para `/portal-admin/settings/presentation-templates` e para `.../presentation-templates/[id]/layout` (e featured) passaram a usar `<a href="...">` em vez de `<Link>`, forçando navegação completa (full page load) e evitando o pedido RSC que falhava ou redireccionava para login. Alterados: hub Definições global (globalLinks), presentation-templates-client (Editar layout), featured-templates-client (Editar layout), páginas [id]/layout e featured/[id]/layout (← Modelos de apresentação e ← Definições), layout-editor-client (Cancelar), presentation-templates/page (← Definições). Paridade com a abordagem já usada para Definições e Secções/Categorias.
+- **Slider largura 0–100% e Nº Linha no editor de layout:** No editor de modelos de apresentação ([id]/layout), o dropdown de largura (Linha inteira / Metade / Um quarto) foi substituído por um slider 1–100% com label do valor em %; adicionado controlo "Nº Linha" (opcional, inteiro ≥ 1) por campo. Lib: `LayoutDefinition` com `zoneWidthPercent` e `zoneLineNumbers`; funções `parseZoneWidthPercent`, `groupZonesIntoRowsByLineNumber` e `groupZonesIntoRowsByWidthPercent`. Actions: validação e gravação dos novos campos em `layout_definition`. Cards do menu público (item-card-from-layout, item-card-destaque-1): agrupamento por número de linha ou por percentagem; render com `flex: 0 0 X%`. Compatibilidade: layouts antigos continuam a funcionar com zoneWidths (full/half/quarter).
 
 ---
 
@@ -228,7 +229,6 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - StoresAce connector (paridade com NET-bo): sync StoresAce com logs (sync_runs/sync_events) e upsert em catalog_items; UI de sync suportar fonte por store e mostrar erros.
 
 **(P1) Funcionalidades essenciais do menu (produto)**
-- **Slider largura 0–100% e Nº Linha no editor de layout:** Plano em `.cursor/plans/slider_largura_0-100%_800851e9.plan.md`. Substituir o dropdown de largura (25%, 50%, 100%) por slider 1–100% e adicionar controlo "Nº Linha" por campo no editor de modelos de apresentação; suportar `zoneLineNumbers` e percentagem numérica na lib e nos cards do menu público (item-card-from-layout, item-card-destaque-1). **Ainda não implementado** — o servidor continua com dropdown full/half/quarter.
 - Moeda/locale por store: em Definições → Gestão de Artigos a coluna Preço já usa `store_settings.currency_code`; no menu público o template BWB - Branco também usa essa moeda. Pendente: locale e formatação de preço por locale (sem hardcode).
 - Imagens "a sério" via Supabase Storage: upload + policies + thumbnails + limites e limpeza de órfãs; manter image_url apenas como fallback dev.
 - UX do menu: rota pública /item/[id] (detalhe do item); pesquisa + filtros (alergénios, destaque, categorias); estados: indisponível / esgotado / disponível por horário (opcional simples). Template BWB - Branco já cobre paridade Carpe Diem (header, Escolhas do Chefe, filtros tabs/toggles, secções, footer). Card de artigo com zonas 1 e A–G já implementado (ver [docs/MENU_ITEM_CARD_ZONES.md](docs/MENU_ITEM_CARD_ZONES.md)).
