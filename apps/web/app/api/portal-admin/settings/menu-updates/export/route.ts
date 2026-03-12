@@ -309,6 +309,11 @@ export async function GET() {
   });
 
   const templatePath = getTemplatePath();
+  if (!templatePath && process.env.NODE_ENV === "development") {
+    console.warn(
+      "[menu-updates export] Template menu-export-template.xlsm não encontrado; export será .xlsx sem macros. Coloque o ficheiro em public/templates/."
+    );
+  }
   if (templatePath) {
     try {
       const templateBuffer = fs.readFileSync(templatePath);
@@ -316,11 +321,10 @@ export async function GET() {
       const sheetName = wb.SheetNames.find((n) => n === "Menu") ?? wb.SheetNames[0];
       if (sheetName && wb.Sheets[sheetName]) {
         fillMenuSheetFromRows(wb.Sheets[sheetName], tenantLabel, storeLabel, rows);
-        const outWb = wb as XLSX.WorkBook & { vbaraw?: unknown };
         const outBuffer = XLSX.write(wb, {
           type: "buffer",
           bookType: "xlsm",
-          bookVBA: outWb.vbaraw ?? true,
+          bookVBA: true,
         }) as Buffer;
         return new NextResponse(new Uint8Array(outBuffer), {
           headers: {
