@@ -20,27 +20,27 @@ End Function
 ' Modo 1: Substituir quando o texto da célula COMEÇA POR FindWhat
 Public Sub ReplaceStartsWith()
   Dim FindWhat As String, ReplaceWith As String
-  FindWhat = Trim(InputBox("Texto que a célula deve COMEÇAR POR (procura no início):", "Substituir (começa por)"))
+  FindWhat = Trim(InputBox("TEXTO QUE A CELULA DEVE COMECAR POR (PROCURA NO INICIO):", "SUBSTITUIR (COMECA POR)"))
   If FindWhat = "" Then Exit Sub
-  ReplaceWith = InputBox("Substituir por (vazio = apagar o texto encontrado):", "Substituir por", "")
+  ReplaceWith = InputBox("SUBSTITUIR POR (VAZIO = APAGAR O TEXTO ENCONTRADO):", "SUBSTITUIR POR", "")
   ReplaceInColumnD "STARTS", FindWhat, ReplaceWith
 End Sub
 
 ' Modo 2: Substituir quando o texto da célula ACABA EM FindWhat
 Public Sub ReplaceEndsWith()
   Dim FindWhat As String, ReplaceWith As String
-  FindWhat = Trim(InputBox("Texto que a célula deve ACABAR EM (procura no fim):", "Substituir (acaba em)"))
+  FindWhat = Trim(InputBox("TEXTO QUE A CELULA DEVE ACABAR EM (PROCURA NO FIM):", "SUBSTITUIR (ACABA EM)"))
   If FindWhat = "" Then Exit Sub
-  ReplaceWith = InputBox("Substituir por (vazio = apagar o texto encontrado):", "Substituir por", "")
+  ReplaceWith = InputBox("SUBSTITUIR POR (VAZIO = APAGAR O TEXTO ENCONTRADO):", "SUBSTITUIR POR", "")
   ReplaceInColumnD "ENDS", FindWhat, ReplaceWith
 End Sub
 
 ' Modo 3: Substituir todas as ocorrências de FindWhat na célula (contém)
 Public Sub ReplaceContains()
   Dim FindWhat As String, ReplaceWith As String
-  FindWhat = Trim(InputBox("Texto que a célula deve CONTER:", "Substituir (contém)"))
+  FindWhat = Trim(InputBox("TEXTO QUE A CELULA DEVE CONTER:", "SUBSTITUIR (CONTEM)"))
   If FindWhat = "" Then Exit Sub
-  ReplaceWith = InputBox("Substituir por (vazio = apagar):", "Substituir por", "")
+  ReplaceWith = InputBox("SUBSTITUIR POR (VAZIO = APAGAR):", "SUBSTITUIR POR", "")
   ReplaceInColumnD "CONTAINS", FindWhat, ReplaceWith
 End Sub
 
@@ -53,7 +53,7 @@ Private Sub ReplaceInColumnD(ByVal Mode As String, ByVal FindWhat As String, ByV
   Set ws = ThisWorkbook.Sheets(SHEET_MENU)
   lastRow = LastRowInColumnD()
   If lastRow < 2 Then
-    MsgBox "Não há dados na coluna D (Nome).", vbInformation
+    MsgBox "NAO HA DADOS NA COLUNA D (NOME).", vbInformation
     Exit Sub
   End If
 
@@ -84,5 +84,5 @@ Private Sub ReplaceInColumnD(ByVal Mode As String, ByVal FindWhat As String, ByV
     End If
   Next r
 
-  MsgBox "Concluído. Células alteradas: " & count, vbInformation
+  MsgBox "CONCLUIDO. CELULAS ALTERADAS: " & count, vbInformation
 End Sub

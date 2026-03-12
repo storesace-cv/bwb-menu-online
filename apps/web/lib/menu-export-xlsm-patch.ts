@@ -1,6 +1,7 @@
 /**
  * Patch do template .xlsm como ZIP: substitui apenas <sheetData> e <dimension>
  * na folha "Menu", preservando desenhos e botões (Form controls).
+ * Garante proteção da folha (sheetProtection) e células bloqueadas/editáveis via estilos.
  * SheetJS não preserva Form controls ao escrever; esta abordagem mantém o resto do ficheiro intacto.
  */
 
@@ -8,6 +9,10 @@ import JSZip from "jszip";
 import type { MenuExcelRow } from "./menu-excel-export";
 
 const MENU_SHEET_NAME = "Menu";
+
+/** Colunas bloqueadas (0-based): Tenant, Loja, Código, Preço, Familia, Sub Familia. Alinhado a menu-excel-export LOCKED_COLUMNS. */
+const LOCKED_COLUMNS = new Set([0, 1, 2, 6, 8, 9]);
+
 const HEADERS = [
   "Tenant",
   "Loja",
@@ -49,15 +54,29 @@ function colLetter(colIndex: number): string {
 function buildSheetDataXml(
   tenantLabel: string,
   storeLabel: string,
-  rows: MenuExcelRow[]
+  rows: MenuExcelRow[],
+  lockedStyleIndex: number,
+  unlockedStyleIndex: number
 ): string {
   const lines: string[] = [];
+
+  const cell = (
+    ref: string,
+    content: string,
+    isNumber: boolean,
+    colIndex: number
+  ) => {
+    const s = LOCKED_COLUMNS.has(colIndex) ? lockedStyleIndex : unlockedStyleIndex;
+    const sAttr = ` s="${s}"`;
+    if (isNumber) return `<c r="${ref}"${sAttr}><v>${content}</v></c>`;
+    return `<c r="${ref}" t="inlineStr"${sAttr}><is><t>${content}</t></is></c>`;
+  };
 
   // Row 1: headers
   const headerCells = HEADERS.map((h, c) => {
     const ref = colLetter(c) + "1";
     const text = escapeXml(h);
-    return `<c r="${ref}" t="inlineStr"><is><t>${text}</t></is></c>`;
+    return cell(ref, text, false, c);
   });
   lines.push(`<row r="1" spans="1:18">${headerCells.join("")}</row>`);
 
@@ -88,15 +107,85 @@ function buildSheetDataXml(
     const cells = values.map((v, c) => {
       const ref = colLetter(c) + String(rowNum);
       if (typeof v === "number") {
-        return `<c r="${ref}"><v>${v}</v></c>`;
+        return cell(ref, String(v), true, c);
       }
-      const text = escapeXml(String(v));
-      return `<c r="${ref}" t="inlineStr"><is><t>${text}</t></is></c>`;
+      return cell(ref, escapeXml(String(v)), false, c);
     });
     lines.push(`<row r="${rowNum}" spans="1:18">${cells.join("")}</row>`);
   }
 
   return `<sheetData>${lines.join("")}</sheetData>`;
+}
+
+/** Opções de proteção alinhadas ao sheet.protect() do ExcelJS (menu-excel-export). */
+const SHEET_PROTECTION_XML =
+  '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="1" formatRows="1" insertColumns="0" insertRows="0" insertHyperlinks="0" deleteColumns="0" deleteRows="0" selectLockedCells="1" selectUnlockedCells="1" sort="1" autoFilter="1"/>';
+
+/**
+ * Obtém índices de estilo locked/unlocked a partir de xl/styles.xml.
+ * Se não existir um xf com protection locked="0", adiciona um e devolve o novo índice.
+ */
+function getOrCreateStyleIndices(stylesXml: string): {
+  lockedIndex: number;
+  unlockedIndex: number;
+  stylesXml: string;
+  stylesModified: boolean;
+} {
+  const cellXfsMatch = stylesXml.match(/<cellXfs([^>]*)>([\s\S]*?)<\/cellXfs>/);
+  if (!cellXfsMatch) {
+    return { lockedIndex: 0, unlockedIndex: 0, stylesXml, stylesModified: false };
+  }
+  const inner = cellXfsMatch[2];
+  const xfRegex = /<xf\s[^>]*>[\s\S]*?<\/xf>|<xf\s[^/]*\/>/g;
+  const xfMatches = inner.match(xfRegex) ?? [];
+  let unlockedIndex = -1;
+  let lockedIndex = -1;
+  for (let i = 0; i < xfMatches.length; i++) {
+    const xf = xfMatches[i];
+    if (/<protection[^>]*locked="0"/.test(xf)) unlockedIndex = i;
+    if (/<protection[^>]*locked="1"/.test(xf) && lockedIndex < 0) lockedIndex = i;
+  }
+  if (lockedIndex < 0) lockedIndex = 0;
+  if (unlockedIndex >= 0) {
+    return {
+      lockedIndex,
+      unlockedIndex,
+      stylesXml,
+      stylesModified: false,
+    };
+  }
+  const firstXf = xfMatches[0];
+  if (!firstXf) {
+    return { lockedIndex: 0, unlockedIndex: 0, stylesXml, stylesModified: false };
+  }
+  let insertedXf: string;
+  if (firstXf.trimEnd().endsWith("/>")) {
+    insertedXf = firstXf.replace(/\/\s*>$/, ' applyProtection="1"><protection locked="0"/></xf>');
+  } else {
+    let xf = firstXf;
+    if (/<protection[^>]*locked="1"/.test(xf)) {
+      xf = xf.replace(/<protection[^>]*locked="1"[^/]*\/>/, "<protection locked=\"0\"/>");
+    } else {
+      xf = xf.replace(/<\/xf>/, "<protection locked=\"0\"/></xf>");
+    }
+    if (!/applyProtection="1"/.test(xf)) {
+      xf = xf.replace(/^<xf\s/, '<xf applyProtection="1" ');
+    }
+    insertedXf = xf;
+  }
+  const newInner = inner + insertedXf;
+  const newCount = xfMatches.length + 1;
+  const newCellXfs = `<cellXfs${cellXfsMatch[1].replace(/count="\d+"/, `count="${newCount}"`)}>${newInner}</cellXfs>`;
+  const newStylesXml = stylesXml.replace(
+    /<cellXfs[^>]*>[\s\S]*?<\/cellXfs>/,
+    newCellXfs
+  );
+  return {
+    lockedIndex,
+    unlockedIndex: xfMatches.length,
+    stylesXml: newStylesXml,
+    stylesModified: true,
+  };
 }
 
 /**
@@ -149,20 +238,48 @@ export async function patchMenuExportXlsm(
     if (!sheetPath) return null;
 
     const sheetFile = zip.file(sheetPath);
+    const stylesFile = zip.file("xl/styles.xml");
     if (!sheetFile) return null;
 
-    let sheetXml = await sheetFile.async("string");
+    let [sheetXml, stylesXml] = await Promise.all([
+      sheetFile.async("string"),
+      stylesFile ? stylesFile.async("string") : Promise.resolve(""),
+    ]);
+
+    let lockedStyleIndex = 0;
+    let unlockedStyleIndex = 0;
+    if (stylesXml) {
+      const styleResult = getOrCreateStyleIndices(stylesXml);
+      lockedStyleIndex = styleResult.lockedIndex;
+      unlockedStyleIndex = styleResult.unlockedIndex;
+      if (styleResult.stylesModified) {
+        zip.file("xl/styles.xml", styleResult.stylesXml);
+      }
+    }
 
     const lastRow = rows.length + 1;
     const lastColLetter = colLetter(HEADERS.length - 1);
     const newDimension = `<dimension ref="A1:${lastColLetter}${lastRow}"/>`;
-    const newSheetData = buildSheetDataXml(tenantLabel, storeLabel, rows);
+    const newSheetData = buildSheetDataXml(
+      tenantLabel,
+      storeLabel,
+      rows,
+      lockedStyleIndex,
+      unlockedStyleIndex
+    );
 
     sheetXml = sheetXml.replace(/<dimension\s+ref="[^"]*"\s*\/>/, newDimension);
     sheetXml = sheetXml.replace(
       /<sheetData>[\s\S]*?<\/sheetData>/,
       newSheetData
     );
+
+    if (!sheetXml.includes("<sheetProtection")) {
+      sheetXml = sheetXml.replace(
+        /(<\/sheetData>)/,
+        `$1${SHEET_PROTECTION_XML}`
+      );
+    }
 
     zip.file(sheetPath, sheetXml);
 
