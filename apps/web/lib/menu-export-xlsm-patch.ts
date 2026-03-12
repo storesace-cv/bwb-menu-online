@@ -354,6 +354,8 @@ export async function patchMenuExportXlsm(
       newSheetData
     );
 
+    // Sempre aplicar as nossas permissões: substituir sheetProtection existente ou inserir após </sheetData>
+    sheetXml = sheetXml.replace(/<sheetProtection[^>]*\/>/, SHEET_PROTECTION_XML);
     if (!sheetXml.includes("<sheetProtection")) {
       sheetXml = sheetXml.replace(
         /(<\/sheetData>)/,
