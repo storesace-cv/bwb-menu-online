@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Card por layout: respeitar zoneOrder sem fallback descrição; roadmap, commit, push, deploy, verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-12 (Rodapé no fundo do ecrã — sticky footer; roadmap, commit, push, deploy, verificação no container).
 
 ---
 
@@ -189,6 +189,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público: tipografia secções/categorias e categorias colapsáveis:** Tipografia definida em `globals.css` (scope `.menu-public-contents`): secções com `.section-title` (32px, font-weight 800, line-height 1.15, letter-spacing -0.01em, fonte system-ui/-apple-system/"Segoe UI"/Roboto); categorias com `.category-title` (22px, font-weight 700, line-height 1.25, letter-spacing 0.005em). Secções mantêm-se uma activa de cada vez (escolha no sheet "Menus"); **categorias** da secção activa passam a ser colapsáveis (accordion): cabeçalho clicável com ícone Font Awesome `fa-eye` (mesmo tamanho do texto, gap 0.4em) e nome da categoria; uma categoria expandida de cada vez; clique na mesma colapsa. Template `bwb-branco-template.tsx` e rótulo "Escolhas do Chefe" em `featured-carousel-section.tsx` com as novas classes.
 - **Menu público: preços em itálico:** Nos cards do menu público (Restaurante 1, Restaurante 2, Destaque 1 e FromLayout), o preço actual deixou de usar `font-bold` e passou a usar `italic`, mantendo alinhamento, tamanho e cor. Preço antigo (riscado) inalterado.
 - **Card por layout: respeitar zoneOrder sem fallback:** O card renderizado por `ItemCardFromLayout` passou a mostrar apenas as zonas definidas em `layoutDefinition.zoneOrder`. Removidas a constante `FALLBACK_ZONES` e a lógica que acrescentava descrição, tempo de preparação e alergénios no fim do card quando omitidos do layout. O modelo "Bebidas (Básico)" (só nome e preços) deixa de exibir descrição; templates que queiram descrição devem incluir a zona em `zoneOrder` na configuração.
+- **Rodapé no fundo do ecrã (sticky footer):** No menu público, o rodapé (`MenuFooterSection`) passa a ficar sempre no fundo do viewport quando o conteúdo ocupa menos que o ecrã. Em `app/page.tsx`: `main` com `min-h-screen flex flex-col` e `PublicMenuClient` dentro de um `div` com `flex-1 flex flex-col min-h-0`. No template BWB - Branco: contentor raiz com `flex flex-col min-h-full`; bloco de conteúdo rolável (hero, pesquisa, carrossel, breadcrumb, secções) envolvido num wrapper `flex-1 min-h-0 flex flex-col`, mantendo o rodapé, links e FAB fora desse wrapper.
 
 ---
 

@@ -349,7 +349,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   // suppressHydrationWarning: tolera alterações ao DOM por extensões do browser (ex.: token-signing) que provocam mismatch de hidratação (#418/#423); conteúdo final é equivalente.
   return (
     <div
-      className="menu-public-contents min-w-0 max-w-full overflow-x-visible"
+      className="menu-public-contents flex flex-col min-h-full min-w-0 max-w-full overflow-x-visible"
       style={
         {
           "--menu-primary": primaryColor,
@@ -386,6 +386,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         </div>
       )}
 
+      <div className="flex-1 min-h-0 flex flex-col">
       {/* Hero (logo + text banner) */}
       {(heroLogoUrl || heroText) && (
         <section
@@ -604,6 +605,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
           );
         })()
       )}
+
+      </div>
 
       {/* Footer */}
       <MenuFooterSection
