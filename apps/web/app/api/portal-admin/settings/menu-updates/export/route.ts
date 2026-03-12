@@ -320,7 +320,14 @@ export async function GET() {
       const wb = XLSX.read(templateBuffer, { type: "buffer", bookVBA: true });
       const sheetName = wb.SheetNames.find((n) => n === "Menu") ?? wb.SheetNames[0];
       if (sheetName && wb.Sheets[sheetName]) {
-        fillMenuSheetFromRows(wb.Sheets[sheetName], tenantLabel, storeLabel, rows);
+        const sheet = wb.Sheets[sheetName];
+        fillMenuSheetFromRows(sheet, tenantLabel, storeLabel, rows);
+        const lastRow = rows.length;
+        const lastCol = MENU_EXPORT_HEADERS.length - 1;
+        sheet["!ref"] = XLSX.utils.encode_range({
+          s: { r: 0, c: 0 },
+          e: { r: lastRow, c: lastCol },
+        });
         const outBuffer = XLSX.write(wb, {
           type: "buffer",
           bookType: "xlsm",
