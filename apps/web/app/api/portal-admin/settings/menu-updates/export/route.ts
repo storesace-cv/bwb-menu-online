@@ -43,6 +43,17 @@ function getTemplatePath(): string | null {
   return null;
 }
 
+function getVbaBlobPath(): string | null {
+  const candidates = [
+    path.join(process.cwd(), "public", "templates", "vbaProject.bin"),
+    path.join(process.cwd(), "apps", "web", "public", "templates", "vbaProject.bin"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
 function fillMenuSheetFromRows(
   sheet: XLSX.WorkSheet,
   tenantLabel: string,
@@ -318,6 +329,17 @@ export async function GET() {
     try {
       const templateBuffer = fs.readFileSync(templatePath);
       const wb = XLSX.read(templateBuffer, { type: "buffer", bookVBA: true });
+      const wbWithVba = wb as XLSX.WorkBook & { vbaraw?: Buffer | Uint8Array };
+      if (!wbWithVba.vbaraw) {
+        const vbaBlobPath = getVbaBlobPath();
+        if (vbaBlobPath) {
+          wbWithVba.vbaraw = fs.readFileSync(vbaBlobPath);
+        } else if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "[menu-updates export] Template sem VBA e vbaProject.bin não encontrado; o .xls será exportado sem macros. Para incluir macros, ver docs/EXCEL_TEMPLATE_MENU_EXPORT.md (gerar vbaProject.bin uma vez no projeto)."
+          );
+        }
+      }
       const sheetName = wb.SheetNames.find((n) => n === "Menu") ?? wb.SheetNames[0];
       if (sheetName && wb.Sheets[sheetName]) {
         const sheet = wb.Sheets[sheetName];

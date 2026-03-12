@@ -1,17 +1,35 @@
 # Template .xlsm para export Actualizações ao Menu
 
-O ficheiro exportado em **Definições → Actualizações ao Menu** deve incluir as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O ExcelJS não suporta escrever VBA; por isso o export usa um **template .xlsm** que já contém o módulo VBA. O servidor lê o template, preenche os dados e devolve um ficheiro **.xls** (Excel 97-2004, formato BIFF8). O formato .xls suporta macros e evita problemas no Excel com ficheiros com macros (em comparação com .xlsm).
+O ficheiro exportado em **Definições → Actualizações ao Menu** inclui as macros VBA para substituição em massa na coluna Nome (D), em folha protegida. O servidor usa um **template .xlsm** e, quando existe **vbaProject.bin** no repositório, injecta as macros no ficheiro .xls exportado. O resultado é um ficheiro **.xls** (Excel 97-2004, BIFF8) com dados e macros prontos a usar.
+
+## Utilizador final
+
+**O utilizador final não precisa de abrir o Excel nem de conhecimentos de VBA.** Basta fazer o download do ficheiro .xls em Definições → Actualizações ao Menu e usar as macros no Excel (Alt+F8): ReplaceStartsWith, ReplaceEndsWith, ReplaceContains para substituir texto na coluna Nome (D).
+
+## Como o export inclui as macros
+
+A API de export (`GET /api/portal-admin/settings/menu-updates/export`) devolve .xls com macros quando existe o ficheiro **vbaProject.bin** em **apps/web/public/templates/**. Se o template .xlsm não tiver VBA embutido, o servidor carrega esse blob e injecta-o no ficheiro exportado; assim o .xls inclui sempre as macros quando o projeto tiver o blob no repositório.
+
+## Setup do projeto (uma vez)
+
+Para que o ficheiro exportado inclua as macros, quem mantém o projeto deve gerar **vbaProject.bin** uma vez e fazer commit:
+
+1. Abra **menu-export-template.xlsm** no Excel (em `apps/web/public/templates/`). Se não existir, execute `node apps/web/scripts/create-menu-export-template.mjs` a partir da raiz do monorepo (ou a partir de `apps/web` com `node scripts/create-menu-export-template.mjs`).
+2. No Excel: Editor VBA (Alt+F11) → Insert → Module → cole o conteúdo de [docs/excel-vba-replace-column-d.bas](excel-vba-replace-column-d.bas). Guarde o livro (Ctrl+S).
+3. Execute o script de extração (a partir da raiz do monorepo ou de `apps/web`):
+   ```bash
+   node apps/web/scripts/extract-vba-from-template.mjs
+   ```
+   Ou a partir de `apps/web`: `node scripts/extract-vba-from-template.mjs`
+4. Faça commit de **apps/web/public/templates/vbaProject.bin**.
+
+Depois disso, todos os deploys e utilizadores recebem o .xls com macros; não é necessário voltar a abrir o Excel para configurar nada.
 
 ## Template no repositório
 
-O repositório pode já incluir **apps/web/public/templates/menu-export-template.xlsm**, gerado pelo script `apps/web/scripts/create-menu-export-template.mjs` (folha "Menu" e cabeçalhos A–R). Esse ficheiro tem a estrutura correcta mas **sem macros**. Para o export devolver .xls com as macros de substituição na coluna D:
+O repositório inclui **apps/web/public/templates/menu-export-template.xlsm**, gerado pelo script `apps/web/scripts/create-menu-export-template.mjs` (folha "Menu" e cabeçalhos A–R). Esse ficheiro tem a estrutura correcta e pode não ter macros; as macros são injectadas a partir de **vbaProject.bin** quando este existe (ver secção anterior).
 
-1. Abra **menu-export-template.xlsm** no Excel (a partir de `apps/web/public/templates/`).
-2. Abra o Editor VBA (Alt+F11), insira um **Módulo** (Insert → Module) e cole o conteúdo de [docs/excel-vba-replace-column-d.bas](excel-vba-replace-column-d.bas). Guarde.
-3. (Opcional) Aplique proteção à folha e desbloqueie a coluna D.
-4. Guarde o livro (Ctrl+S). O ficheiro passará a incluir as macros; faça commit e deploy.
-
-Para regenerar apenas a estrutura (folha + cabeçalhos), sem VBA: a partir de `apps/web`, execute `node scripts/create-menu-export-template.mjs`. Depois adicione o VBA no Excel conforme acima.
+Para regenerar apenas a estrutura (folha + cabeçalhos), sem VBA: execute `node apps/web/scripts/create-menu-export-template.mjs` (ou a partir de `apps/web`: `node scripts/create-menu-export-template.mjs`). Para voltar a ter macros no export, é necessário ter **vbaProject.bin**; se o tiver já commitado, não precisa de fazer mais nada.
 
 ## Como criar o template do zero (uma vez)
 
@@ -19,13 +37,12 @@ Para regenerar apenas a estrutura (folha + cabeçalhos), sem VBA: a partir de `a
 2. Renomeie a primeira folha para **Menu**.
 3. Na linha 1, insira os cabeçalhos nas colunas A a R (exactamente nesta ordem):
    - Tenant, Loja, Código, Nome, Descrição, Ingredientes, Preço, Tipo, Familia, Sub Familia, Secção, Categoria, Promo, TA, Tempo prep., Ordem, Visível, Destaque
-4. (Opcional) Aplique proteção à folha e desbloqueie a coluna D, para replicar o comportamento do export gerado por ExcelJS. O preenchimento pelo servidor não altera a proteção do template.
+4. (Opcional) Aplique proteção à folha e desbloqueie a coluna D.
 5. Abra o Editor VBA (Alt+F11), insira um **Módulo** (Insert → Module) e cole o conteúdo do ficheiro [docs/excel-vba-replace-column-d.bas](excel-vba-replace-column-d.bas). Guarde o módulo.
-6. Guarde o livro como **Excel Macro-Enabled Workbook (.xlsm)** com o nome **menu-export-template.xlsm**.
-7. Coloque o ficheiro em:
-   - **apps/web/public/templates/menu-export-template.xlsm**
+6. Guarde o livro como **Excel Macro-Enabled Workbook (.xlsm)** com o nome **menu-export-template.xlsm** em **apps/web/public/templates/**.
+7. Execute o script de extração para gerar **vbaProject.bin** e faça commit (ver secção "Setup do projeto (uma vez)").
 
-Se este ficheiro existir, a API de export (`GET /api/portal-admin/settings/menu-updates/export`) devolve um **.xls** (Excel 97-2004) preenchido com os dados do menu e com as macros disponíveis. O servidor lê o template .xlsm e escreve a resposta em formato .xls. Se o template não existir, o export continua a devolver um .xlsx gerado apenas por ExcelJS (sem macros).
+Se o template não existir, a API de export devolve um .xlsx gerado por ExcelJS (sem macros).
 
 ## Estrutura esperada do template
 
