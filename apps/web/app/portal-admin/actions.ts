@@ -40,6 +40,20 @@ function getFormDataValue(formData: FormData, name: string): string | null {
   return null;
 }
 
+/** FormData file keys can be prefixed (e.g. "1_logo_file") when using useFormState; try name then "1_" + name, then any key ending with _name. */
+function getFormDataFile(formData: FormData, name: string): File | null {
+  const direct = formData.get(name);
+  if (direct instanceof File && direct.size > 0) return direct;
+  const prefixed = formData.get("1_" + name);
+  if (prefixed instanceof File && prefixed.size > 0) return prefixed;
+  const entries = Array.from(formData.entries());
+  for (let i = 0; i < entries.length; i++) {
+    const [key, value] = entries[i];
+    if ((key === name || key.endsWith("_" + name)) && value instanceof File && value.size > 0) return value;
+  }
+  return null;
+}
+
 export async function createTenant(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const nif = (formData.get("nif") as string)?.trim() ?? "";
@@ -1454,7 +1468,7 @@ export async function batchUpdateItemsSectionCategory(
 
 export async function updateStoreSettings(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
-  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+  const storeId = (getFormDataValue(formData, "store_id") ?? "").trim();
   if (!storeId) return { error: "Loja obrigatória" };
   const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
   if (!hasAccess) return { error: "Sem acesso a esta loja" };
@@ -1466,37 +1480,37 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
     .maybeSingle();
   const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
 
-  const storeDisplayName = (formData.get("store_display_name") as string)?.trim() ?? "";
-  const primaryColor = (formData.get("primary_color") as string)?.trim() ?? "";
-  let logoUrl = (formData.get("logo_url") as string)?.trim() ?? "";
-  const logoFile = formData.get("logo_file") instanceof File ? (formData.get("logo_file") as File) : null;
-  const currencyCode = (formData.get("currency_code") as string)?.trim() ?? "";
-  const menuTemplateKey = (formData.get("menu_template_key") as string)?.trim() || "bwb-branco";
-  const heroText = (formData.get("hero_text") as string)?.trim() ?? "";
-  const footerText = (formData.get("footer_text") as string)?.trim() ?? (currentSettings.footer_text ?? "");
-  let footerLogoUrl = (formData.get("footer_logo_url") as string)?.trim() ?? "";
-  const footerLogoFile = formData.get("footer_logo_file") instanceof File ? (formData.get("footer_logo_file") as File) : null;
-  const footerAddress = (formData.get("footer_address") as string)?.trim() ?? "";
-  const footerEmail = (formData.get("footer_email") as string)?.trim() ?? "";
-  const footerPhone = (formData.get("footer_phone") as string)?.trim() ?? "";
-  const footerBackgroundColor = (formData.get("footer_background_color") as string)?.trim() ?? "";
-  const footerBackgroundCss = (formData.get("footer_background_css") as string)?.trim() ?? "";
-  const footerTextColor = (formData.get("footer_text_color") as string)?.trim() ?? "";
-  const contactUrl = (formData.get("contact_url") as string)?.trim() ?? "";
-  const privacyUrl = (formData.get("privacy_url") as string)?.trim() ?? "";
-  const reservationUrl = (formData.get("reservation_url") as string)?.trim() ?? "";
-  const featuredSectionLabel = (formData.get("featured_section_label") as string)?.trim() ?? "";
-  const featuredTemplateKey = (formData.get("featured_template_key") as string)?.trim() || "modelo-destaque-1";
-  const featuredCarouselBackgroundColor = (formData.get("featured_carousel_background_color") as string)?.trim() ?? "";
-  const featuredCarouselBackgroundCss = (formData.get("featured_carousel_background_css") as string)?.trim() ?? "";
-  const featuredDotsBackgroundColor = (formData.get("featured_dots_background_color") as string)?.trim() ?? "";
-  const featuredDotsBackgroundCss = (formData.get("featured_dots_background_css") as string)?.trim() ?? "";
-  const heroBackgroundColor = (formData.get("hero_background_color") as string)?.trim() ?? "";
-  const heroBackgroundCss = (formData.get("hero_background_css") as string)?.trim() ?? "";
-  const logoFillColor = (formData.get("logo_fill_color") as string)?.trim() ?? "";
-  const logoStrokeColor = (formData.get("logo_stroke_color") as string)?.trim() ?? "";
-  const footerLogoFillColor = (formData.get("footer_logo_fill_color") as string)?.trim() ?? "";
-  const footerLogoStrokeColor = (formData.get("footer_logo_stroke_color") as string)?.trim() ?? "";
+  const storeDisplayName = (getFormDataValue(formData, "store_display_name") ?? "").trim();
+  const primaryColor = (getFormDataValue(formData, "primary_color") ?? "").trim();
+  let logoUrl = (getFormDataValue(formData, "logo_url") ?? "").trim();
+  const logoFile = getFormDataFile(formData, "logo_file");
+  const currencyCode = (getFormDataValue(formData, "currency_code") ?? "").trim();
+  const menuTemplateKey = (getFormDataValue(formData, "menu_template_key") ?? "").trim() || "bwb-branco";
+  const heroText = (getFormDataValue(formData, "hero_text") ?? "").trim();
+  const footerText = (getFormDataValue(formData, "footer_text") ?? "").trim() || (currentSettings.footer_text ?? "");
+  let footerLogoUrl = (getFormDataValue(formData, "footer_logo_url") ?? "").trim();
+  const footerLogoFile = getFormDataFile(formData, "footer_logo_file");
+  const footerAddress = (getFormDataValue(formData, "footer_address") ?? "").trim();
+  const footerEmail = (getFormDataValue(formData, "footer_email") ?? "").trim();
+  const footerPhone = (getFormDataValue(formData, "footer_phone") ?? "").trim();
+  const footerBackgroundColor = (getFormDataValue(formData, "footer_background_color") ?? "").trim();
+  const footerBackgroundCss = (getFormDataValue(formData, "footer_background_css") ?? "").trim();
+  const footerTextColor = (getFormDataValue(formData, "footer_text_color") ?? "").trim();
+  const contactUrl = (getFormDataValue(formData, "contact_url") ?? "").trim();
+  const privacyUrl = (getFormDataValue(formData, "privacy_url") ?? "").trim();
+  const reservationUrl = (getFormDataValue(formData, "reservation_url") ?? "").trim();
+  const featuredSectionLabel = (getFormDataValue(formData, "featured_section_label") ?? "").trim();
+  const featuredTemplateKey = (getFormDataValue(formData, "featured_template_key") ?? "").trim() || "modelo-destaque-1";
+  const featuredCarouselBackgroundColor = (getFormDataValue(formData, "featured_carousel_background_color") ?? "").trim();
+  const featuredCarouselBackgroundCss = (getFormDataValue(formData, "featured_carousel_background_css") ?? "").trim();
+  const featuredDotsBackgroundColor = (getFormDataValue(formData, "featured_dots_background_color") ?? "").trim();
+  const featuredDotsBackgroundCss = (getFormDataValue(formData, "featured_dots_background_css") ?? "").trim();
+  const heroBackgroundColor = (getFormDataValue(formData, "hero_background_color") ?? "").trim();
+  const heroBackgroundCss = (getFormDataValue(formData, "hero_background_css") ?? "").trim();
+  const logoFillColor = (getFormDataValue(formData, "logo_fill_color") ?? "").trim();
+  const logoStrokeColor = (getFormDataValue(formData, "logo_stroke_color") ?? "").trim();
+  const footerLogoFillColor = (getFormDataValue(formData, "footer_logo_fill_color") ?? "").trim();
+  const footerLogoStrokeColor = (getFormDataValue(formData, "footer_logo_stroke_color") ?? "").trim();
 
   if (logoFile && logoFile.size > 0) {
     const mime = (logoFile.type ?? "").toLowerCase();
