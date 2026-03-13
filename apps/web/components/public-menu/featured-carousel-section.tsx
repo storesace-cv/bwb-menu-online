@@ -11,14 +11,14 @@ export type FeaturedItemWithCategory = {
   categoryName?: string;
 };
 
-const CENTER_WIDTH_DESKTOP = "min(320px, 85vw)";
-const CENTER_WIDTH_MOBILE = "min(220px, 62vw)";
-const CAROUSEL_MIN_HEIGHT_DESKTOP = 504;
-const CAROUSEL_MIN_HEIGHT_MOBILE = 360;
-const SIDE_SCALE_DESKTOP = 0.88;
-const SIDE_SCALE_MOBILE = 0.9;
-const OVERLAP_PX_DESKTOP = 30;
-const OVERLAP_PX_MOBILE = 20;
+const CENTER_WIDTH_DESKTOP = "min(240px, 63.75vw)";
+const CENTER_WIDTH_MOBILE = "min(165px, 46.5vw)";
+const CAROUSEL_MIN_HEIGHT_DESKTOP = 378;
+const CAROUSEL_MIN_HEIGHT_MOBILE = 270;
+const SIDE_SCALE_DESKTOP = 0.66;
+const SIDE_SCALE_MOBILE = 0.675;
+const OVERLAP_PX_DESKTOP = 22;
+const OVERLAP_PX_MOBILE = 15;
 
 export function FeaturedCarouselSection({
   featuredItems,
@@ -173,11 +173,15 @@ export function FeaturedCarouselSection({
   const alignClass = titleAlign === "left" ? "text-left" : titleAlign === "right" ? "text-right" : "text-center";
   const carouselSectionStyle = buildBackgroundStyle(carouselBackgroundColor, carouselBackgroundCss, {});
   const dotsContainerStyle = buildBackgroundStyle(dotsBackgroundColor, dotsBackgroundCss, {});
+  const sectionStyle =
+    Object.keys(carouselSectionStyle).length > 0
+      ? { ...carouselSectionStyle, paddingBottom: 32 }
+      : undefined;
   return (
     <section
       className="relative z-10 mb-10 overflow-visible"
       aria-label="Destaques"
-      style={Object.keys(carouselSectionStyle).length > 0 ? carouselSectionStyle : undefined}
+      style={sectionStyle}
     >
       <h2
         className={`section-title mt-0 ${alignClass}`}
