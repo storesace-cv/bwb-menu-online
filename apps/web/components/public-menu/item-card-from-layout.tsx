@@ -242,7 +242,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
   const nameClassName = [
     FONT_WEIGHT_CLASSES[nameFontWeight],
     FONT_SIZE_CLASSES[nameFontSize],
-    "leading-snug m-0 text-gray-900 text-left",
+    "leading-snug m-0 text-gray-900 text-left min-w-0 truncate",
   ].join(" ");
   const priceSizeClass = FONT_SIZE_CLASSES[priceFontSize];
   const priceLeadClass = LINE_HEIGHT_CLASSES[priceLineHeight];
@@ -402,7 +402,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             return (
               <div
                 key={`r-${rowIdx}`}
-                className="flex items-center flex-wrap"
+                className="flex items-center flex-nowrap"
                 style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
               >
                 {row.map((type) => {
