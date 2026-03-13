@@ -197,6 +197,12 @@ export function SettingsForm({
           </p>
         </div>
       </Card>
+      <div className="flex flex-wrap items-center gap-3">
+        <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
+          Guardar
+        </SubmitButton>
+        <span className="text-xs text-slate-500">Grava todos os parâmetros do formulário (todas as secções).</span>
+      </div>
 
       <h2 className="text-2xl font-semibold text-slate-200 mb-2">Galeria</h2>
       <p className="text-sm text-slate-400 mb-4">
@@ -318,6 +324,11 @@ export function SettingsForm({
           </div>
         </div>
       </Card>
+      <div className="flex flex-wrap items-center gap-3">
+        <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
+          Guardar
+        </SubmitButton>
+      </div>
 
       <h2 className="text-2xl font-semibold text-slate-200 mb-2">Artigos e menu</h2>
       <p className="text-sm text-slate-400 mb-4">Template global e moeda.</p>
@@ -345,6 +356,11 @@ export function SettingsForm({
           />
         </div>
       </Card>
+      <div className="flex flex-wrap items-center gap-3">
+        <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
+          Guardar
+        </SubmitButton>
+      </div>
 
       <h2 className="text-2xl font-semibold text-slate-200 mb-2">Rodapé</h2>
       <p className="text-sm text-slate-400 mb-4">Rodapé do menu público.</p>
@@ -438,6 +454,11 @@ export function SettingsForm({
           </div>
         </div>
       </Card>
+      <div className="flex flex-wrap items-center gap-3">
+        <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
+          Guardar
+        </SubmitButton>
+      </div>
 
       <h2 className="text-2xl font-semibold text-slate-200 mb-2">Ligações externas</h2>
       <p className="text-sm text-slate-400 mb-4">URLs exibidas no menu (contacto, privacidade, reserva).</p>
@@ -469,11 +490,12 @@ export function SettingsForm({
           />
         </div>
       </Card>
-
       <div className="flex flex-col gap-3">
-        <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
-          Guardar
-        </SubmitButton>
+        <div className="flex flex-wrap items-center gap-3">
+          <SubmitButton variant="primary" submitting={submitting} loadingText="A guardar…">
+            Guardar
+          </SubmitButton>
+        </div>
         {state?.error && <Alert variant="error">{state.error}</Alert>}
       </div>
     </form>
