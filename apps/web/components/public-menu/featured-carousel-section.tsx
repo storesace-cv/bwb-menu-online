@@ -198,7 +198,7 @@ export function FeaturedCarouselSection({
       style={sectionStyle}
     >
       {/* Bloco interno: título + carrossel + indicadores (zona do tracejado vermelho) */}
-      <div className="overflow-visible">
+      <div className="overflow-visible w-full">
         <h2
           className={`section-title mt-0 ${alignClass}`}
           style={{
@@ -209,7 +209,7 @@ export function FeaturedCarouselSection({
         >
           {featuredSectionLabel}
         </h2>
-        <div className="relative group/carousel flex justify-center overflow-visible">
+        <div className="relative group/carousel w-full flex justify-center overflow-visible">
           <div
             ref={carouselContainerRef}
             tabIndex={0}
@@ -222,10 +222,11 @@ export function FeaturedCarouselSection({
             onKeyDown={handleKeyDown}
           >
             <div
-              className="relative overflow-visible"
+              className="relative overflow-visible flex-shrink-0 mx-auto"
               style={{
                 width: slotsContainerWidth,
                 minWidth: typeof slotsContainerWidth === "number" ? slotsContainerWidth : undefined,
+                maxWidth: "100%",
                 minHeight: carouselMinHeight,
               }}
             >
