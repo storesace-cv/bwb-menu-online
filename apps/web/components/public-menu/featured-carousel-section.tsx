@@ -225,7 +225,7 @@ export function FeaturedCarouselSection({
   const rawScale = isSmallScreen ? (scaleMobile ?? 1) : (scaleDesktop ?? 1);
   const scale = Number.isFinite(rawScale) && rawScale >= 0.75 && rawScale <= 1 ? rawScale : 1;
   const sectionHeightStyle =
-    scale < 1 && contentHeight != null
+    scale < 1 && contentHeight != null && !isSmallScreen
       ? { height: contentHeight * scale, overflow: "hidden" as const }
       : undefined;
   const mergedSectionStyle = sectionHeightStyle
