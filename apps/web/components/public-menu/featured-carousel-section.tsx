@@ -11,17 +11,15 @@ export type FeaturedItemWithCategory = {
   categoryName?: string;
 };
 
-const CENTER_WIDTH_DESKTOP = "min(240px, 63.75vw)";
-const CENTER_WIDTH_MOBILE = "min(165px, 46.5vw)";
-const CAROUSEL_MIN_HEIGHT_DESKTOP = 378;
-const CAROUSEL_MIN_HEIGHT_MOBILE = 270;
-const SIDE_SCALE_DESKTOP = 0.66;
-const SIDE_SCALE_MOBILE = 0.675;
-const OVERLAP_PX_DESKTOP = 22;
-const OVERLAP_PX_MOBILE = 15;
+/** Tamanho de referência do cartão de destaque (todos os registos no ecrã). */
+const CARD_WIDTH_DESKTOP = 435;
+const CARD_HEIGHT_DESKTOP = 600;
+/** Quantidade (px) de cada cartão lateral que fica por detrás do cartão do meio. */
+const OVERLAP_INSIDE_PX_DESKTOP = 200;
 
-/** Proporção do card no carrossel (largura : altura) para evitar esticamento vertical. */
-const CAROUSEL_CARD_ASPECT_RATIO = "3/4";
+/** Mobile: mesmo ratio 435:600, largura limitada ao viewport. */
+const CARD_WIDTH_MOBILE = "min(435px, 90vw)";
+const CAROUSEL_MIN_HEIGHT_MOBILE = 600;
 
 export function FeaturedCarouselSection({
   featuredItems,
@@ -78,10 +76,12 @@ export function FeaturedCarouselSection({
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  const centerWidth = isSmallScreen ? CENTER_WIDTH_MOBILE : CENTER_WIDTH_DESKTOP;
-  const carouselMinHeight = isSmallScreen ? CAROUSEL_MIN_HEIGHT_MOBILE : CAROUSEL_MIN_HEIGHT_DESKTOP;
-  const sideScale = isSmallScreen ? SIDE_SCALE_MOBILE : SIDE_SCALE_DESKTOP;
-  const overlapPx = isSmallScreen ? OVERLAP_PX_MOBILE : OVERLAP_PX_DESKTOP;
+  const cardWidth = isSmallScreen ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP;
+  const cardHeight = isSmallScreen ? CAROUSEL_MIN_HEIGHT_MOBILE : CARD_HEIGHT_DESKTOP;
+  const carouselMinHeight = isSmallScreen ? CAROUSEL_MIN_HEIGHT_MOBILE : CARD_HEIGHT_DESKTOP;
+  const overlapInsidePx = OVERLAP_INSIDE_PX_DESKTOP;
+  const leftTranslateX = `calc(-100% + ${CARD_WIDTH_DESKTOP / 2 + overlapInsidePx}px)`;
+  const rightTranslateX = `${CARD_WIDTH_DESKTOP / 2 - overlapInsidePx}px`;
 
   const goPrev = useCallback(() => {
     setActiveIndex((i) => (i - 1 + n) % n);
@@ -143,6 +143,12 @@ export function FeaturedCarouselSection({
   const renderSlot = (index: number, slot: "left" | "center" | "right") => {
     const { item, categoryName } = featuredItems[index];
     const isCenter = slot === "center";
+    const slotWidth: React.CSSProperties["width"] =
+      typeof cardWidth === "number" ? cardWidth : cardWidth;
+    const wrapperSize: React.CSSProperties =
+      typeof cardWidth === "number"
+        ? { width: "100%", height: cardHeight }
+        : { width: "100%", aspectRatio: "435/600" };
     return (
       <div
         key={`${slot}-${index}`}
@@ -151,21 +157,17 @@ export function FeaturedCarouselSection({
           position: "absolute",
           left: "50%",
           top: 0,
-          width: centerWidth,
-          maxWidth: isSmallScreen ? "62vw" : "85vw",
+          width: slotWidth,
           transform: isCenter
             ? "translateX(-50%)"
             : slot === "left"
-              ? `translateX(calc(-100% + ${overlapPx}px)) scale(${sideScale})`
-              : `translateX(${overlapPx}px) scale(${sideScale})`,
+              ? `translateX(${leftTranslateX})`
+              : `translateX(${rightTranslateX})`,
           transformOrigin: slot === "left" ? "right center" : slot === "right" ? "left center" : "center center",
           zIndex: isCenter ? 2 : 1,
         }}
       >
-        <div
-          className="w-full overflow-hidden rounded-2xl"
-          style={{ aspectRatio: CAROUSEL_CARD_ASPECT_RATIO }}
-        >
+        <div className="w-full overflow-hidden rounded-2xl" style={wrapperSize}>
           <CardComponent
             item={item}
             categoryName={categoryName}
@@ -212,7 +214,14 @@ export function FeaturedCarouselSection({
             onTouchEnd={handleTouchEnd}
             onKeyDown={handleKeyDown}
           >
-            <div className="relative overflow-visible" style={{ width: centerWidth, maxWidth: isSmallScreen ? "62vw" : "85vw", minHeight: `${carouselMinHeight}px` }}>
+            <div
+              className="relative overflow-visible"
+              style={{
+                width: cardWidth,
+                maxWidth: isSmallScreen ? "90vw" : undefined,
+                minHeight: carouselMinHeight,
+              }}
+            >
               {n === 1 ? (
                 renderSlot(0, "center")
               ) : (
