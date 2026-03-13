@@ -20,6 +20,10 @@ const OVERLAP_INSIDE_PX_DESKTOP = 200;
 /** Largura do contentor dos slots para os três cartões caberem sem corte (esquerda visível). */
 const CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP = 905;
 
+/** Posição left (px) dos slots em desktop: centro e direita (esquerda = 0). */
+const SLOT_CENTER_LEFT_DESKTOP = (CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP - CARD_WIDTH_DESKTOP) / 2;
+const SLOT_RIGHT_LEFT_DESKTOP = CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP - CARD_WIDTH_DESKTOP;
+
 /** Mobile: mesmo ratio 435:600, largura limitada ao viewport. */
 const CARD_WIDTH_MOBILE = "min(435px, 90vw)";
 const CAROUSEL_MIN_HEIGHT_MOBILE = 600;
@@ -152,20 +156,32 @@ export function FeaturedCarouselSection({
       typeof cardWidth === "number"
         ? { width: "100%", height: cardHeight }
         : { width: "100%", aspectRatio: "435/600" };
+    const isDesktop = typeof cardWidth === "number";
+    const slotLeft = isDesktop
+      ? slot === "left"
+        ? 0
+        : slot === "center"
+          ? SLOT_CENTER_LEFT_DESKTOP
+          : SLOT_RIGHT_LEFT_DESKTOP
+      : "50%";
+    const slotTransform = isDesktop
+      ? undefined
+      : isCenter
+        ? "translateX(-50%)"
+        : slot === "left"
+          ? `translateX(${leftTranslateX})`
+          : `translateX(${rightTranslateX})`;
+
     return (
       <div
         key={`${slot}-${index}`}
         className="flex-shrink-0 rounded-2xl overflow-hidden"
         style={{
           position: "absolute",
-          left: "50%",
+          left: slotLeft,
           top: 0,
           width: slotWidth,
-          transform: isCenter
-            ? "translateX(-50%)"
-            : slot === "left"
-              ? `translateX(${leftTranslateX})`
-              : `translateX(${rightTranslateX})`,
+          ...(slotTransform !== undefined && { transform: slotTransform }),
           transformOrigin: slot === "left" ? "right center" : slot === "right" ? "left center" : "center center",
           zIndex: isCenter ? 2 : 1,
         }}

@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Carrossel Destaques: centralizar bloco 905px; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Carrossel Destaques: posicionamento por left em px; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -227,6 +227,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Carrossel Destaques: tamanho 435×600px e overlap 200px:** Tamanho de referência dos cartões de destaque fixado em 435px × 600px (todos os registos no ecrã). Constantes `CARD_WIDTH_DESKTOP`, `CARD_HEIGHT_DESKTOP`, `OVERLAP_INSIDE_PX_DESKTOP`; mobile com `min(435px, 90vw)` e ratio 435:600. Cartões à esquerda e à direita posicionados com 200px por detrás do cartão do meio (translateX calculados para overlap 200px).
 - **Carrossel Destaques: cartão esquerdo visível e bloco interno:** Contentor dos slots alargado para 905px (desktop) ou `min(905px, 100vw)` (mobile) para que o cartão à esquerda não seja cortado; `overflow-visible` em toda a cadeia. Dentro da section (zona a preto), bloco interno (div) que agrupa título, área do carrossel e indicadores (dots); dots passaram a estar dentro da section, dentro desse bloco.
 - **Carrossel Destaques: centralizar bloco 905px:** Bloco interno e contentor do carrossel com `w-full` para ocupar toda a largura; contentor dos slots (905px) com `flex-shrink-0 mx-auto` e `maxWidth: 100%` para ficar centralizado em relação ao ecrã e ao bloco preto (evitar alinhamento à direita).
+- **Carrossel Destaques: posicionamento por left em pixels:** Em desktop, os três slots passaram a usar `left` em px (0, 235, 470) em vez de `left: 50%` + `transform`; constantes `SLOT_CENTER_LEFT_DESKTOP` e `SLOT_RIGHT_LEFT_DESKTOP`; sem `transform` nos slots em desktop; mobile mantém o esquema com transform para viewports estreitos.
 
 ---
 
