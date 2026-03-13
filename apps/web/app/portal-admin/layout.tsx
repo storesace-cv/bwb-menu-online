@@ -24,6 +24,34 @@ export default async function PortalAdminLayout({
   const isActionPost = (headersList.get("next-action") ?? "").trim() !== "";
   const mode = getPortalMode(host, pathname);
 
+  if (isActionPost) {
+    const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";
+    return (
+      <div className={THEME_WRAPPER_CLASS}>
+        <header className="bg-slate-800/80 border-b border-slate-700 backdrop-blur-sm shadow-md px-4 py-3 flex flex-wrap gap-4 items-center">
+          <Link href="/portal-admin" className="font-bold text-slate-100 hover:text-emerald-400 transition-colors" prefetch={false}>Portal Admin</Link>
+          <span className="text-slate-400 text-sm">{mode === "global" ? "Global" : "Loja"}</span>
+          {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass} prefetch={false}>Tenants</Link>}
+          {mode === "global" && <Link href="/portal-admin/import/mappings" className={linkClass} prefetch={false}>Mapeamentos</Link>}
+          {(mode === "global" || mode === "tenant") && (
+            <a href="/portal-admin/settings" className={linkClass}>Definições</a>
+          )}
+          <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
+          {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
+          <form action="/api/auth/signout" method="post" className="ml-auto">
+            <button
+              type="submit"
+              className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+            >
+              Sair
+            </button>
+          </form>
+        </header>
+        <main className="flex-1 p-6">{children}</main>
+      </div>
+    );
+  }
+
   try {
     const isLoginPage = pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/");
     const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
