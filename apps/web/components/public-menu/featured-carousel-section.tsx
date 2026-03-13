@@ -69,6 +69,8 @@ export function FeaturedCarouselSection({
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const carouselContainerRef = useRef<HTMLDivElement>(null);
+  const contentWrapperRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -86,6 +88,15 @@ export function FeaturedCarouselSection({
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, []);
+
+  useEffect(() => {
+    const measure = () => {
+      const el = contentWrapperRef.current;
+      if (el) setContentHeight(el.offsetHeight);
+    };
+    const id = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(id);
+  }, [isSmallScreen, n]);
 
   const cardWidth = isSmallScreen ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP;
   const cardHeight = isSmallScreen ? CAROUSEL_MIN_HEIGHT_MOBILE : CARD_HEIGHT_DESKTOP;
@@ -213,21 +224,28 @@ export function FeaturedCarouselSection({
     : CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP;
   const rawScale = isSmallScreen ? (scaleMobile ?? 1) : (scaleDesktop ?? 1);
   const scale = Number.isFinite(rawScale) && rawScale >= 0.75 && rawScale <= 1 ? rawScale : 1;
+  const sectionHeightStyle =
+    scale < 1 && contentHeight != null
+      ? { height: contentHeight * scale, overflow: "hidden" as const }
+      : undefined;
+  const mergedSectionStyle = sectionHeightStyle
+    ? { ...sectionStyle, ...sectionHeightStyle }
+    : sectionStyle;
   return (
     <section
       className="relative z-10 overflow-visible flex justify-center"
       aria-label="Destaques"
-      style={sectionStyle}
+      style={mergedSectionStyle}
     >
       {/* Bloco interno escalado e centralizado */}
       <div
         className="overflow-visible inline-block w-full max-w-full"
         style={{
           transform: `scale(${scale})`,
-          transformOrigin: "center center",
+          transformOrigin: scale < 1 ? "top center" : "center center",
         }}
       >
-      <div className="overflow-visible w-full">
+      <div ref={contentWrapperRef} className="overflow-visible w-full">
         <h2
           className={`section-title mt-0 ${alignClass}`}
           style={{

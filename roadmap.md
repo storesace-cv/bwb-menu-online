@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Slider destaques: 1 à esquerda por defeito; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Altura do bloco de destaques proporcional à escala; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -230,6 +230,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Carrossel Destaques: posicionamento por left em pixels:** Em desktop, os três slots passaram a usar `left` em px (0, 235, 470) em vez de `left: 50%` + `transform`; constantes `SLOT_CENTER_LEFT_DESKTOP` e `SLOT_RIGHT_LEFT_DESKTOP`; sem `transform` nos slots em desktop; mobile mantém o esquema com transform para viewports estreitos.
 - **Tamanho do bloco dos destaques configurável por slider:** Em Definições → Parâmetros App (cartão Galeria) dois sliders permitem reduzir o tamanho do bloco dos destaques (título + carrossel 905×600 + dots) entre 100% (base) e 75% (1/4 mais pequeno). Um slider para PC/tablet e outro para smartphones; valores em `store_settings.settings` (`featured_carousel_scale_desktop`, `featured_carousel_scale_mobile`); template BWB - Branco passa escala ao `FeaturedCarouselSection`, que aplica `transform: scale()` ao bloco interno mantendo centralização.
 - **Slider destaques: 1 (base) à esquerda por defeito:** Os dois sliders de tamanho do bloco de destaques passaram a usar `dir="rtl"` no `<input type="range">`, de modo que o valor 1 (tamanho base) fique à esquerda e 1/4 (75%) à direita; o valor por defeito 1 mostra o cursor à esquerda, permitindo "diminuir" deslizando para a direita. Ficheiro: `settings-form.tsx`.
+- **Altura do bloco de destaques proporcional à escala:** Quando o tamanho do bloco de destaques é reduzido (scale &lt; 1), a secção do carrossel passou a reservar altura em layout igual a `altura_natural × scale` (medição com ref + useEffect), com `overflow: hidden` e `transformOrigin: top center` no wrapper escalado, eliminando os espaços vazios acima e abaixo do bloco. Ficheiro: `featured-carousel-section.tsx`.
 
 ---
 
