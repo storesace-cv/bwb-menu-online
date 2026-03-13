@@ -287,6 +287,7 @@ export function SettingsForm({
               <span className="text-sm text-slate-400 w-4">1</span>
               <input
                 type="range"
+                dir="rtl"
                 min={0.75}
                 max={1}
                 step={0.01}
@@ -312,6 +313,7 @@ export function SettingsForm({
               <span className="text-sm text-slate-400 w-4">1</span>
               <input
                 type="range"
+                dir="rtl"
                 min={0.75}
                 max={1}
                 step={0.01}
