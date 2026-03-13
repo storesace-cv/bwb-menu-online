@@ -9,11 +9,13 @@ export function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? request.headers.get("x-forwarded-host") ?? "";
   const pathname = request.nextUrl.pathname;
 
+  const nextAction = request.headers.get("next-action") ?? request.headers.get("Next-Action") ?? "";
   portalDebugLog("middleware", {
     pathname,
     host,
     rsc: request.headers.get("rsc") ?? request.headers.get("RSC") ?? null,
     redirectRoot: host === GLOBAL_HOST && pathname === "/",
+    hasNextAction: nextAction.length > 0,
   });
 
   // menu.bwb.pt root -> redirect to portal-admin

@@ -838,10 +838,16 @@ export async function updatePresentationTemplateLayout(
     priceLineHeight?: string;
   }
 ): Promise<{ error?: string }> {
+  // #region agent log
+  portalDebugLog("presentation_template_layout", { step: "entry", templateId: (templateId ?? "").slice(0, 8) });
+  // #endregion
   try {
   const supabase = await createClient();
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
   if (!isSuper) return { error: "Acesso reservado a superadmin." };
+  // #region agent log
+  portalDebugLog("presentation_template_layout", { step: "auth_ok" });
+  // #endregion
   const id = (templateId ?? "").trim();
   if (!id) return { error: "ID do template obrigatório." };
   const zones = Array.isArray(layoutDefinition?.zoneOrder) ? layoutDefinition.zoneOrder : [];
@@ -942,11 +948,22 @@ export async function updatePresentationTemplateLayout(
     .from("menu_presentation_templates")
     .update({ layout_definition: payload })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    // #region agent log
+    portalDebugLog("presentation_template_layout", { step: "db_error", error: error.message });
+    // #endregion
+    return { error: error.message };
+  }
+  // #region agent log
+  portalDebugLog("presentation_template_layout", { step: "success" });
+  // #endregion
   revalidatePath("/portal-admin/settings/presentation-templates");
   revalidatePath(`/portal-admin/settings/presentation-templates/${id}/layout`);
   return {};
   } catch (e) {
+    // #region agent log
+    portalDebugLog("presentation_template_layout", { step: "catch", error: e instanceof Error ? e.message : String(e) });
+    // #endregion
     console.error("updatePresentationTemplateLayout", e);
     return { error: e instanceof Error ? e.message : "Erro ao guardar layout." };
   }
