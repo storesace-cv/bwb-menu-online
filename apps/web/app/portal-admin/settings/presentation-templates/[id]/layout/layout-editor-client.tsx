@@ -407,9 +407,6 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
       });
       if (Object.keys(heightsToSave).length > 0) payload.zoneHeights = heightsToSave;
       const updateFn = onUpdateLayout ?? updatePresentationTemplateLayout;
-      // #region agent log
-      fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "layout-editor-client.tsx:save", message: "save_start", data: { templateId }, timestamp: Date.now(), hypothesisId: "A" }) }).catch(() => {});
-      // #endregion
       let result: Awaited<ReturnType<typeof updateFn>>;
       try {
         result = await updateFn(templateId, payload);
@@ -423,22 +420,13 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         }
       }
       if (result?.error) {
-        // #region agent log
-        fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "layout-editor-client.tsx:save", message: "save_result_error", data: { error: result.error }, timestamp: Date.now(), hypothesisId: "D" }) }).catch(() => {});
-        // #endregion
         setError(result.error);
         return;
       }
-      // #region agent log
-      fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "layout-editor-client.tsx:save", message: "save_ok", data: {}, timestamp: Date.now(), hypothesisId: "A" }) }).catch(() => {});
-      // #endregion
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       const e = err instanceof Error ? err : new Error(String(err));
-      // #region agent log
-      fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "layout-editor-client.tsx:save", message: "save_failed", data: { name: e.name, message: e.message }, timestamp: Date.now(), hypothesisId: "A" }) }).catch(() => {});
-      // #endregion
       setError(e.message || "Erro ao guardar.");
     } finally {
       setSaving(false);
