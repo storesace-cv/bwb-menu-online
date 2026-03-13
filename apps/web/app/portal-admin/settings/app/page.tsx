@@ -23,7 +23,7 @@ export default async function ParamsAppPage() {
   const { data: store } = await supabase.from("stores").select("name").eq("id", storeId).single();
   const { data: row } = await supabase.from("store_settings").select("settings").eq("store_id", storeId).single();
   const settings = (row?.settings as Record<string, string | number> | null) ?? {};
-  const menuTemplateKey = settings.menu_template_key ?? "bwb-branco";
+  const menuTemplateKey = String(settings.menu_template_key ?? "bwb-branco");
   const parseScaleFromSettings = (key: string): number => {
     const v = settings[key];
     if (v == null) return 1;
@@ -60,34 +60,34 @@ export default async function ParamsAppPage() {
         storeId={storeId}
         featuredTemplates={featuredTemplates ?? []}
         initial={{
-            store_display_name: settings.store_display_name ?? "",
-            primary_color: settings.primary_color ?? "",
-            logo_url: settings.logo_url ?? "",
-            logo_fill_color: settings.logo_fill_color ?? "",
-            logo_stroke_color: settings.logo_stroke_color ?? "",
-            currency_code: settings.currency_code ?? "",
+            store_display_name: String(settings.store_display_name ?? ""),
+            primary_color: String(settings.primary_color ?? ""),
+            logo_url: String(settings.logo_url ?? ""),
+            logo_fill_color: String(settings.logo_fill_color ?? ""),
+            logo_stroke_color: String(settings.logo_stroke_color ?? ""),
+            currency_code: String(settings.currency_code ?? ""),
             menu_template_key: menuTemplateKey,
-            hero_text: settings.hero_text ?? "",
-            hero_background_color: settings.hero_background_color ?? "",
-            hero_background_css: settings.hero_background_css ?? "",
-            footer_logo_url: settings.footer_logo_url ?? "",
-            footer_logo_fill_color: settings.footer_logo_fill_color ?? "",
-            footer_logo_stroke_color: settings.footer_logo_stroke_color ?? "",
-            footer_address: (settings.footer_address ?? "").trim() || (settings.footer_text ?? "").trim() || "",
-            footer_email: settings.footer_email ?? "",
-            footer_phone: settings.footer_phone ?? "",
-            footer_background_color: settings.footer_background_color ?? "",
-            footer_background_css: settings.footer_background_css ?? "",
-            footer_text_color: settings.footer_text_color ?? "",
-            contact_url: settings.contact_url ?? "",
-            privacy_url: settings.privacy_url ?? "",
-            reservation_url: settings.reservation_url ?? "",
-            featured_section_label: settings.featured_section_label ?? "",
-            featured_template_key: settings.featured_template_key ?? "modelo-destaque-1",
-            featured_carousel_background_color: settings.featured_carousel_background_color ?? "",
-            featured_carousel_background_css: settings.featured_carousel_background_css ?? "",
-            featured_dots_background_color: settings.featured_dots_background_color ?? "",
-            featured_dots_background_css: settings.featured_dots_background_css ?? "",
+            hero_text: String(settings.hero_text ?? ""),
+            hero_background_color: String(settings.hero_background_color ?? ""),
+            hero_background_css: String(settings.hero_background_css ?? ""),
+            footer_logo_url: String(settings.footer_logo_url ?? ""),
+            footer_logo_fill_color: String(settings.footer_logo_fill_color ?? ""),
+            footer_logo_stroke_color: String(settings.footer_logo_stroke_color ?? ""),
+            footer_address: (String(settings.footer_address ?? "").trim() || String(settings.footer_text ?? "").trim()) || "",
+            footer_email: String(settings.footer_email ?? ""),
+            footer_phone: String(settings.footer_phone ?? ""),
+            footer_background_color: String(settings.footer_background_color ?? ""),
+            footer_background_css: String(settings.footer_background_css ?? ""),
+            footer_text_color: String(settings.footer_text_color ?? ""),
+            contact_url: String(settings.contact_url ?? ""),
+            privacy_url: String(settings.privacy_url ?? ""),
+            reservation_url: String(settings.reservation_url ?? ""),
+            featured_section_label: String(settings.featured_section_label ?? ""),
+            featured_template_key: String(settings.featured_template_key ?? "modelo-destaque-1"),
+            featured_carousel_background_color: String(settings.featured_carousel_background_color ?? ""),
+            featured_carousel_background_css: String(settings.featured_carousel_background_css ?? ""),
+            featured_dots_background_color: String(settings.featured_dots_background_color ?? ""),
+            featured_dots_background_css: String(settings.featured_dots_background_css ?? ""),
             featured_carousel_scale_desktop: parseScaleFromSettings("featured_carousel_scale_desktop"),
             featured_carousel_scale_mobile: parseScaleFromSettings("featured_carousel_scale_mobile"),
           }}

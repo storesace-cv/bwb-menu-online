@@ -133,6 +133,10 @@ export type PublicMenuStoreSettings = {
   featured_dots_background_color?: string;
   /** CSS de fundo dos indicadores do carrossel. Opcional. */
   featured_dots_background_css?: string;
+  /** Escala do bloco dos destaques em desktop (0.75–1). Default: 1. */
+  featured_carousel_scale_desktop?: number | string;
+  /** Escala do bloco dos destaques em mobile (0.75–1). Default: 1. */
+  featured_carousel_scale_mobile?: number | string;
   /** Método de leitura de imagens: "storage" | "url" | "legacy_path". Default: "storage". */
   image_source?: string;
 };
