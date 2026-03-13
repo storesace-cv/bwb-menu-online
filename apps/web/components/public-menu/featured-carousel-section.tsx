@@ -17,6 +17,9 @@ const CARD_HEIGHT_DESKTOP = 600;
 /** Quantidade (px) de cada cartão lateral que fica por detrás do cartão do meio. */
 const OVERLAP_INSIDE_PX_DESKTOP = 200;
 
+/** Largura do contentor dos slots para os três cartões caberem sem corte (esquerda visível). */
+const CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP = 905;
+
 /** Mobile: mesmo ratio 435:600, largura limitada ao viewport. */
 const CARD_WIDTH_MOBILE = "min(435px, 90vw)";
 const CAROUSEL_MIN_HEIGHT_MOBILE = 600;
@@ -185,13 +188,17 @@ export function FeaturedCarouselSection({
   const dotsContainerStyle = buildBackgroundStyle(dotsBackgroundColor, dotsBackgroundCss, {});
   const sectionStyle =
     Object.keys(carouselSectionStyle).length > 0 ? carouselSectionStyle : undefined;
+  const slotsContainerWidth = isSmallScreen
+    ? "min(905px, 100vw)"
+    : CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP;
   return (
-    <>
-      <section
-        className="relative z-10 overflow-visible"
-        aria-label="Destaques"
-        style={sectionStyle}
-      >
+    <section
+      className="relative z-10 overflow-visible"
+      aria-label="Destaques"
+      style={sectionStyle}
+    >
+      {/* Bloco interno: título + carrossel + indicadores (zona do tracejado vermelho) */}
+      <div className="overflow-visible">
         <h2
           className={`section-title mt-0 ${alignClass}`}
           style={{
@@ -202,13 +209,13 @@ export function FeaturedCarouselSection({
         >
           {featuredSectionLabel}
         </h2>
-        <div className="relative group/carousel flex justify-center">
+        <div className="relative group/carousel flex justify-center overflow-visible">
           <div
             ref={carouselContainerRef}
             tabIndex={0}
             role="region"
             aria-label="Destaques"
-            className="relative w-full flex justify-center overflow-x-visible overflow-y-visible px-4"
+            className="relative w-full flex justify-center overflow-visible px-4"
             style={{ minHeight: `${carouselMinHeight}px` }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
@@ -217,8 +224,8 @@ export function FeaturedCarouselSection({
             <div
               className="relative overflow-visible"
               style={{
-                width: cardWidth,
-                maxWidth: isSmallScreen ? "90vw" : undefined,
+                width: slotsContainerWidth,
+                minWidth: typeof slotsContainerWidth === "number" ? slotsContainerWidth : undefined,
                 minHeight: carouselMinHeight,
               }}
             >
@@ -234,40 +241,40 @@ export function FeaturedCarouselSection({
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Indicadores: faixa por baixo do bloco do carrossel; área de toque ≥44px (WCAG 2.5.5) */}
-      {n >= 1 && (
-        <div
-          className="flex justify-center gap-1.5 mt-3 mb-10"
-          role="tablist"
-          aria-label="Posição no carrossel"
-          style={Object.keys(dotsContainerStyle).length > 0 ? dotsContainerStyle : undefined}
-        >
-          {featuredItems.map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              role="tab"
-              aria-label={`Ir para destaque ${index + 1}`}
-              aria-selected={index === activeIndex}
-              onClick={() => setActiveIndex(index)}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
-            >
-              <span
-                className="rounded-full block flex-shrink-0 border-2 border-transparent"
-                style={{
-                  width: index === activeIndex ? 12 : 8,
-                  height: index === activeIndex ? 12 : 8,
-                  backgroundColor: index === activeIndex ? "var(--menu-primary)" : "transparent",
-                  borderColor: index === activeIndex ? "var(--menu-primary)" : "rgba(0,0,0,0.2)",
-                }}
-                aria-hidden
-              />
-            </button>
-          ))}
-        </div>
-      )}
-    </>
+        {/* Indicadores: área de toque ≥44px (WCAG 2.5.5) */}
+        {n >= 1 && (
+          <div
+            className="flex justify-center gap-1.5 mt-3 mb-10"
+            role="tablist"
+            aria-label="Posição no carrossel"
+            style={Object.keys(dotsContainerStyle).length > 0 ? dotsContainerStyle : undefined}
+          >
+            {featuredItems.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                role="tab"
+                aria-label={`Ir para destaque ${index + 1}`}
+                aria-selected={index === activeIndex}
+                onClick={() => setActiveIndex(index)}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
+              >
+                <span
+                  className="rounded-full block flex-shrink-0 border-2 border-transparent"
+                  style={{
+                    width: index === activeIndex ? 12 : 8,
+                    height: index === activeIndex ? 12 : 8,
+                    backgroundColor: index === activeIndex ? "var(--menu-primary)" : "transparent",
+                    borderColor: index === activeIndex ? "var(--menu-primary)" : "rgba(0,0,0,0.2)",
+                  }}
+                  aria-hidden
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

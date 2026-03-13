@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Carrossel Destaques: 435×600px e 200px por detrás do centro; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Carrossel: cartão esquerdo visível e bloco interno; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -225,6 +225,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Carrossel Destaques: fundo único e cards 25% menores:** O fundo do bloco do carrossel (zona a preto) passa a estender-se para baixo da faixa dos indicadores (zona a vermelho) com padding-bottom 32px na `<section>` quando há estilo de fundo configurado. Tamanho dos cards reduzido para 75%: constantes em `featured-carousel-section.tsx` (CENTER_WIDTH, CAROUSEL_MIN_HEIGHT, SIDE_SCALE, OVERLAP_PX) para desktop e mobile.
 - **Carrossel Destaques: proporção dos cards e ordem do fundo dos indicadores:** Os cards do carrossel passaram a ser contidos por um wrapper com aspect-ratio 3/4 no slot (`CAROUSEL_CARD_ASPECT_RATIO`), evitando esticamento vertical e mantendo o conteúdo proporcional. A `<section>` com fundo do carrossel (preto) contém apenas título e área dos cards; o bloco dos indicadores (dots) com fundo vermelho é irmão da section no fluxo (por baixo do bloco preto); removido `paddingBottom` da section.
 - **Carrossel Destaques: tamanho 435×600px e overlap 200px:** Tamanho de referência dos cartões de destaque fixado em 435px × 600px (todos os registos no ecrã). Constantes `CARD_WIDTH_DESKTOP`, `CARD_HEIGHT_DESKTOP`, `OVERLAP_INSIDE_PX_DESKTOP`; mobile com `min(435px, 90vw)` e ratio 435:600. Cartões à esquerda e à direita posicionados com 200px por detrás do cartão do meio (translateX calculados para overlap 200px).
+- **Carrossel Destaques: cartão esquerdo visível e bloco interno:** Contentor dos slots alargado para 905px (desktop) ou `min(905px, 100vw)` (mobile) para que o cartão à esquerda não seja cortado; `overflow-visible` em toda a cadeia. Dentro da section (zona a preto), bloco interno (div) que agrupa título, área do carrossel e indicadores (dots); dots passaram a estar dentro da section, dentro desse bloco.
 
 ---
 
