@@ -20,6 +20,9 @@ const SIDE_SCALE_MOBILE = 0.675;
 const OVERLAP_PX_DESKTOP = 22;
 const OVERLAP_PX_MOBILE = 15;
 
+/** Proporção do card no carrossel (largura : altura) para evitar esticamento vertical. */
+const CAROUSEL_CARD_ASPECT_RATIO = "3/4";
+
 export function FeaturedCarouselSection({
   featuredItems,
   featuredSectionLabel,
@@ -159,13 +162,18 @@ export function FeaturedCarouselSection({
           zIndex: isCenter ? 2 : 1,
         }}
       >
-        <CardComponent
-          item={item}
-          categoryName={categoryName}
-          currencyCode={currencyCode}
-          imageSource={imageSource}
-          layoutDefinition={featuredLayoutDefinition ?? null}
-        />
+        <div
+          className="w-full overflow-hidden rounded-2xl"
+          style={{ aspectRatio: CAROUSEL_CARD_ASPECT_RATIO }}
+        >
+          <CardComponent
+            item={item}
+            categoryName={categoryName}
+            currencyCode={currencyCode}
+            imageSource={imageSource}
+            layoutDefinition={featuredLayoutDefinition ?? null}
+          />
+        </div>
       </div>
     );
   };
@@ -174,55 +182,55 @@ export function FeaturedCarouselSection({
   const carouselSectionStyle = buildBackgroundStyle(carouselBackgroundColor, carouselBackgroundCss, {});
   const dotsContainerStyle = buildBackgroundStyle(dotsBackgroundColor, dotsBackgroundCss, {});
   const sectionStyle =
-    Object.keys(carouselSectionStyle).length > 0
-      ? { ...carouselSectionStyle, paddingBottom: 32 }
-      : undefined;
+    Object.keys(carouselSectionStyle).length > 0 ? carouselSectionStyle : undefined;
   return (
-    <section
-      className="relative z-10 mb-10 overflow-visible"
-      aria-label="Destaques"
-      style={sectionStyle}
-    >
-      <h2
-        className={`section-title mt-0 ${alignClass}`}
-        style={{
-          marginBottom: `${titleMarginBottom}px`,
-          paddingTop: `${titlePaddingTop}px`,
-          color: "var(--menu-primary)",
-        }}
+    <>
+      <section
+        className="relative z-10 overflow-visible"
+        aria-label="Destaques"
+        style={sectionStyle}
       >
-        {featuredSectionLabel}
-      </h2>
-      <div className="relative group/carousel flex justify-center">
-        <div
-          ref={carouselContainerRef}
-          tabIndex={0}
-          role="region"
-          aria-label="Destaques"
-          className="relative w-full flex justify-center overflow-x-visible overflow-y-visible px-4"
-          style={{ minHeight: `${carouselMinHeight}px` }}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onKeyDown={handleKeyDown}
+        <h2
+          className={`section-title mt-0 ${alignClass}`}
+          style={{
+            marginBottom: `${titleMarginBottom}px`,
+            paddingTop: `${titlePaddingTop}px`,
+            color: "var(--menu-primary)",
+          }}
         >
-          <div className="relative overflow-visible" style={{ width: centerWidth, maxWidth: isSmallScreen ? "62vw" : "85vw", minHeight: `${carouselMinHeight}px` }}>
-            {n === 1 ? (
-              renderSlot(0, "center")
-            ) : (
-              <>
-                {renderSlot(prevIndex, "left")}
-                {renderSlot(activeIndex, "center")}
-                {renderSlot(nextIndex, "right")}
-              </>
-            )}
+          {featuredSectionLabel}
+        </h2>
+        <div className="relative group/carousel flex justify-center">
+          <div
+            ref={carouselContainerRef}
+            tabIndex={0}
+            role="region"
+            aria-label="Destaques"
+            className="relative w-full flex justify-center overflow-x-visible overflow-y-visible px-4"
+            style={{ minHeight: `${carouselMinHeight}px` }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onKeyDown={handleKeyDown}
+          >
+            <div className="relative overflow-visible" style={{ width: centerWidth, maxWidth: isSmallScreen ? "62vw" : "85vw", minHeight: `${carouselMinHeight}px` }}>
+              {n === 1 ? (
+                renderSlot(0, "center")
+              ) : (
+                <>
+                  {renderSlot(prevIndex, "left")}
+                  {renderSlot(activeIndex, "center")}
+                  {renderSlot(nextIndex, "right")}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Indicadores: um círculo por registo, destacar o activo; área de toque ≥44px (WCAG 2.5.5) */}
+      {/* Indicadores: faixa por baixo do bloco do carrossel; área de toque ≥44px (WCAG 2.5.5) */}
       {n >= 1 && (
         <div
-          className="flex justify-center gap-1.5 mt-3"
+          className="flex justify-center gap-1.5 mt-3 mb-10"
           role="tablist"
           aria-label="Posição no carrossel"
           style={Object.keys(dotsContainerStyle).length > 0 ? dotsContainerStyle : undefined}
@@ -251,6 +259,6 @@ export function FeaturedCarouselSection({
           ))}
         </div>
       )}
-    </section>
+    </>
   );
 }
