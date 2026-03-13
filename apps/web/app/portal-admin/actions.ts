@@ -838,6 +838,7 @@ export async function updatePresentationTemplateLayout(
     priceLineHeight?: string;
   }
 ): Promise<{ error?: string }> {
+  try {
   const supabase = await createClient();
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
   if (!isSuper) return { error: "Acesso reservado a superadmin." };
@@ -945,6 +946,10 @@ export async function updatePresentationTemplateLayout(
   revalidatePath("/portal-admin/settings/presentation-templates");
   revalidatePath(`/portal-admin/settings/presentation-templates/${id}/layout`);
   return {};
+  } catch (e) {
+    console.error("updatePresentationTemplateLayout", e);
+    return { error: e instanceof Error ? e.message : "Erro ao guardar layout." };
+  }
 }
 
 /** Actualizar layout de um modelo de apresentação de Destaques (superadmin). Mesma assinatura e payload que updatePresentationTemplateLayout. */
@@ -952,6 +957,7 @@ export async function updateFeaturedPresentationTemplateLayout(
   templateId: string,
   layoutDefinition: Parameters<typeof updatePresentationTemplateLayout>[1]
 ): Promise<{ error?: string }> {
+  try {
   const supabase = await createClient();
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
   if (!isSuper) return { error: "Acesso reservado a superadmin." };
@@ -1059,6 +1065,10 @@ export async function updateFeaturedPresentationTemplateLayout(
   revalidatePath("/portal-admin/settings/presentation-templates");
   revalidatePath(`/portal-admin/settings/presentation-templates/featured/${id}/layout`);
   return {};
+  } catch (e) {
+    console.error("updateFeaturedPresentationTemplateLayout", e);
+    return { error: e instanceof Error ? e.message : "Erro ao guardar layout." };
+  }
 }
 
 /** Criar "Modelo Destaque 1" a partir do layout de Modelo Restaurante 1 (superadmin). Só cria se ainda não existir. */

@@ -26,8 +26,9 @@ export default async function PortalAdminLayout({
     const mode = getPortalMode(host, pathname);
     const isLoginPage = pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/");
     const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
+    const isActionPost = (headersList.get("next-action") ?? "").trim() !== "";
 
-    portalDebugLog("layout", { pathname, host, isLoginPage, isRsc });
+    portalDebugLog("layout", { pathname, host, isLoginPage, isRsc, isActionPost });
 
     if (isLoginPage) {
       portalDebugLog("layout", { pathname, decision: "login_page" });
@@ -48,13 +49,13 @@ export default async function PortalAdminLayout({
       mustRenewPassword: mustRenew,
     });
 
-    if (!user) {
+    if (!user && !isActionPost) {
       portalDebugLog("layout", { pathname, decision: "redirect_login" });
       if (isRsc) return <RedirectTo url={PORTAL_LOGIN} />;
       redirect(PORTAL_LOGIN);
     }
 
-    if (mustRenew && !pathname.includes("change-password")) {
+    if (mustRenew && !pathname.includes("change-password") && !isActionPost) {
       portalDebugLog("layout", { pathname, decision: "redirect_change_password" });
       if (isRsc) return <RedirectTo url={CHANGE_PASSWORD} />;
       redirect(CHANGE_PASSWORD);
