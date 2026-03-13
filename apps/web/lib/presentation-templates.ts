@@ -60,10 +60,10 @@ export interface LayoutDefinition {
   priceLineHeight?: ContentLineHeight;
 }
 
-/** Presets de padding interno (px) para a UI. */
-export const CONTENT_PADDING_PRESETS = [4, 6, 8, 12, 16, 20, 24] as const;
-/** Presets de gap entre colunas (px) para a UI. */
-export const CONTENT_ROW_GAP_PRESETS = [2, 4, 8, 16, 24] as const;
+/** Presets de padding interno (px) para a UI. 0 = sem padding. */
+export const CONTENT_PADDING_PRESETS = [0, 4, 6, 8, 12, 16, 20, 24] as const;
+/** Presets de gap entre colunas (px) para a UI. 0 = sem gap. */
+export const CONTENT_ROW_GAP_PRESETS = [0, 2, 4, 8, 16, 24] as const;
 export const DEFAULT_CONTENT_PADDING_PX = 12;
 export const DEFAULT_CONTENT_ROW_GAP_PX = 16;
 

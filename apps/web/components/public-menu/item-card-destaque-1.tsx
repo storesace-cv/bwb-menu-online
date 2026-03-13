@@ -46,9 +46,9 @@ const ALLERGEN_BADGE_DESTAQUE = "text-xs px-1.5 py-0.5 rounded text-white bg-whi
 
 const ZONE_HEIGHT_MIN = 12;
 const ZONE_HEIGHT_MAX = 600;
-const CONTENT_PADDING_MIN = 4;
+const CONTENT_PADDING_MIN = 0;
 const CONTENT_PADDING_MAX = 24;
-const CONTENT_ROW_GAP_MIN = 2;
+const CONTENT_ROW_GAP_MIN = 0;
 const CONTENT_ROW_GAP_MAX = 24;
 
 const FONT_SIZE_CLASSES: Record<ContentFontSize, string> = {

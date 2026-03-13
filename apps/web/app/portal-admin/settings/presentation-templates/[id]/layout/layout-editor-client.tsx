@@ -251,12 +251,12 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
   });
   const [contentPaddingPx, setContentPaddingPx] = useState<number>(
     initialLayout?.contentPaddingPx != null && Number.isFinite(initialLayout.contentPaddingPx)
-      ? Math.max(4, Math.min(24, Math.round(Number(initialLayout.contentPaddingPx))))
+      ? Math.max(0, Math.min(24, Math.round(Number(initialLayout.contentPaddingPx))))
       : DEFAULT_CONTENT_PADDING_PX
   );
   const [contentRowGapPx, setContentRowGapPx] = useState<number>(
     initialLayout?.contentRowGapPx != null && Number.isFinite(initialLayout.contentRowGapPx)
-      ? Math.max(2, Math.min(24, Math.round(Number(initialLayout.contentRowGapPx))))
+      ? Math.max(0, Math.min(24, Math.round(Number(initialLayout.contentRowGapPx))))
       : DEFAULT_CONTENT_ROW_GAP_PX
   );
   const [nameFontSize, setNameFontSize] = useState<ContentFontSize>(
@@ -376,8 +376,8 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
         zoneOrder,
         rowSpacingPx: rowSpacingPx >= 0 && rowSpacingPx <= 48 ? rowSpacingPx : DEFAULT_ROW_SPACING_PX,
-        contentPaddingPx: contentPaddingPx >= 4 && contentPaddingPx <= 24 ? contentPaddingPx : DEFAULT_CONTENT_PADDING_PX,
-        contentRowGapPx: contentRowGapPx >= 2 && contentRowGapPx <= 24 ? contentRowGapPx : DEFAULT_CONTENT_ROW_GAP_PX,
+        contentPaddingPx: contentPaddingPx >= 0 && contentPaddingPx <= 24 ? contentPaddingPx : DEFAULT_CONTENT_PADDING_PX,
+        contentRowGapPx: contentRowGapPx >= 0 && contentRowGapPx <= 24 ? contentRowGapPx : DEFAULT_CONTENT_ROW_GAP_PX,
         nameFontSize,
         nameFontWeight,
         priceFontSize,
@@ -605,11 +605,11 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
               <Input
                 id="content-padding"
                 type="number"
-                min={4}
+                min={0}
                 max={24}
                 step={1}
                 value={contentPaddingPx}
-                onChange={(e) => setContentPaddingPx(Math.max(4, Math.min(24, Number(e.target.value) || 4)))}
+                onChange={(e) => setContentPaddingPx(Math.max(0, Math.min(24, Number(e.target.value) ?? 0)))}
                 className="w-20"
               />
               {CONTENT_PADDING_PRESETS.map((px) => (
@@ -632,11 +632,11 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
               <Input
                 id="content-row-gap"
                 type="number"
-                min={2}
+                min={0}
                 max={24}
                 step={1}
                 value={contentRowGapPx}
-                onChange={(e) => setContentRowGapPx(Math.max(2, Math.min(24, Number(e.target.value) || 2)))}
+                onChange={(e) => setContentRowGapPx(Math.max(0, Math.min(24, Number(e.target.value) ?? 0)))}
                 className="w-20"
               />
               {CONTENT_ROW_GAP_PRESETS.map((px) => (

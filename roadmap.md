@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Preço na mesma linha que o Nome; backgrounds carrossel/dots configuráveis; fix preventDefault no carrossel; commit, push, deploy, verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (cartão Galeria em Parâmetros App; padding/gap 0 no editor de layout; deploy e verificação no container).
 
 ---
 
@@ -190,6 +190,8 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Menu público: preços em itálico:** Nos cards do menu público (Restaurante 1, Restaurante 2, Destaque 1 e FromLayout), o preço actual deixou de usar `font-bold` e passou a usar `italic`, mantendo alinhamento, tamanho e cor. Preço antigo (riscado) inalterado.
 - **Card por layout: respeitar zoneOrder sem fallback:** O card renderizado por `ItemCardFromLayout` passou a mostrar apenas as zonas definidas em `layoutDefinition.zoneOrder`. Removidas a constante `FALLBACK_ZONES` e a lógica que acrescentava descrição, tempo de preparação e alergénios no fim do card quando omitidos do layout. O modelo "Bebidas (Básico)" (só nome e preços) deixa de exibir descrição; templates que queiram descrição devem incluir a zona em `zoneOrder` na configuração.
 - **Rodapé no fundo do ecrã (sticky footer):** No menu público, o rodapé (`MenuFooterSection`) passa a ficar sempre no fundo do viewport quando o conteúdo ocupa menos que o ecrã. Em `app/page.tsx`: `main` com `min-h-screen flex flex-col` e `PublicMenuClient` dentro de um `div` com `flex-1 flex flex-col min-h-0`. No template BWB - Branco: contentor raiz com `flex flex-col min-h-full`; bloco de conteúdo rolável (hero, pesquisa, carrossel, breadcrumb, secções) envolvido num wrapper `flex-1 min-h-0 flex flex-col`, mantendo o rodapé, links e FAB fora desse wrapper.
+- **Parâmetros App — cartão Galeria e ordem no ecrã:** Em Definições → Parâmetros App, um único cartão **Galeria** (abaixo de Cabeçalho) agrupa o texto hero, o nome do bloco de destaques, o modelo de apresentação de Destaques e todos os fundos configuráveis (faixa hero, carrossel de destaques, indicadores/dots), na ordem em que aparecem no menu público (de cima para baixo), com o fundo de cada bloco imediatamente a seguir aos campos de conteúdo desse bloco. O cartão Hero em separado foi removido; **Artigos e menu** ficou apenas com Template do Menu e Código de moeda. Ficheiro: `settings-form.tsx`; `name`/`id` dos inputs inalterados.
+- **Editor de layout — padding interno e gap 0:** No editor de layout dos modelos de apresentação (Estilo do conteúdo), **Padding interno (px)** e **Gap entre colunas (px)** passam a aceitar **0** (sem padding e sem gap). Presets `CONTENT_PADDING_PRESETS` e `CONTENT_ROW_GAP_PRESETS` incluem 0; validação e clamp em `layout-editor-client.tsx`, `actions.ts` e nos cards públicos `item-card-from-layout.tsx` / `item-card-destaque-1.tsx` (CONTENT_*_MIN = 0).
 
 ---
 

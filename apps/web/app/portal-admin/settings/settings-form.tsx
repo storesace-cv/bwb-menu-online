@@ -198,22 +198,27 @@ export function SettingsForm({
         </div>
       </Card>
 
-      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Hero</h2>
-      <p className="text-sm text-slate-400 mb-4">Faixa introdutória acima do menu.</p>
+      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Galeria</h2>
+      <p className="text-sm text-slate-400 mb-4">
+        Ordem como no menu público (de cima para baixo): texto da faixa introdutória e fundo; nome e modelo do bloco de destaques e fundos do carrossel e dos indicadores.
+      </p>
       <Card className="border-white">
         <div className={GRID_SECTION}>
-          <Input
-            id="hero_text"
-            name="hero_text"
-            label="Texto hero (menu público)"
-            type="text"
-            defaultValue={initial.hero_text ?? ""}
-            placeholder="Texto introdutório opcional"
-          />
+          {/* Bloco hero (faixa logo + texto): conteúdo, depois fundo */}
+          <div className="md:col-span-2">
+            <Input
+              id="hero_text"
+              name="hero_text"
+              label="Texto hero (menu público)"
+              type="text"
+              defaultValue={initial.hero_text ?? ""}
+              placeholder="Texto introdutório opcional"
+            />
+          </div>
           <ColorPickerField
             id="hero_background_color"
             name="hero_background_color"
-            label="Cor de fundo do hero"
+            label="Cor de fundo da faixa introdutória (hero)"
             defaultValue={initial.hero_background_color ?? ""}
             defaultHex="#F2F2F2"
             placeholder="#F2F2F2"
@@ -221,7 +226,7 @@ export function SettingsForm({
           />
           <div className="md:col-span-2 flex flex-col gap-2">
             <label htmlFor="hero_background_css" className="text-sm font-medium text-slate-300">
-              CSS de fundo do hero (opcional)
+              CSS de fundo da faixa introdutória (opcional)
             </label>
             <textarea
               id="hero_background_css"
@@ -232,58 +237,36 @@ export function SettingsForm({
               className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
             />
             <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
-            <p className="text-xs text-slate-500">Mais gradientes (copiar CSS): {linkWebgradients}</p>
           </div>
-        </div>
-      </Card>
 
-      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Artigos e menu</h2>
-      <p className="text-sm text-slate-400 mb-4">Conteúdo e apresentação do menu.</p>
-      <Card className="border-white">
-        <div className={GRID_SECTION}>
-          <Select
-            id="menu_template_key"
-            name="menu_template_key"
-            label="Template do Menu"
-            defaultValue={initial.menu_template_key ?? DEFAULT_MENU_TEMPLATE_KEY}
-          >
-            {MENU_TEMPLATE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </Select>
-          <Input
-            id="currency_code"
-            name="currency_code"
-            label="Código de moeda"
-            type="text"
-            defaultValue={initial.currency_code ?? ""}
-            placeholder="ex: EUR, Kz"
-          />
-          <Input
-            id="featured_section_label"
-            name="featured_section_label"
-            label="Nome que aparece no Menu (bloco de destaques)"
-            type="text"
-            defaultValue={initial.featured_section_label ?? ""}
-            placeholder="ex: Escolhas do Chef, Destaques"
-          />
-          <Select
-            id="featured_template_key"
-            name="featured_template_key"
-            label="Modelo de apresentação de Destaques"
-            defaultValue={initial.featured_template_key ?? "modelo-destaque-1"}
-          >
-            {featuredTemplates.map((t) => (
-              <option key={t.id} value={t.component_key}>
-                {t.name}
-              </option>
-            ))}
-            {featuredTemplates.length === 0 && (
-              <option value="modelo-destaque-1">Modelo Destaque 1</option>
-            )}
-          </Select>
+          {/* Bloco destaques: nome e modelo, depois fundo do carrossel (secção inclui título+cards) */}
+          <div className="md:col-span-2">
+            <Input
+              id="featured_section_label"
+              name="featured_section_label"
+              label="Nome que aparece no Menu (bloco de destaques)"
+              type="text"
+              defaultValue={initial.featured_section_label ?? ""}
+              placeholder="ex: Escolhas do Chef, Destaques"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Select
+              id="featured_template_key"
+              name="featured_template_key"
+              label="Modelo de apresentação de Destaques"
+              defaultValue={initial.featured_template_key ?? "modelo-destaque-1"}
+            >
+              {featuredTemplates.map((t) => (
+                <option key={t.id} value={t.component_key}>
+                  {t.name}
+                </option>
+              ))}
+              {featuredTemplates.length === 0 && (
+                <option value="modelo-destaque-1">Modelo Destaque 1</option>
+              )}
+            </Select>
+          </div>
           <ColorPickerField
             id="featured_carousel_background_color"
             name="featured_carousel_background_color"
@@ -307,6 +290,8 @@ export function SettingsForm({
             />
             <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
           </div>
+
+          {/* Indicadores (bolinhas): fundo por último */}
           <ColorPickerField
             id="featured_dots_background_color"
             name="featured_dots_background_color"
@@ -329,7 +314,35 @@ export function SettingsForm({
               className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-500 font-mono"
             />
             <p className="text-xs text-slate-500">Se preenchido, substitui a cor sólida acima.</p>
+            <p className="text-xs text-slate-500">Mais gradientes (copiar CSS): {linkWebgradients}</p>
           </div>
+        </div>
+      </Card>
+
+      <h2 className="text-2xl font-semibold text-slate-200 mb-2">Artigos e menu</h2>
+      <p className="text-sm text-slate-400 mb-4">Template global e moeda.</p>
+      <Card className="border-white">
+        <div className={GRID_SECTION}>
+          <Select
+            id="menu_template_key"
+            name="menu_template_key"
+            label="Template do Menu"
+            defaultValue={initial.menu_template_key ?? DEFAULT_MENU_TEMPLATE_KEY}
+          >
+            {MENU_TEMPLATE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+          <Input
+            id="currency_code"
+            name="currency_code"
+            label="Código de moeda"
+            type="text"
+            defaultValue={initial.currency_code ?? ""}
+            placeholder="ex: EUR, Kz"
+          />
         </div>
       </Card>
 
