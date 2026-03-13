@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (cartão Galeria em Parâmetros App; padding/gap 0 no editor de layout; deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Fetch failed Parâmetros App: hub e links com navegação completa; deploy e verificação no container).
 
 ---
 
@@ -217,6 +217,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Preço na mesma linha que o Nome (fallback):** Quando o template não tem `zoneLineNumbers` nem `zoneWidthPercent`/`zoneWidths` (ex.: nunca guardado ou template antigo), o card do menu público passou a usar um fallback por percentagem com nome 75% e preço 25% na mesma linha, em vez de colocar cada um em linha própria. Alterados item-card-from-layout e item-card-destaque-1 (defaultZoneWidthPercent com name 75, price 25, price_old 25); removida a função local groupZonesIntoRows em item-card-destaque-1.
 - **Backgrounds do carrossel e dos indicadores configuráveis:** Em Definições → Parâmetros App foram adicionados campos para cor e CSS de fundo do bloco do carrossel de destaques e dos indicadores (bolinhas). Store settings: `featured_carousel_background_color`, `featured_carousel_background_css`, `featured_dots_background_color`, `featured_dots_background_css`; template BWB - Branco passa estes valores a `FeaturedCarouselSection`, que aplica `buildBackgroundStyle` na `<section>` do carrossel e no `<div role="tablist">` dos dots. O bloco hero (logo/texto) já era configurável (Cor de fundo do hero, CSS de fundo do hero).
 - **Fix "Unable to preventDefault inside passive event listener" no carrossel:** O listener `wheel` no contentor do carrossel de destaques passou a ser registado com `addEventListener(..., { passive: false })` num `useEffect` (ref no contentor), permitindo chamar `preventDefault()` e navegar com a roda; removido `onWheel` do JSX para eliminar o aviso no DevTools.
+- **Eliminar "Fetch failed" ao abrir Parâmetros App (hub com paridade total):** No hub Definições (`settings/page.tsx`), todos os cards activos (Parâmetros App, Actualizações ao Menu, Gestão de Imagens, Tipos de artigo, ChatGPT/Grok, Utilizadores) passaram a usar `<a href="...">` em vez de `<Link prefetch={false}>`; no clique o Next deixava de fazer o pedido RSC (`GET .../settings/app?_rsc=...`) que falhava na consola. Na página Parâmetros App (`settings/app/page.tsx`), os links ← Definições, Menu e Sync passaram a `<a href>` para navegação completa ao sair da página (paridade com Gestão de Artigos e Secções/Categorias).
 
 ---
 

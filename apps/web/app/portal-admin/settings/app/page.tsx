@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
-import Link from "next/link";
 import { SettingsForm } from "../settings-form";
 import { IntegrationForm } from "../integration-form";
 
@@ -16,7 +15,7 @@ export default async function ParamsAppPage() {
       <div>
         <h1 className="text-2xl font-semibold text-slate-100 mb-2">Parâmetros App</h1>
         <p className="text-slate-400">Domínio não associado a nenhuma loja.</p>
-        <p className="mt-4"><Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link></p>
+        <p className="mt-4"><a href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</a></p>
       </div>
     );
   }
@@ -45,11 +44,11 @@ export default async function ParamsAppPage() {
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Parâmetros App</h1>
       <p className="text-slate-400 mb-2">Tema e branding para o menu público desta loja. {store?.name && `Loja: ${store.name}`}</p>
       <p className="mb-6">
-        <Link href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</Link>
+        <a href="/portal-admin/settings" className="text-emerald-400 hover:text-emerald-300">← Definições</a>
         {" · "}
-        <Link href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300">Menu</Link>
+        <a href="/portal-admin/menu" className="text-emerald-400 hover:text-emerald-300">Menu</a>
         {" · "}
-        <Link href="/portal-admin/sync" className="text-emerald-400 hover:text-emerald-300">Sync</Link>
+        <a href="/portal-admin/sync" className="text-emerald-400 hover:text-emerald-300">Sync</a>
       </p>
       <SettingsForm
         storeId={storeId}
