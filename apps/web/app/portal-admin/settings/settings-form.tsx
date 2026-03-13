@@ -127,6 +127,8 @@ export function SettingsForm({
     featured_carousel_background_css?: string;
     featured_dots_background_color?: string;
     featured_dots_background_css?: string;
+    featured_carousel_scale_desktop?: number;
+    featured_carousel_scale_mobile?: number;
   };
 }) {
   const [state, formAction] = useFormState(updateStoreSettings, null);
@@ -272,6 +274,57 @@ export function SettingsForm({
                 <option value="modelo-destaque-1">Modelo Destaque 1</option>
               )}
             </Select>
+          </div>
+          {/* Sliders: tamanho do bloco de destaques (1 = base, 1/4 = 25% mais pequeno) */}
+          <div className="md:col-span-2 flex flex-col gap-1">
+            <label className="text-sm font-medium text-slate-300">
+              Tamanho do bloco de destaques (PC/tablet)
+            </label>
+            <p className="text-xs text-slate-500 mb-1">
+              1 = tamanho base; 1/4 = 25% mais pequeno. Só pode diminuir.
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm text-slate-400 w-4">1</span>
+              <input
+                type="range"
+                min={0.75}
+                max={1}
+                step={0.01}
+                name="featured_carousel_scale_desktop"
+                defaultValue={initial.featured_carousel_scale_desktop ?? 1}
+                className="flex-1 min-w-[120px] h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-emerald-500"
+                aria-label="Escala do bloco de destaques em PC/tablet (0,75 a 1)"
+              />
+              <span className="text-sm text-slate-400">1/4</span>
+              <span className="text-sm text-slate-300 tabular-nums min-w-[3rem]">
+                {Math.round((initial.featured_carousel_scale_desktop ?? 1) * 100)}%
+              </span>
+            </div>
+          </div>
+          <div className="md:col-span-2 flex flex-col gap-1">
+            <label className="text-sm font-medium text-slate-300">
+              Tamanho do bloco de destaques (smartphones)
+            </label>
+            <p className="text-xs text-slate-500 mb-1">
+              1 = tamanho base; 1/4 = 25% mais pequeno.
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm text-slate-400 w-4">1</span>
+              <input
+                type="range"
+                min={0.75}
+                max={1}
+                step={0.01}
+                name="featured_carousel_scale_mobile"
+                defaultValue={initial.featured_carousel_scale_mobile ?? 1}
+                className="flex-1 min-w-[120px] h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-emerald-500"
+                aria-label="Escala do bloco de destaques em smartphones (0,75 a 1)"
+              />
+              <span className="text-sm text-slate-400">1/4</span>
+              <span className="text-sm text-slate-300 tabular-nums min-w-[3rem]">
+                {Math.round((initial.featured_carousel_scale_mobile ?? 1) * 100)}%
+              </span>
+            </div>
           </div>
           <ColorPickerField
             id="featured_carousel_background_color"

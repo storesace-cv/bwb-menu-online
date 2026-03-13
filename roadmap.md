@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Carrossel Destaques: posicionamento por left em px; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Tamanho do bloco dos destaques configurável por slider; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -228,6 +228,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Carrossel Destaques: cartão esquerdo visível e bloco interno:** Contentor dos slots alargado para 905px (desktop) ou `min(905px, 100vw)` (mobile) para que o cartão à esquerda não seja cortado; `overflow-visible` em toda a cadeia. Dentro da section (zona a preto), bloco interno (div) que agrupa título, área do carrossel e indicadores (dots); dots passaram a estar dentro da section, dentro desse bloco.
 - **Carrossel Destaques: centralizar bloco 905px:** Bloco interno e contentor do carrossel com `w-full` para ocupar toda a largura; contentor dos slots (905px) com `flex-shrink-0 mx-auto` e `maxWidth: 100%` para ficar centralizado em relação ao ecrã e ao bloco preto (evitar alinhamento à direita).
 - **Carrossel Destaques: posicionamento por left em pixels:** Em desktop, os três slots passaram a usar `left` em px (0, 235, 470) em vez de `left: 50%` + `transform`; constantes `SLOT_CENTER_LEFT_DESKTOP` e `SLOT_RIGHT_LEFT_DESKTOP`; sem `transform` nos slots em desktop; mobile mantém o esquema com transform para viewports estreitos.
+- **Tamanho do bloco dos destaques configurável por slider:** Em Definições → Parâmetros App (cartão Galeria) dois sliders permitem reduzir o tamanho do bloco dos destaques (título + carrossel 905×600 + dots) entre 100% (base) e 75% (1/4 mais pequeno). Um slider para PC/tablet e outro para smartphones; valores em `store_settings.settings` (`featured_carousel_scale_desktop`, `featured_carousel_scale_mobile`); template BWB - Branco passa escala ao `FeaturedCarouselSection`, que aplica `transform: scale()` ao bloco interno mantendo centralização.
 
 ---
 

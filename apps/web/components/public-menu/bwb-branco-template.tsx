@@ -198,6 +198,14 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const carouselBackgroundCss = menu.store_settings?.featured_carousel_background_css?.trim();
   const dotsBackgroundColor = menu.store_settings?.featured_dots_background_color?.trim();
   const dotsBackgroundCss = menu.store_settings?.featured_dots_background_css?.trim();
+  const parseCarouselScale = (key: "featured_carousel_scale_desktop" | "featured_carousel_scale_mobile"): number => {
+    const v = menu.store_settings?.[key];
+    if (v == null) return 1;
+    const num = typeof v === "number" ? v : parseFloat(String(v));
+    return Number.isFinite(num) && num >= 0.75 && num <= 1 ? num : 1;
+  };
+  const featuredCarouselScaleDesktop = parseCarouselScale("featured_carousel_scale_desktop");
+  const featuredCarouselScaleMobile = parseCarouselScale("featured_carousel_scale_mobile");
 
   const filteredCategories = useMemo(() => {
     const sections = menu.sections ?? [];
@@ -448,6 +456,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         carouselBackgroundCss={carouselBackgroundCss}
         dotsBackgroundColor={dotsBackgroundColor}
         dotsBackgroundCss={dotsBackgroundCss}
+        scaleDesktop={featuredCarouselScaleDesktop}
+        scaleMobile={featuredCarouselScaleMobile}
       />
 
       {/* Breadcrumb */}

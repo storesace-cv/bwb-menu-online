@@ -22,8 +22,14 @@ export default async function ParamsAppPage() {
 
   const { data: store } = await supabase.from("stores").select("name").eq("id", storeId).single();
   const { data: row } = await supabase.from("store_settings").select("settings").eq("store_id", storeId).single();
-  const settings = (row?.settings as Record<string, string> | null) ?? {};
+  const settings = (row?.settings as Record<string, string | number> | null) ?? {};
   const menuTemplateKey = settings.menu_template_key ?? "bwb-branco";
+  const parseScaleFromSettings = (key: string): number => {
+    const v = settings[key];
+    if (v == null) return 1;
+    const num = typeof v === "number" ? v : parseFloat(String(v));
+    return Number.isFinite(num) && num >= 0.75 && num <= 1 ? num : 1;
+  };
 
   const { data: featuredTemplates } = await supabase
     .from("menu_featured_presentation_templates")
@@ -82,6 +88,8 @@ export default async function ParamsAppPage() {
             featured_carousel_background_css: settings.featured_carousel_background_css ?? "",
             featured_dots_background_color: settings.featured_dots_background_color ?? "",
             featured_dots_background_css: settings.featured_dots_background_css ?? "",
+            featured_carousel_scale_desktop: parseScaleFromSettings("featured_carousel_scale_desktop"),
+            featured_carousel_scale_mobile: parseScaleFromSettings("featured_carousel_scale_mobile"),
           }}
       />
 

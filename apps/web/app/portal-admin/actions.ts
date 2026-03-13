@@ -1532,6 +1532,14 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   const featuredCarouselBackgroundCss = (getFormDataValue(formData, "featured_carousel_background_css") ?? "").trim();
   const featuredDotsBackgroundColor = (getFormDataValue(formData, "featured_dots_background_color") ?? "").trim();
   const featuredDotsBackgroundCss = (getFormDataValue(formData, "featured_dots_background_css") ?? "").trim();
+  const rawScaleDesktop = getFormDataValue(formData, "featured_carousel_scale_desktop");
+  const rawScaleMobile = getFormDataValue(formData, "featured_carousel_scale_mobile");
+  const parseScale = (raw: string | null): number => {
+    const num = raw != null ? parseFloat(raw) : 1;
+    return Number.isFinite(num) && num >= 0.75 && num <= 1 ? num : 1;
+  };
+  const featuredCarouselScaleDesktop = parseScale(rawScaleDesktop);
+  const featuredCarouselScaleMobile = parseScale(rawScaleMobile);
   const heroBackgroundColor = (getFormDataValue(formData, "hero_background_color") ?? "").trim();
   const heroBackgroundCss = (getFormDataValue(formData, "hero_background_css") ?? "").trim();
   const logoFillColor = (getFormDataValue(formData, "logo_fill_color") ?? "").trim();
@@ -1669,6 +1677,8 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
   merged.featured_carousel_background_css = featuredCarouselBackgroundCss;
   merged.featured_dots_background_color = featuredDotsBackgroundColor;
   merged.featured_dots_background_css = featuredDotsBackgroundCss;
+  merged.featured_carousel_scale_desktop = String(featuredCarouselScaleDesktop);
+  merged.featured_carousel_scale_mobile = String(featuredCarouselScaleMobile);
 
   const { error } = await supabase.from("store_settings").upsert(
     { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },

@@ -42,6 +42,8 @@ export function FeaturedCarouselSection({
   carouselBackgroundCss,
   dotsBackgroundColor,
   dotsBackgroundCss,
+  scaleDesktop = 1,
+  scaleMobile = 1,
 }: {
   featuredItems: FeaturedItemWithCategory[];
   featuredSectionLabel: string;
@@ -56,6 +58,8 @@ export function FeaturedCarouselSection({
   carouselBackgroundCss?: string;
   dotsBackgroundColor?: string;
   dotsBackgroundCss?: string;
+  scaleDesktop?: number;
+  scaleMobile?: number;
 }) {
   if (featuredItems.length === 0) return null;
 
@@ -207,13 +211,22 @@ export function FeaturedCarouselSection({
   const slotsContainerWidth = isSmallScreen
     ? "min(905px, 100vw)"
     : CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP;
+  const rawScale = isSmallScreen ? (scaleMobile ?? 1) : (scaleDesktop ?? 1);
+  const scale = Number.isFinite(rawScale) && rawScale >= 0.75 && rawScale <= 1 ? rawScale : 1;
   return (
     <section
-      className="relative z-10 overflow-visible"
+      className="relative z-10 overflow-visible flex justify-center"
       aria-label="Destaques"
       style={sectionStyle}
     >
-      {/* Bloco interno: título + carrossel + indicadores (zona do tracejado vermelho) */}
+      {/* Bloco interno escalado e centralizado */}
+      <div
+        className="overflow-visible inline-block w-full max-w-full"
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "center center",
+        }}
+      >
       <div className="overflow-visible w-full">
         <h2
           className={`section-title mt-0 ${alignClass}`}
@@ -291,6 +304,7 @@ export function FeaturedCarouselSection({
             ))}
           </div>
         )}
+      </div>
       </div>
     </section>
   );
