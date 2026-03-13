@@ -410,7 +410,18 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
       // #region agent log
       fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "layout-editor-client.tsx:save", message: "save_start", data: { templateId }, timestamp: Date.now(), hypothesisId: "A" }) }).catch(() => {});
       // #endregion
-      const result = await updateFn(templateId, payload);
+      let result: Awaited<ReturnType<typeof updateFn>>;
+      try {
+        result = await updateFn(templateId, payload);
+      } catch (firstErr) {
+        const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+        const isFetchLike = /fetch failed|failed to fetch|load failed|networkerror|network error/i.test(msg);
+        if (isFetchLike) {
+          result = await updateFn(templateId, payload);
+        } else {
+          throw firstErr;
+        }
+      }
       if (result?.error) {
         // #region agent log
         fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "layout-editor-client.tsx:save", message: "save_result_error", data: { error: result.error }, timestamp: Date.now(), hypothesisId: "D" }) }).catch(() => {});
