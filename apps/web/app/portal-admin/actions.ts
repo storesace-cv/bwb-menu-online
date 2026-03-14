@@ -1494,11 +1494,12 @@ export async function batchUpdateItemsSectionCategory(
 }
 
 export async function updateStoreSettings(_prev: { error?: string } | null, formData: FormData) {
-  const supabase = await createClient();
-  const storeId = (getFormDataValue(formData, "store_id") ?? "").trim();
-  if (!storeId) return { error: "Loja obrigatória" };
-  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
-  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  try {
+    const supabase = await createClient();
+    const storeId = (getFormDataValue(formData, "store_id") ?? "").trim();
+    if (!storeId) return { error: "Loja obrigatória" };
+    const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+    if (!hasAccess) return { error: "Sem acesso a esta loja" };
 
   const { data: existing } = await supabase
     .from("store_settings")
@@ -1684,38 +1685,49 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
     { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
     { onConflict: "store_id" }
   );
-  if (error) return { error: error.message };
-  revalidatePath("/portal-admin/settings");
-  revalidatePath("/portal-admin/settings/app");
-  return null;
+    if (error) return { error: error.message };
+    revalidatePath("/portal-admin/settings");
+    revalidatePath("/portal-admin/settings/app");
+    return null;
+  } catch (e) {
+    portalDebugLog("updateStoreSettings", { error: String(e) });
+    console.error("updateStoreSettings", e);
+    return { error: "Erro ao guardar. Tente novamente." };
+  }
 }
 
 export async function updateImageSource(_prev: { error?: string } | null, formData: FormData) {
-  const supabase = await createClient();
-  const storeId = (formData.get("store_id") as string)?.trim() ?? "";
-  if (!storeId) return { error: "Loja obrigatória" };
-  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
-  if (!hasAccess) return { error: "Sem acesso a esta loja" };
+  try {
+    const supabase = await createClient();
+    const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+    if (!storeId) return { error: "Loja obrigatória" };
+    const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
+    if (!hasAccess) return { error: "Sem acesso a esta loja" };
 
-  const raw = (formData.get("image_source") as string)?.trim() ?? "storage";
-  const imageSource = raw === "url" || raw === "legacy_path" ? raw : "storage";
+    const raw = (formData.get("image_source") as string)?.trim() ?? "storage";
+    const imageSource = raw === "url" || raw === "legacy_path" ? raw : "storage";
 
-  const { data: existing } = await supabase
-    .from("store_settings")
-    .select("settings")
-    .eq("store_id", storeId)
-    .maybeSingle();
-  const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
-  const merged: Record<string, string> = { ...currentSettings, image_source: imageSource };
+    const { data: existing } = await supabase
+      .from("store_settings")
+      .select("settings")
+      .eq("store_id", storeId)
+      .maybeSingle();
+    const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
+    const merged: Record<string, string> = { ...currentSettings, image_source: imageSource };
 
-  const { error } = await supabase.from("store_settings").upsert(
-    { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
-    { onConflict: "store_id" }
-  );
-  if (error) return { error: error.message };
-  revalidatePath("/portal-admin/settings");
-  revalidatePath("/portal-admin/settings/image-import");
-  return null;
+    const { error } = await supabase.from("store_settings").upsert(
+      { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
+      { onConflict: "store_id" }
+    );
+    if (error) return { error: error.message };
+    revalidatePath("/portal-admin/settings");
+    revalidatePath("/portal-admin/settings/image-import");
+    return null;
+  } catch (e) {
+    portalDebugLog("updateImageSource", { error: String(e) });
+    console.error("updateImageSource", e);
+    return { error: "Erro ao guardar. Tente novamente." };
+  }
 }
 
 export async function updateSectionTitleAppearance(_prev: { error?: string } | null, formData: FormData) {
