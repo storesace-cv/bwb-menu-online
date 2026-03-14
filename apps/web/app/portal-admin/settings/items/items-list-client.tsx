@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, startTransition } from "react";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
@@ -14,6 +14,8 @@ const ITEMS_PER_PAGE_STORAGE_KEY = "bwb-portal-settings-items-per-page";
 const DEFAULT_ITEMS_SORT: SortRule[] = [{ key: "name", direction: "asc", type: "text" }];
 const SORTABLE_COLUMN_KEYS = new Set(["name", "price", "type", "familia", "sub_familia", "promo", "ta", "prep", "sort_order", "is_visible", "is_featured", "section", "category"]);
 const PER_PAGE_OPTIONS = [25, 50, 100, 250] as const;
+const BACKFILL_CHUNK_SIZE = 200;
+const REST_LOAD_CHUNK_SIZE = 200;
 import { batchUpdateItemsSectionCategory } from "../../actions";
 
 type Section = { id: string; name: string; sort_order: number | null };
@@ -82,22 +84,25 @@ export function ItemsListClient({
     const withDash = initialItems.filter((i) => (initialItemSectionCategory[i.id]?.sectionName ?? "—") === "—").length;
     if (withDash <= initialItems.length / 2) return;
     backfillSectionCategoryStarted.current = true;
-    fetch(`/api/portal-admin/settings/items?offset=0&limit=${initialItems.length}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(res.statusText);
-        return res.json();
-      })
-      .then((data: { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> }) => {
-        if (data.itemSectionCategory && Object.keys(data.itemSectionCategory).length > 0) {
-          setMergedSectionCategory((prev) => ({ ...prev, ...data.itemSectionCategory }));
-        }
-        if (data.itemFamilia && Object.keys(data.itemFamilia).length > 0) {
-          setMergedFamilia((prev) => ({ ...prev, ...data.itemFamilia }));
-        }
-      })
-      .catch(() => {
-        backfillSectionCategoryStarted.current = false;
+    const totalToFetch = initialItems.length;
+    type ChunkPayload = { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> };
+    const fetchChunk = (off: number): Promise<ChunkPayload> =>
+      fetch(`/api/portal-admin/settings/items?offset=${off}&limit=${BACKFILL_CHUNK_SIZE}`)
+        .then((res) => { if (!res.ok) throw new Error(res.statusText); return res.json(); });
+    const runChunks = (off: number): Promise<void> =>
+      fetchChunk(off).then((data) => {
+        startTransition(() => {
+          if (data.itemSectionCategory && Object.keys(data.itemSectionCategory).length > 0) {
+            setMergedSectionCategory((prev) => ({ ...prev, ...data.itemSectionCategory }));
+          }
+          if (data.itemFamilia && Object.keys(data.itemFamilia).length > 0) {
+            setMergedFamilia((prev) => ({ ...prev, ...data.itemFamilia }));
+          }
+        });
+        const nextOff = off + BACKFILL_CHUNK_SIZE;
+        if (nextOff < totalToFetch) return runChunks(nextOff);
       });
+    runChunks(0).catch(() => { backfillSectionCategoryStarted.current = false; });
   }, [initialItems.length, initialItemSectionCategory]);
 
   useEffect(() => {
@@ -105,37 +110,42 @@ export function ItemsListClient({
     restLoadStarted.current = true;
     setRestLoading(true);
     setRestLoadError(false);
-    const offset = initialItems.length;
-    const url = `/api/portal-admin/settings/items?offset=${offset}&limit=5000`;
+    const startOffset = initialItems.length;
     const maxAttempts = 3;
     const delayMs = 1500;
+    type ChunkPayload = { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> };
 
-    const attempt = (attemptIndex: number): Promise<void> =>
-      fetch(url)
-        .then((res) => {
-          if (!res.ok) throw new Error(res.statusText);
-          return res.json();
-        })
-        .then((data: { items: Item[]; itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>; itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> }) => {
-          setMergedItems((prev) => [...prev, ...(data.items ?? [])]);
-          setMergedSectionCategory((prev) => ({ ...prev, ...(data.itemSectionCategory ?? {}) }));
-          setMergedFamilia((prev) => ({ ...prev, ...(data.itemFamilia ?? {}) }));
-        });
+    const fetchChunk = (off: number): Promise<ChunkPayload> =>
+      fetch(`/api/portal-admin/settings/items?offset=${off}&limit=${REST_LOAD_CHUNK_SIZE}`)
+        .then((res) => { if (!res.ok) throw new Error(res.statusText); return res.json(); });
 
-    const runWithRetry = (n: number): Promise<void> =>
-      attempt(n).catch((err) => {
-        if (n + 1 < maxAttempts) {
-          return new Promise((resolve) => setTimeout(resolve, delayMs)).then(() => runWithRetry(n + 1));
+    const attemptChunk = (off: number, attemptIndex: number): Promise<ChunkPayload> =>
+      fetchChunk(off).catch((err) => {
+        if (attemptIndex + 1 < maxAttempts) {
+          return new Promise((resolve) => setTimeout(resolve, delayMs)).then(() => attemptChunk(off, attemptIndex + 1));
         }
         restLoadStarted.current = false;
         setRestLoadError(true);
         throw err;
       });
 
-    runWithRetry(0)
-      .finally(() => {
-        setRestLoading(false);
-      })
+    const runChunks = (off: number): Promise<void> =>
+      attemptChunk(off, 0).then((data) => {
+        const items = data.items ?? [];
+        startTransition(() => {
+          setMergedItems((prev) => [...prev, ...items]);
+          if (Object.keys(data.itemSectionCategory ?? {}).length > 0) {
+            setMergedSectionCategory((prev) => ({ ...prev, ...(data.itemSectionCategory ?? {}) }));
+          }
+          if (Object.keys(data.itemFamilia ?? {}).length > 0) {
+            setMergedFamilia((prev) => ({ ...prev, ...(data.itemFamilia ?? {}) }));
+          }
+        });
+        if (items.length >= REST_LOAD_CHUNK_SIZE) return runChunks(off + REST_LOAD_CHUNK_SIZE);
+      });
+
+    runChunks(startOffset)
+      .finally(() => setRestLoading(false))
       .catch(() => {});
   }, [hasMore, initialItems.length, loadRestTrigger]);
 

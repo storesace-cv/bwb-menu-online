@@ -9,7 +9,7 @@ import { Card } from "@/components/admin";
 
 export const dynamic = "force-dynamic";
 
-const INITIAL_ITEMS_LIMIT = 2000;
+const INITIAL_ITEMS_LIMIT = 150;
 
 export default async function SettingsItemsPage() {
   const headersList = await headers();
