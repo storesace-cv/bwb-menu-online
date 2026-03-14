@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
-import Link from "next/link";
 import { ImageImportClient } from "./image-import-client";
 
 function normalizeStoreId(data: unknown): string | null {
@@ -55,9 +54,9 @@ export default async function ImageImportPage() {
       return (
         <div>
           <p className="text-slate-400">Acesso apenas no contexto de uma loja.</p>
-          <Link href="/portal-admin/settings" className="text-emerald-400 hover:underline mt-2 inline-block">
+          <a href="/portal-admin/settings" className="text-emerald-400 hover:underline mt-2 inline-block">
             Voltar às Definições
-          </Link>
+          </a>
         </div>
       );
     }
@@ -67,11 +66,11 @@ export default async function ImageImportPage() {
         <nav className="mb-2 text-sm" aria-label="Breadcrumb">
           <ol className="flex items-center gap-2 text-slate-400">
             <li>
-              <Link href="/portal-admin" className="hover:text-slate-200 transition-colors">Portal Admin</Link>
+              <a href="/portal-admin" className="hover:text-slate-200 transition-colors">Portal Admin</a>
             </li>
             <li aria-hidden="true">/</li>
             <li>
-              <Link href="/portal-admin/settings" className="hover:text-slate-200 transition-colors">Definições</Link>
+              <a href="/portal-admin/settings" className="hover:text-slate-200 transition-colors">Definições</a>
             </li>
             <li aria-hidden="true">/</li>
             <li className="text-slate-100" aria-current="page">Gestão de Imagens</li>
@@ -92,9 +91,9 @@ export default async function ImageImportPage() {
     return (
       <div>
         <p className="text-slate-400">Não foi possível carregar. Tente novamente.</p>
-        <Link href="/portal-admin/settings" className="text-emerald-400 hover:underline mt-2 inline-block">
+        <a href="/portal-admin/settings" className="text-emerald-400 hover:underline mt-2 inline-block">
           Voltar às Definições
-        </Link>
+        </a>
       </div>
     );
   }
