@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-const SUBMIT_LOADING_TIMEOUT_MS = 45000;
+/** Max time to show loading when Server Action response never arrives (e.g. RSC fetch fails). */
+const SUBMIT_LOADING_TIMEOUT_MS = 8000;
 
 /**
  * Hook para mostrar estado de carregamento em formulários que usam useFormState.

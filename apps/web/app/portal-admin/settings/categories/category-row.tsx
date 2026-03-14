@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
 import { updateCategory, deleteCategoryFormAction } from "../../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { Input, Select, Button, Alert, SubmitButton } from "@/components/admin";
@@ -42,10 +43,16 @@ export function CategoryRow({
     ? (value: boolean) => { if (value) onEditClick?.(); else onCancelClick?.(); }
     : setInternalEditing;
   const [updateState, updateFormAction] = useFormState(updateCategory, null);
+  const [updateSubmitting, updateFormBind] = useFormSubmitLoading(updateState);
+  const router = useRouter();
+  const prevSubmittingRef = useRef(updateSubmitting);
   useEffect(() => {
     if (contentOnly && updateState && !updateState.error) onCancelClick?.();
   }, [contentOnly, updateState, onCancelClick]);
-  const [updateSubmitting, updateFormBind] = useFormSubmitLoading(updateState);
+  useEffect(() => {
+    if (prevSubmittingRef.current && !updateSubmitting) router.refresh();
+    prevSubmittingRef.current = updateSubmitting;
+  }, [updateSubmitting, router]);
   const deleteFormRef = useRef<HTMLFormElement>(null);
 
   const [selectedSampleId, setSelectedSampleId] = useState(category.sample_image_id ?? "");
