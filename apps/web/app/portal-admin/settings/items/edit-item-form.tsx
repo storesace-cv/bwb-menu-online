@@ -70,6 +70,7 @@ export function EditItemForm({
   subFamilia,
   highlightCategoryId,
   resolvedPrice = null,
+  imageSource = "storage",
 }: {
   item: MenuItem;
   articleTypes: ArticleType[];
@@ -85,6 +86,7 @@ export function EditItemForm({
   subFamilia: string | null;
   highlightCategoryId: string | null;
   resolvedPrice?: number | null;
+  imageSource?: string;
 }) {
   const router = useRouter();
   const [state, formAction] = useFormState(updateMenuItem, null);
@@ -96,11 +98,42 @@ export function EditItemForm({
   const [createCategoryName, setCreateCategoryName] = useState(subFamilia ?? "");
   const [createCategoryError, setCreateCategoryError] = useState<string | null>(null);
   const [createCategoryPending, setCreateCategoryPending] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const nameRef = useRef<HTMLTextAreaElement>(null);
   const ingredientsRef = useRef<HTMLTextAreaElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const previewUrl = imagePreviewUrl(item);
+  const showUrlField = imageSource !== "storage";
+
+  async function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageUploadError(null);
+    setImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.set("item_id", item.id);
+      formData.append("file", file);
+      const res = await fetch("/api/portal-admin/settings/items/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setImageUploadError(data.error ?? res.statusText ?? "Erro ao carregar imagem");
+        return;
+      }
+      router.refresh();
+    } catch (err) {
+      setImageUploadError(err instanceof Error ? err.message : "Erro de rede");
+    } finally {
+      setImageUploading(false);
+      e.target.value = "";
+    }
+  }
 
   function handleFamiliaClick() {
     if (!sectionId) {
@@ -163,25 +196,52 @@ export function EditItemForm({
 
       {/* 1. Imagem */}
       <div className="w-full">
-        <label htmlFor="edit-image" className="block text-sm font-medium text-slate-300 mb-1">
+        <label className="block text-sm font-medium text-slate-300 mb-1">
           Imagem
         </label>
         <input
-          id="edit-image"
-          name="image_url"
-          type="url"
-          placeholder="URL da imagem (opcional)"
-          defaultValue={item.image_url ?? ""}
-          className={inputClass}
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleImageFileChange}
+          disabled={imageUploading}
         />
-        {previewUrl && (
-          <div className="mt-2">
-            <img
-              src={previewUrl}
-              alt="Pré-visualização"
-              className="h-24 w-24 object-cover rounded-lg border border-slate-700"
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={imageUploading}
+          className="mt-1 flex items-center justify-center h-28 w-28 rounded-lg border border-slate-600 bg-slate-800/80 hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-emerald-500 overflow-hidden"
+          aria-label={previewUrl ? "Substituir imagem" : "Adicionar imagem"}
+        >
+          {imageUploading ? (
+            <span className="text-slate-400 text-sm">A carregar…</span>
+          ) : previewUrl ? (
+            <img src={previewUrl} alt="Pré-visualização" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-slate-500 text-sm text-center px-2">Clique para adicionar ou substituir</span>
+          )}
+        </button>
+        {imageUploadError && (
+          <p className="mt-2 text-sm text-red-400">{imageUploadError}</p>
+        )}
+        {showUrlField && (
+          <>
+            <label htmlFor="edit-image" className="block text-sm font-medium text-slate-300 mt-3 mb-1">
+              URL da imagem (opcional)
+            </label>
+            <input
+              id="edit-image"
+              name="image_url"
+              type="url"
+              placeholder="URL da imagem (opcional)"
+              defaultValue={item.image_url ?? ""}
+              className={inputClass}
             />
-          </div>
+          </>
+        )}
+        {!showUrlField && (
+          <input type="hidden" name="image_url" value={item.image_url ?? ""} />
         )}
       </div>
 

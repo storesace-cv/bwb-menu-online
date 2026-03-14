@@ -26,6 +26,11 @@ export default async function SettingsPage() {
         label: "ChatGPT / Grok",
         description: "Configurar IA da plataforma e escolher em quais clientes (tenants) será usada.",
       });
+      globalLinks.push({
+        href: "/portal-admin/settings/image-samples",
+        label: "Samples de Imagens",
+        description: "Carregar imagens sample que as categorias podem usar como imagem de fallback para artigos sem foto. Apenas superadmin.",
+      });
     }
     return (
       <div>

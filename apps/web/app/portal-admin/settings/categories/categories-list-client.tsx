@@ -34,14 +34,17 @@ export type CategoryItem = {
   sort_order: number;
   section_id: string | null;
   presentation_template_id?: string | null;
+  sample_image_id?: string | null;
 };
 type PresentationTemplate = { id: string; name: string };
+type ImageSample = { id: string; name: string | null };
 
 type Props = {
   sections: SectionItem[];
   categoriesBySectionId: Record<string, CategoryItem[]>;
   uncategorized: CategoryItem[];
   presentationTemplates: PresentationTemplate[];
+  imageSamples: ImageSample[];
 };
 
 function SortableSectionCard({
@@ -49,6 +52,7 @@ function SortableSectionCard({
   sectionCategories,
   sections,
   presentationTemplates,
+  imageSamples,
   onOrdenar,
   isOrdenarPending,
 }: {
@@ -56,6 +60,7 @@ function SortableSectionCard({
   sectionCategories: CategoryItem[];
   sections: SectionItem[];
   presentationTemplates: PresentationTemplate[];
+  imageSamples: ImageSample[];
   onOrdenar: (sectionId: string) => void;
   isOrdenarPending: boolean;
 }) {
@@ -138,6 +143,7 @@ function SortableSectionCard({
                 category={c}
                 sections={sections}
                 presentationTemplates={presentationTemplates}
+                imageSamples={imageSamples}
               />
             ))}
           </SortableContext>
@@ -180,10 +186,12 @@ function SortableCategoryCard({
   category,
   sections,
   presentationTemplates,
+  imageSamples,
 }: {
   category: CategoryItem;
   sections: SectionItem[];
   presentationTemplates: PresentationTemplate[];
+  imageSamples: ImageSample[];
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const isEditing = editingId === category.id;
@@ -229,6 +237,7 @@ function SortableCategoryCard({
               category={category}
               sections={sections}
               presentationTemplates={presentationTemplates}
+              imageSamples={imageSamples}
               contentOnly
               editing={isEditing}
               onEditClick={() => setEditingId(category.id)}
@@ -259,6 +268,7 @@ export function CategoriesListClient({
   categoriesBySectionId,
   uncategorized,
   presentationTemplates,
+  imageSamples,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -311,6 +321,7 @@ export function CategoriesListClient({
                 sectionCategories={sectionCategories}
                 sections={sections}
                 presentationTemplates={presentationTemplates}
+                imageSamples={imageSamples}
                 onOrdenar={handleOrdenar}
                 isOrdenarPending={isPending}
               />
@@ -329,6 +340,7 @@ export function CategoriesListClient({
                       category={c}
                       sections={sections}
                       presentationTemplates={presentationTemplates}
+                      imageSamples={imageSamples}
                     />
                   </div>
                 ))}

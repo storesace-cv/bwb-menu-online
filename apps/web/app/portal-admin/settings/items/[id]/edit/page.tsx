@@ -111,6 +111,23 @@ export default async function EditItemPage({
   });
   const aiEnabled = !!aiEnabledRpc;
 
+  let imageSource = "storage";
+  const { data: tenantImageSource } = await supabase.rpc("get_tenant_image_source_by_store_id", {
+    p_store_id: storeId,
+  });
+  if (typeof tenantImageSource === "string" && ["storage", "url", "legacy_path"].includes(tenantImageSource)) {
+    imageSource = tenantImageSource;
+  } else {
+    const { data: settingsRow } = await supabase
+      .from("store_settings")
+      .select("settings")
+      .eq("store_id", storeId)
+      .maybeSingle();
+    const settings = (settingsRow?.settings as Record<string, unknown> | null) ?? {};
+    const src = settings.image_source;
+    if (src === "url" || src === "legacy_path") imageSource = src as string;
+  }
+
   const { data: allergens } = await supabase
     .from("allergens")
     .select("id, code, name_i18n, severity, sort_order")
@@ -142,6 +159,7 @@ export default async function EditItemPage({
           subFamilia={subFamilia}
           highlightCategoryId={highlightCategoryId}
           resolvedPrice={resolvedPrice}
+          imageSource={imageSource}
         />
       </Card>
     </div>

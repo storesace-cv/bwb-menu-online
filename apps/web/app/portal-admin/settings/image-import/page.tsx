@@ -24,24 +24,30 @@ export default async function ImageImportPage() {
 
     let imageSource = "storage";
     let tenantImageSource: string | null = null;
+    let sampleImageUsage = "category_only";
     if (storeId) {
       const { data: tenantSrc } = await supabase.rpc("get_tenant_image_source_by_store_id", {
         p_store_id: storeId,
       });
+      const { data: row, error: settingsError } = await supabase
+        .from("store_settings")
+        .select("settings")
+        .eq("store_id", storeId)
+        .maybeSingle();
+      if (!settingsError && row?.settings != null && typeof row.settings === "object") {
+        const settings = row.settings as Record<string, unknown>;
+        const usage = settings.sample_image_usage;
+        if (usage === "none" || usage === "category_only" || usage === "article_only") {
+          sampleImageUsage = usage;
+        }
+      }
       if (typeof tenantSrc === "string" && ["storage", "url", "legacy_path"].includes(tenantSrc)) {
         tenantImageSource = tenantSrc;
         imageSource = tenantSrc;
-      } else {
-        const { data: row, error: settingsError } = await supabase
-          .from("store_settings")
-          .select("settings")
-          .eq("store_id", storeId)
-          .maybeSingle();
-        if (!settingsError && row?.settings != null && typeof row.settings === "object") {
-          const settings = row.settings as Record<string, unknown>;
-          const src = settings.image_source;
-          if (src === "url" || src === "legacy_path") imageSource = src;
-        }
+      } else if (row?.settings != null && typeof row.settings === "object") {
+        const settings = row.settings as Record<string, unknown>;
+        const src = settings.image_source;
+        if (src === "url" || src === "legacy_path") imageSource = src as string;
       }
     }
 
@@ -76,6 +82,7 @@ export default async function ImageImportPage() {
         <ImageImportClient
           storeId={storeId}
           initialImageSource={imageSource}
+          initialSampleImageUsage={sampleImageUsage}
           tenantImageSourceLocked={tenantImageSource != null}
         />
       </div>

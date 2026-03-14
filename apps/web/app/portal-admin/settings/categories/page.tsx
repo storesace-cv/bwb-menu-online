@@ -30,11 +30,16 @@ export default async function CategoriesPage() {
     .order("sort_order");
   const { data: categories } = await supabase
     .from("menu_categories")
-    .select("id, name, sort_order, section_id, presentation_template_id")
+    .select("id, name, sort_order, section_id, presentation_template_id, sample_image_id")
     .eq("store_id", storeId)
     .order("sort_order");
 
-  type CategoryItem = { id: string; name: string; sort_order: number; section_id: string | null; presentation_template_id?: string | null };
+  const { data: imageSamples } = await supabase
+    .from("image_samples")
+    .select("id, name")
+    .order("name");
+
+  type CategoryItem = { id: string; name: string; sort_order: number; section_id: string | null; presentation_template_id?: string | null; sample_image_id?: string | null };
   const categoriesBySectionId = new Map<string, CategoryItem[]>();
   for (const c of categories ?? []) {
     if (c.section_id) {
@@ -103,6 +108,7 @@ export default async function CategoriesPage() {
               categoriesBySectionId={Object.fromEntries(categoriesBySectionId)}
               uncategorized={uncategorized}
               presentationTemplates={presentationTemplates ?? []}
+              imageSamples={imageSamples ?? []}
             />
           ) : (
             <p className="text-slate-500 py-4">Nenhuma categoria. Crie uma acima.</p>

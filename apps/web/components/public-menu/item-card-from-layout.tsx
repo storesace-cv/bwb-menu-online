@@ -188,13 +188,14 @@ type ItemCardFromLayoutProps = {
   layoutDefinition: LayoutDefinition;
   currencyCode?: string;
   imageSource?: string;
+  sampleImageUsage?: string;
 };
 
 /** Card de artigo renderizado conforme layout_definition (ordem e visibilidade das zonas). Apenas as zonas em zoneOrder são renderizadas. */
-export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, imageSource }: ItemCardFromLayoutProps) {
+export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, imageSource, sampleImageUsage }: ItemCardFromLayoutProps) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const imageSrc = getImageSrc(item, imageSource);
+  const imageSrc = getImageSrc(item, imageSource, sampleImageUsage);
   const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
   useEffect(() => {
     setEffectiveSrc(imageSrc);

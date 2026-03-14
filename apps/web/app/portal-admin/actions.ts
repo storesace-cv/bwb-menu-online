@@ -639,6 +639,7 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
   const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
   const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
+  const sampleImageId = (formData.get("sample_image_id") as string)?.trim() || null;
   if (!id || !name) return { error: "ID e nome obrigatórios" };
   if (!sectionId) return { error: "Secção obrigatória." };
   const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
@@ -647,7 +648,13 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
   if (!hasAccess) return { error: "Sem acesso a esta loja" };
   const { error } = await supabase
     .from("menu_categories")
-    .update({ name, sort_order: sortOrder, section_id: sectionId, presentation_template_id: presentationTemplateId || null })
+    .update({
+      name,
+      sort_order: sortOrder,
+      section_id: sectionId,
+      presentation_template_id: presentationTemplateId || null,
+      sample_image_id: sampleImageId || null,
+    })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/menu");
@@ -1707,13 +1714,21 @@ export async function updateImageSource(_prev: { error?: string } | null, formDa
     const raw = (formData.get("image_source") as string)?.trim() ?? "storage";
     const imageSource = raw === "url" || raw === "legacy_path" ? raw : "storage";
 
+    const sampleRaw = (formData.get("sample_image_usage") as string)?.trim() ?? "category_only";
+    const sampleImageUsage =
+      sampleRaw === "none" || sampleRaw === "article_only" ? sampleRaw : "category_only";
+
     const { data: existing } = await supabase
       .from("store_settings")
       .select("settings")
       .eq("store_id", storeId)
       .maybeSingle();
     const currentSettings: Record<string, string> = (existing?.settings as Record<string, string> | null) ?? {};
-    const merged: Record<string, string> = { ...currentSettings, image_source: imageSource };
+    const merged: Record<string, string> = {
+      ...currentSettings,
+      image_source: imageSource,
+      sample_image_usage: sampleImageUsage,
+    };
 
     const { error } = await supabase.from("store_settings").upsert(
       { store_id: storeId, settings: merged, updated_at: new Date().toISOString() },
@@ -1728,6 +1743,40 @@ export async function updateImageSource(_prev: { error?: string } | null, formDa
     console.error("updateImageSource", e);
     return { error: "Erro ao guardar. Tente novamente." };
   }
+}
+
+/** Delete an image sample. Superadmin only. Clears menu_categories.sample_image_id (FK) and removes files from storage. */
+export async function deleteImageSample(_prev: { error?: string } | null, formData: FormData) {
+  const supabase = await createClient();
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) return { error: "Apenas superadmin pode apagar samples." };
+
+  const id = (formData.get("id") as string)?.trim() ?? "";
+  if (!id) return { error: "ID do sample obrigatório" };
+
+  const { data: row } = await supabase
+    .from("image_samples")
+    .select("id, image_base_path")
+    .eq("id", id)
+    .single();
+  if (!row) return { error: "Sample não encontrado" };
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && serviceKey && row.image_base_path && row.image_base_path !== "pending") {
+    const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+    await admin.storage.from("menu-images").remove([
+      `${row.image_base_path}640.webp`,
+      `${row.image_base_path}320.webp`,
+    ]);
+  }
+
+  const { error } = await supabase.from("image_samples").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings");
+  revalidatePath("/portal-admin/settings/image-samples");
+  revalidatePath("/portal-admin/settings/categories");
+  return null;
 }
 
 export async function updateSectionTitleAppearance(_prev: { error?: string } | null, formData: FormData) {

@@ -27,12 +27,14 @@ function RowCards({
   CardComponent,
   layoutDefinition,
   imageSource,
+  sampleImageUsage,
 }: {
   items: [PublicMenuItem, PublicMenuItem | null];
   currencyCode?: string;
-  CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string; imageSource?: string; inRowCards?: boolean }>;
+  CardComponent: ComponentType<{ item: PublicMenuItem; currencyCode?: string; imageSource?: string; sampleImageUsage?: string; inRowCards?: boolean }>;
   layoutDefinition?: LayoutDefinition | null;
   imageSource?: string;
+  sampleImageUsage?: string;
 }) {
   const [left, right] = items;
   const useLayout = layoutDefinition != null && Array.isArray(layoutDefinition.zoneOrder) && layoutDefinition.zoneOrder.length > 0;
@@ -40,9 +42,9 @@ function RowCards({
   if (useLayout) {
     return (
       <div className="grid grid-cols-2 gap-6">
-        <ItemCardFromLayout item={left} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
+        <ItemCardFromLayout item={left} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} sampleImageUsage={sampleImageUsage} />
         {right ? (
-          <ItemCardFromLayout item={right} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} />
+          <ItemCardFromLayout item={right} layoutDefinition={layoutDefinition} currencyCode={currencyCode} imageSource={imageSource} sampleImageUsage={sampleImageUsage} />
         ) : (
           <div className="rounded-xl border border-gray-200 bg-gray-50 min-h-[200px]" aria-hidden />
         )}
@@ -51,14 +53,14 @@ function RowCards({
   }
 
   const leftResult = (
-    <CardComponent item={left} currencyCode={currencyCode} imageSource={imageSource} inRowCards />
+    <CardComponent item={left} currencyCode={currencyCode} imageSource={imageSource} sampleImageUsage={sampleImageUsage} inRowCards />
   );
   const leftArr = React.Children.toArray(leftResult);
   const leftZones = leftArr.slice(0, ROW_CARDS_SUBGRID_ROWS);
   const leftModals = leftArr.slice(ROW_CARDS_SUBGRID_ROWS);
 
   const rightResult = right ? (
-    <CardComponent item={right} currencyCode={currencyCode} imageSource={imageSource} inRowCards />
+    <CardComponent item={right} currencyCode={currencyCode} imageSource={imageSource} sampleImageUsage={sampleImageUsage} inRowCards />
   ) : null;
   const rightArr = rightResult ? React.Children.toArray(rightResult) : [];
   const rightZones = rightArr.slice(0, ROW_CARDS_SUBGRID_ROWS);
@@ -194,6 +196,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const featuredTemplateKey = menu.store_settings?.featured_template_key?.trim() || "modelo-destaque-1";
   const featuredLayoutDefinition = menu.featured_layout_definition ?? null;
   const imageSource = menu.store_settings?.image_source?.trim() || undefined;
+  const sampleImageUsage = menu.store_settings?.sample_image_usage?.trim() || undefined;
   const carouselBackgroundColor = menu.store_settings?.featured_carousel_background_color?.trim();
   const carouselBackgroundCss = menu.store_settings?.featured_carousel_background_css?.trim();
   const dotsBackgroundColor = menu.store_settings?.featured_dots_background_color?.trim();
@@ -449,6 +452,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         featuredLayoutDefinition={featuredLayoutDefinition as LayoutDefinition | null}
         currencyCode={currencyCode}
         imageSource={imageSource}
+        sampleImageUsage="category_only"
         titleAlign={sectionTitleAlign}
         titleMarginBottom={sectionTitleMarginBottom}
         titlePaddingTop={sectionTitlePaddingTop}
@@ -566,6 +570,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
                                     layoutDefinition={layoutDef as LayoutDefinition}
                                     currencyCode={currencyCode}
                                     imageSource={imageSource}
+                                    sampleImageUsage={sampleImageUsage}
                                   />
                                 ) : (
                                   <CardComponent
@@ -573,6 +578,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
                                     item={item}
                                     currencyCode={currencyCode}
                                     imageSource={imageSource}
+                                    sampleImageUsage={sampleImageUsage}
                                   />
                                 );
                               })}
@@ -600,12 +606,14 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
                                         layoutDefinition={layoutDef as LayoutDefinition}
                                         currencyCode={currencyCode}
                                         imageSource={imageSource}
+                                        sampleImageUsage={sampleImageUsage}
                                       />
                                     ) : (
                                       <CardComponent
                                         item={item}
                                         currencyCode={currencyCode}
                                         imageSource={imageSource}
+                                        sampleImageUsage={sampleImageUsage}
                                       />
                                     )}
                                   </li>

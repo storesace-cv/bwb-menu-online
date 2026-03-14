@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Loading e violation em Gestão de Artigos; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Gestão de Samples e imagens sample; destaques sempre com imagens; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -242,6 +242,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Paridade carrossel em smartphones:** (1) Navegação por scroll vertical com o dedo sobre a área do carrossel (equivalente à roda do rato em desktop): touchmove com preventDefault quando o gesto é predominantemente vertical; touchend com deltaY dominante chama goNext/goPrev; conflito com swipe horizontal resolvido por |deltaY| vs |deltaX|; respeita prefers-reduced-motion. (2) Ajuste automático do bloco em mobile: sectionHeightStyle (height proporcional ao scale, overflow hidden) passou a aplicar-se também em smartphones quando scale &lt; 1. Ficheiro: `featured-carousel-section.tsx`.
 - **Destaques em mobile: ver toda a área na vertical:** Em smartphones, o contentor da region (div com role="region") passou a usar apenas minHeight e overflow: visible (sem altura fixa nem overflow hidden), e o wrapper de cada slot do cartão usa overflow-visible em mobile, para o conteúdo não ser cortado e se ver toda a parte dos destaques ao scrollar a página. Ficheiro: `featured-carousel-section.tsx`.
 - **Slot exterior sem overflow-hidden em mobile:** O div exterior de cada slot do carrossel (position absolute, flex-shrink-0, rounded-2xl) passou a não ter overflow-hidden em smartphones (classe condicional por isSmallScreen), para o HTML gerado coincidir com o desejado e toda a área dos destaques ser visível na vertical. Ficheiro: `featured-carousel-section.tsx`.
+- **Gestão de Samples e imagens sample (migration 068):** Tabela `image_samples` (store_id, name, file_path) e coluna `menu_categories.sample_image_id`; RPCs para listar/upsert samples e payload do menu com `category_sample_image_base_path`. Página Definições → Gestão de Imagens com secção **Gestão de Samples** (dropdown): "Não usa nenhuma Imagens Sample", "Usa somente as imagens nas categorias", "Usa somente as imagens dos artigos"; valor em `store_settings.settings.sample_image_usage`. Superadmin: página Samples de Imagens (upload por store) e API upload; Definições → Categorias: select de imagem sample por categoria; editor de item com upload de imagem por artigo (API upload por item). `getImageSrc` e `fallbackForItem` aplicam a política (none / category_only / article_only); template BWB - Branco e todos os cards recebem e usam `sampleImageUsage`. **Destaques:** independentemente do modo escolhido, o bloco de destaques usa sempre imagens (equivalente a "Usa somente as imagens nas categorias") para as imagens aparecerem sempre no carrossel.
 
 ---
 

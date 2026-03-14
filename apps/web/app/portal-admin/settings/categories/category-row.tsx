@@ -8,12 +8,14 @@ import { Input, Select, Button, Alert, SubmitButton } from "@/components/admin";
 
 type PresentationTemplate = { id: string; name: string };
 type Section = { id: string; name: string; sort_order: number };
-type Category = { id: string; name: string; sort_order: number; section_id: string | null; presentation_template_id?: string | null };
+type ImageSample = { id: string; name: string | null };
+type Category = { id: string; name: string; sort_order: number; section_id: string | null; presentation_template_id?: string | null; sample_image_id?: string | null };
 
 export function CategoryRow({
   category,
   sections,
   presentationTemplates,
+  imageSamples = [],
   contentOnly,
   editing: controlledEditing,
   onEditClick,
@@ -22,6 +24,7 @@ export function CategoryRow({
   category: Category;
   sections: Section[];
   presentationTemplates: PresentationTemplate[];
+  imageSamples?: ImageSample[];
   /** When true, only render content (no buttons); parent renders buttons outside. */
   contentOnly?: boolean;
   /** When contentOnly, controlled editing state. */
@@ -54,6 +57,9 @@ export function CategoryRow({
   const templateName = category.presentation_template_id
     ? presentationTemplates.find((t) => t.id === category.presentation_template_id)?.name ?? "—"
     : "—";
+  const sampleName = category.sample_image_id
+    ? imageSamples.find((s) => s.id === category.sample_image_id)?.name ?? "—"
+    : "—";
 
   if (editing) {
     return (
@@ -72,6 +78,14 @@ export function CategoryRow({
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </Select>
+          {imageSamples.length > 0 && (
+            <Select id={`edit-cat-sample-${category.id}`} name="sample_image_id" label="Imagem sample" wrapperClassName="mb-0" defaultValue={category.sample_image_id ?? ""}>
+              <option value="">Nenhuma</option>
+              {imageSamples.map((s) => (
+                <option key={s.id} value={s.id}>{s.name || s.id}</option>
+              ))}
+            </Select>
+          )}
           <Input id={`edit-cat-sort-${category.id}`} name="sort_order" label="Ordem" type="number" defaultValue={category.sort_order} className="w-24" wrapperClassName="mb-0" />
           <SubmitButton variant="primary" submitting={updateSubmitting} loadingText="A guardar…">Guardar</SubmitButton>
           <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
@@ -90,6 +104,9 @@ export function CategoryRow({
       <span className="text-slate-200 font-medium">{category.name}</span>
       <span className="text-slate-500 text-sm">secção: {sectionName}</span>
       <span className="text-slate-500 text-sm">modelo: {templateName}</span>
+      {imageSamples.length > 0 && (
+        <span className="text-slate-500 text-sm">sample: {sampleName}</span>
+      )}
       <span className="text-slate-500 text-sm">ordem {category.sort_order}</span>
     </div>
   );

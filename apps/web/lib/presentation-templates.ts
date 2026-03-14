@@ -204,6 +204,7 @@ export type PresentationCardProps = {
   item: PublicMenuItem;
   currencyCode?: string;
   imageSource?: string;
+  sampleImageUsage?: string;
   /** Quando true, o card renderiza 8 zonas como filhos para subgrid (alinhamento em 2 colunas). */
   inRowCards?: boolean;
 };
@@ -213,6 +214,7 @@ export type FeaturedCardProps = {
   currencyCode?: string;
   categoryName?: string;
   imageSource?: string;
+  sampleImageUsage?: string;
   layoutDefinition?: LayoutDefinition | null;
   /** Quando definido (ex. "100%"), usa-se no article em vez do minHeight do layout. Útil no carrossel mobile. */
   articleMinHeight?: string | number;

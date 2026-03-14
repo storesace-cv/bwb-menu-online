@@ -81,6 +81,7 @@ export function ItemCardDestaque1({
   categoryName,
   currencyCode,
   imageSource,
+  sampleImageUsage,
   layoutDefinition,
   articleMinHeight: articleMinHeightProp,
 }: {
@@ -88,11 +89,12 @@ export function ItemCardDestaque1({
   categoryName?: string;
   currencyCode?: string;
   imageSource?: string;
+  sampleImageUsage?: string;
   layoutDefinition?: LayoutDefinition | null;
   articleMinHeight?: string | number;
 }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
-  const imageSrc = getImageSrc(item, imageSource);
+  const imageSrc = getImageSrc(item, imageSource, sampleImageUsage);
   const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
   useEffect(() => {
     setEffectiveSrc(imageSrc);

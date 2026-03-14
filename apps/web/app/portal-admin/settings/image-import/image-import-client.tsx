@@ -22,22 +22,37 @@ const IMAGE_SOURCE_OPTIONS = [
   { value: "legacy_path", label: "Path legado (image_path)" },
 ] as const;
 
+const SAMPLE_IMAGE_USAGE_OPTIONS = [
+  { value: "none", label: "Não usa nenhuma Imagens Sample" },
+  { value: "category_only", label: "Usa somente as imagens nas categorias" },
+  { value: "article_only", label: "Usa somente as imagens dos artigos" },
+] as const;
+
 const VALID_IMAGE_SOURCES = ["storage", "url", "legacy_path"] as const;
+const VALID_SAMPLE_USAGE = ["none", "category_only", "article_only"] as const;
 function normalizeImageSource(value: string | undefined): (typeof VALID_IMAGE_SOURCES)[number] {
   const v = (value ?? "storage").trim();
   return VALID_IMAGE_SOURCES.includes(v as (typeof VALID_IMAGE_SOURCES)[number]) ? (v as (typeof VALID_IMAGE_SOURCES)[number]) : "storage";
 }
 
+function normalizeSampleImageUsage(value: string | undefined): (typeof VALID_SAMPLE_USAGE)[number] {
+  const v = (value ?? "category_only").trim();
+  return VALID_SAMPLE_USAGE.includes(v as (typeof VALID_SAMPLE_USAGE)[number]) ? (v as (typeof VALID_SAMPLE_USAGE)[number]) : "category_only";
+}
+
 export function ImageImportClient({
   storeId,
   initialImageSource,
+  initialSampleImageUsage = "category_only",
   tenantImageSourceLocked = false,
 }: {
   storeId: string;
   initialImageSource?: string;
+  initialSampleImageUsage?: string;
   tenantImageSourceLocked?: boolean;
 }) {
   const effectiveImageSource = normalizeImageSource(initialImageSource ?? "storage");
+  const effectiveSampleUsage = normalizeSampleImageUsage(initialSampleImageUsage ?? "category_only");
   const [imageSourceState, formAction] = useFormState(updateImageSource, null);
   const [sourceSubmitting, sourceFormBind] = useFormSubmitLoading(imageSourceState);
   const [overwrite, setOverwrite] = useState(false);
@@ -86,16 +101,17 @@ export function ImageImportClient({
     <div className="space-y-6 max-w-3xl">
       <Card className="p-5 bg-slate-800/50 border-slate-700">
         <h2 className="text-lg font-medium text-slate-200 mb-3">Método de leitura de imagens</h2>
-        {tenantImageSourceLocked ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm text-slate-400">
-              O método de leitura de imagens é definido ao nível do tenant e não pode ser alterado aqui.
-            </p>
-            <p className="text-slate-200 font-medium">{imageSourceLabel}</p>
-          </div>
-        ) : (
-          <form action={formAction} className="flex flex-col gap-4 max-w-md mb-0" {...sourceFormBind}>
-            <input type="hidden" name="store_id" value={storeId} />
+        <form action={formAction} className="flex flex-col gap-4 max-w-md mb-0" {...sourceFormBind}>
+          <input type="hidden" name="store_id" value={storeId} />
+          {tenantImageSourceLocked ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-slate-400">
+                O método de leitura de imagens é definido ao nível do tenant e não pode ser alterado aqui.
+              </p>
+              <p className="text-slate-200 font-medium">{imageSourceLabel}</p>
+              <input type="hidden" name="image_source" value={effectiveImageSource} />
+            </div>
+          ) : (
             <Select
               id="image_source"
               name="image_source"
@@ -108,10 +124,22 @@ export function ImageImportClient({
                 </option>
               ))}
             </Select>
-            <SubmitButton variant="primary" submitting={sourceSubmitting} loadingText="A guardar…">Guardar método</SubmitButton>
-            {imageSourceState?.error && <Alert variant="error">{imageSourceState.error}</Alert>}
-          </form>
-        )}
+          )}
+          <Select
+            id="sample_image_usage"
+            name="sample_image_usage"
+            label="Gestão de Samples"
+            defaultValue={effectiveSampleUsage}
+          >
+            {SAMPLE_IMAGE_USAGE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+          <SubmitButton variant="primary" submitting={sourceSubmitting} loadingText="A guardar…">Guardar método</SubmitButton>
+          {imageSourceState?.error && <Alert variant="error">{imageSourceState.error}</Alert>}
+        </form>
       </Card>
 
       <Card className="p-5 bg-slate-800/50 border-slate-700">

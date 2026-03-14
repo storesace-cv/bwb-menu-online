@@ -75,6 +75,8 @@ export type PublicMenuItem = {
   menu_price_display?: string;
   /** Preço antigo pré-formatado (valor + moeda). */
   price_old_display?: string;
+  /** Quando o artigo não tem imagem e a categoria tem sample, a RPC devolve o base_path do sample para fallback no menu. */
+  category_sample_image_base_path?: string | null;
 };
 
 export type PublicMenuStoreSettings = {
@@ -139,6 +141,8 @@ export type PublicMenuStoreSettings = {
   featured_carousel_scale_mobile?: number | string;
   /** Método de leitura de imagens: "storage" | "url" | "legacy_path". Default: "storage". */
   image_source?: string;
+  /** Gestão de samples: "none" | "category_only" | "article_only". Quando "category_only", artigos sem imagem usam a imagem da categoria; caso contrário só a imagem do artigo ou placeholder. */
+  sample_image_usage?: string;
 };
 
 /** Layout definition for featured carousel cards (same shape as presentation-templates LayoutDefinition). */

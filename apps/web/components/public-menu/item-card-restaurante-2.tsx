@@ -20,17 +20,19 @@ export function ItemCardRestaurante2({
   item,
   currencyCode,
   imageSource,
+  sampleImageUsage,
   inRowCards,
 }: {
   item: PublicMenuItem;
   currencyCode?: string;
   imageSource?: string;
+  sampleImageUsage?: string;
   inRowCards?: boolean;
 }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const imageSrc = getImageSrc(item, imageSource);
+  const imageSrc = getImageSrc(item, imageSource, sampleImageUsage);
   const [effectiveSrc, setEffectiveSrc] = useState(imageSrc);
   useEffect(() => {
     setEffectiveSrc(imageSrc);

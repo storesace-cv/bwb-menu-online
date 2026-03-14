@@ -38,6 +38,7 @@ export function FeaturedCarouselSection({
   featuredLayoutDefinition,
   currencyCode,
   imageSource,
+  sampleImageUsage,
   titleAlign = "center",
   titleMarginBottom = "20",
   titlePaddingTop = "20",
@@ -54,6 +55,7 @@ export function FeaturedCarouselSection({
   featuredLayoutDefinition?: LayoutDefinition | null;
   currencyCode: string;
   imageSource?: string;
+  sampleImageUsage?: string;
   titleAlign?: string;
   titleMarginBottom?: string;
   titlePaddingTop?: string;
@@ -251,6 +253,7 @@ export function FeaturedCarouselSection({
             categoryName={categoryName}
             currencyCode={currencyCode}
             imageSource={imageSource}
+            sampleImageUsage={sampleImageUsage}
             layoutDefinition={featuredLayoutDefinition ?? null}
             {...(isSmallScreen && { articleMinHeight: "100%" })}
           />
