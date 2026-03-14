@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { lastPortalLayoutRequest } from "@/lib/portal-debug-log";
 
-/** Temporarily no PORTAL_DEBUG check so we can verify layout headers after Guardar POST. */
+/** Debug endpoint (PORTAL_DEBUG=1). Layout request capture was removed after Guardar fix. */
 export async function GET() {
-  return NextResponse.json(lastPortalLayoutRequest ?? { message: "no request captured yet" });
+  if (process.env.PORTAL_DEBUG !== "1") {
+    return new NextResponse(null, { status: 404 });
+  }
+  return NextResponse.json({ message: "action-headers capture removed" });
 }

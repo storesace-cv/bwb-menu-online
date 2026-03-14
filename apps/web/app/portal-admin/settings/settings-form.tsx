@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { updateStoreSettings } from "../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
@@ -134,11 +133,6 @@ export function SettingsForm({
 }) {
   const [state, formAction] = useFormState(updateStoreSettings, null);
   const [submitting, formBind] = useFormSubmitLoading(state);
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "settings-form.tsx:state_effect", message: "state or submitting", data: { state: state != null ? JSON.stringify(state) : "null", submitting }, timestamp: Date.now(), hypothesisId: "H2" }) }).catch(() => {});
-  }, [state, submitting]);
-  // #endregion
   return (
     <form
       id={FORM_ID}
