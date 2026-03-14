@@ -125,8 +125,16 @@ export interface LayoutDefinition {
   rowSpacingPx?: number;
   /** Opcional: altura mínima por tipo de zona. 0 = automática (conteúdo); > 0 = altura mínima em px. Omitido = DEFAULT_ZONE_HEIGHTS[type]. */
   zoneHeights?: Record<string, number>;
-  /** Padding interno (px) do bloco de conteúdo do card; 4–24; default 12. */
+  /** Padding interno (px) do bloco de conteúdo do card; 4–24; default 12. Ignorado se contentPaddingSides estiver definido. */
   contentPaddingPx?: number;
+  /** Padding assimétrico (px) por lado; quando definido, substitui contentPaddingPx. */
+  contentPaddingSides?: { top: number; right: number; bottom: number; left: number };
+  /** Tamanho dos ícones (px) nas zonas prep_time e icons; omitido = 18 e 22. */
+  zoneIconSizes?: { prep_time?: number; icons?: number };
+  /** line-height do nome (ex.: 1.15); omitido = leading-snug do editor. */
+  nameLineHeight?: number;
+  /** padding-right (px) só na zona preço; omitido = 0. */
+  pricePaddingRightPx?: number;
   /** Gap (px) entre colunas na mesma linha; 2–24; default 16. */
   contentRowGapPx?: number;
   /** Tamanho da fonte do nome do artigo; default "lg". */

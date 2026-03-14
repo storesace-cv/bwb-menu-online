@@ -239,6 +239,30 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     layoutDefinition.contentPaddingPx != null && Number.isFinite(layoutDefinition.contentPaddingPx)
       ? Math.max(CONTENT_PADDING_MIN, Math.min(CONTENT_PADDING_MAX, Math.round(Number(layoutDefinition.contentPaddingPx))))
       : DEFAULT_CONTENT_PADDING_PX;
+  const contentPaddingStyle: React.CSSProperties = (() => {
+    const s = layoutDefinition.contentPaddingSides;
+    if (
+      s &&
+      [s.top, s.right, s.bottom, s.left].every((n) => typeof n === "number" && Number.isFinite(n))
+    ) {
+      const clamp = (n: number) => Math.max(0, Math.min(24, Math.round(n)));
+      return {
+        paddingTop: clamp(s.top),
+        paddingRight: clamp(s.right),
+        paddingBottom: clamp(s.bottom),
+        paddingLeft: clamp(s.left),
+      };
+    }
+    return { padding: contentPaddingPx };
+  })();
+  const zoneIconSizes = layoutDefinition.zoneIconSizes ?? {};
+  const prepIconSize = Math.max(10, Math.min(32, zoneIconSizes.prep_time ?? 18));
+  const articleIconSize = Math.max(10, Math.min(32, zoneIconSizes.icons ?? 22));
+  const nameLineHeight = layoutDefinition.nameLineHeight;
+  const pricePaddingRightPx =
+    layoutDefinition.pricePaddingRightPx != null && Number.isFinite(layoutDefinition.pricePaddingRightPx)
+      ? Math.max(0, Math.min(24, Math.round(Number(layoutDefinition.pricePaddingRightPx))))
+      : 0;
   const contentRowGapPx =
     layoutDefinition.contentRowGapPx != null && Number.isFinite(layoutDefinition.contentRowGapPx)
       ? Math.max(CONTENT_ROW_GAP_MIN, Math.min(CONTENT_ROW_GAP_MAX, Math.round(Number(layoutDefinition.contentRowGapPx))))
@@ -264,8 +288,10 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
   const nameClassName = [
     FONT_WEIGHT_CLASSES[nameFontWeight],
     FONT_SIZE_CLASSES[nameFontSize],
-    "leading-snug m-0 text-gray-900 text-left min-w-0 truncate",
+    nameLineHeight != null && nameLineHeight > 0 ? "m-0 text-gray-900 text-left min-w-0 truncate" : "leading-snug m-0 text-gray-900 text-left min-w-0 truncate",
   ].join(" ");
+  const nameStyle: React.CSSProperties | undefined =
+    nameLineHeight != null && nameLineHeight > 0 ? { lineHeight: nameLineHeight } : undefined;
   const priceSizeClass = FONT_SIZE_CLASSES[priceFontSize];
   const priceLeadClass = LINE_HEIGHT_CLASSES[priceLineHeight];
 
@@ -287,17 +313,24 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             )}
           </button>
         );
-      case "icons":
+      case "icons": {
+        const minH = Math.max(21, Math.round(articleIconSize + 4));
         return (
-          <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">
-            {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0" />}
-            {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
-            {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
+          <div
+            className="flex justify-end items-center gap-1.5 flex-wrap shrink-0"
+            style={{ minHeight: minH }}
+          >
+            {item.article_type && <MenuIcon code={item.article_type.icon_code} size={articleIconSize} className="shrink-0" />}
+            {item.is_promotion && <MenuIcon code="on-promo" size={articleIconSize} className="shrink-0" />}
+            {item.take_away && <MenuIcon code="take-away" size={articleIconSize} className="shrink-0" />}
           </div>
         );
+      }
       case "name":
         return (
-          <h3 className={nameClassName}>{item.menu_name}</h3>
+          <h3 className={nameClassName} style={nameStyle}>
+            {item.menu_name}
+          </h3>
         );
       case "description":
         return item.menu_description ? (
@@ -322,8 +355,11 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         );
       case "prep_time":
         return item.prep_minutes != null ? (
-          <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
-            <MenuIcon code="prep-time" size={18} />
+          <div
+            className={`flex items-center gap-1.5 text-sm text-gray-500 ${zoneIconSizes.prep_time != null ? "mt-0" : "mt-1"}`}
+            style={nameLineHeight != null && nameLineHeight > 0 ? { lineHeight: nameLineHeight } : undefined}
+          >
+            <MenuIcon code="prep-time" size={prepIconSize} />
             <span>{item.prep_minutes}&apos;</span>
           </div>
         ) : null;
@@ -360,6 +396,14 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             ]
               .filter(Boolean)
               .join(" ")}
+            style={
+              pricePaddingRightPx > 0 || (nameLineHeight != null && nameLineHeight > 0)
+                ? {
+                    ...(pricePaddingRightPx > 0 ? { paddingRight: pricePaddingRightPx } : {}),
+                    ...(nameLineHeight != null && nameLineHeight > 0 ? { lineHeight: nameLineHeight } : {}),
+                  }
+                : undefined
+            }
           >
             {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
           </div>
@@ -422,7 +466,10 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
   const renderContentBlock = () => (
     <div
       className="flex flex-col flex-1 min-h-0 min-w-0"
-      style={{ padding: `${contentPaddingPx}px` }}
+      style={{
+        ...contentPaddingStyle,
+        ...(nameLineHeight != null && nameLineHeight > 0 ? { lineHeight: nameLineHeight } : {}),
+      }}
     >
       {contentRows.map((row, rowIdx) => {
         const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};

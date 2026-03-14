@@ -858,6 +858,10 @@ export async function updatePresentationTemplateLayout(
       contentScaleToFit?: boolean;
     } | null;
     zoneAlignment?: Record<string, string> | null;
+    contentPaddingSides?: { top?: number; right?: number; bottom?: number; left?: number } | null;
+    zoneIconSizes?: { prep_time?: number; icons?: number } | null;
+    nameLineHeight?: number | null;
+    pricePaddingRightPx?: number | null;
   }
 ): Promise<{ error?: string }> {
   portalDebugLog("presentation_template_layout", { step: "entry", templateId: (templateId ?? "").slice(0, 8) });
@@ -924,6 +928,47 @@ export async function updatePresentationTemplateLayout(
   if (layoutDefinition.contentPaddingPx != null && Number.isFinite(Number(layoutDefinition.contentPaddingPx))) {
     const n = Math.round(Number(layoutDefinition.contentPaddingPx));
     if (n >= CONTENT_PADDING_MIN && n <= CONTENT_PADDING_MAX) contentPaddingPx = n;
+  }
+  let contentPaddingSidesPayload: { top: number; right: number; bottom: number; left: number } | undefined;
+  const padSides = layoutDefinition.contentPaddingSides;
+  if (padSides && typeof padSides === "object") {
+    const clampPad = (n: unknown) => Math.max(0, Math.min(24, Math.round(Number(n))));
+    if (
+      [padSides.top, padSides.right, padSides.bottom, padSides.left].every(
+        (x) => typeof x === "number" && Number.isFinite(x)
+      )
+    ) {
+      contentPaddingSidesPayload = {
+        top: clampPad(padSides.top),
+        right: clampPad(padSides.right),
+        bottom: clampPad(padSides.bottom),
+        left: clampPad(padSides.left),
+      };
+    }
+  }
+  let zoneIconSizesPayload: { prep_time?: number; icons?: number } | undefined;
+  if (layoutDefinition.zoneIconSizes && typeof layoutDefinition.zoneIconSizes === "object") {
+    const z = layoutDefinition.zoneIconSizes;
+    zoneIconSizesPayload = {};
+    if (z.prep_time != null && Number.isFinite(Number(z.prep_time))) {
+      const n = Number(z.prep_time);
+      if (n >= 10 && n <= 32) zoneIconSizesPayload.prep_time = n;
+    }
+    if (z.icons != null && Number.isFinite(Number(z.icons))) {
+      const n = Number(z.icons);
+      if (n >= 10 && n <= 32) zoneIconSizesPayload.icons = n;
+    }
+    if (Object.keys(zoneIconSizesPayload).length === 0) zoneIconSizesPayload = undefined;
+  }
+  let nameLineHeightPayload: number | undefined;
+  if (layoutDefinition.nameLineHeight != null && Number.isFinite(Number(layoutDefinition.nameLineHeight))) {
+    const lh = Number(layoutDefinition.nameLineHeight);
+    if (lh >= 0.9 && lh <= 2) nameLineHeightPayload = lh;
+  }
+  let pricePaddingRightPayload: number | undefined;
+  if (layoutDefinition.pricePaddingRightPx != null && Number.isFinite(Number(layoutDefinition.pricePaddingRightPx))) {
+    const n = Math.round(Number(layoutDefinition.pricePaddingRightPx));
+    if (n >= 0 && n <= 24) pricePaddingRightPayload = n;
   }
   let contentRowGapPx: number | null = null;
   if (layoutDefinition.contentRowGapPx != null && Number.isFinite(Number(layoutDefinition.contentRowGapPx))) {
@@ -997,6 +1042,12 @@ export async function updatePresentationTemplateLayout(
     ...(priceLineHeight ? { priceLineHeight } : {}),
     ...(zoneAlignmentPayload ? { zoneAlignment: zoneAlignmentPayload } : {}),
     ...(macroZonesPayload ? { macroZones: macroZonesPayload } : {}),
+    ...(contentPaddingSidesPayload ? { contentPaddingSides: contentPaddingSidesPayload } : {}),
+    ...(zoneIconSizesPayload ? { zoneIconSizes: zoneIconSizesPayload } : {}),
+    ...(nameLineHeightPayload != null ? { nameLineHeight: nameLineHeightPayload } : {}),
+    ...(pricePaddingRightPayload != null && pricePaddingRightPayload > 0
+      ? { pricePaddingRightPx: pricePaddingRightPayload }
+      : {}),
   };
   const { error } = await supabase
     .from("menu_presentation_templates")
@@ -1085,6 +1136,47 @@ export async function updateFeaturedPresentationTemplateLayout(
     const n = Math.round(Number(layoutDefinition.contentPaddingPx));
     if (n >= CONTENT_PADDING_MIN && n <= CONTENT_PADDING_MAX) contentPaddingPx = n;
   }
+  let contentPaddingSidesFeat: { top: number; right: number; bottom: number; left: number } | undefined;
+  const padSidesF = layoutDefinition.contentPaddingSides;
+  if (padSidesF && typeof padSidesF === "object") {
+    const clampPadF = (n: unknown) => Math.max(0, Math.min(24, Math.round(Number(n))));
+    if (
+      [padSidesF.top, padSidesF.right, padSidesF.bottom, padSidesF.left].every(
+        (x) => typeof x === "number" && Number.isFinite(x)
+      )
+    ) {
+      contentPaddingSidesFeat = {
+        top: clampPadF(padSidesF.top),
+        right: clampPadF(padSidesF.right),
+        bottom: clampPadF(padSidesF.bottom),
+        left: clampPadF(padSidesF.left),
+      };
+    }
+  }
+  let zoneIconSizesFeat: { prep_time?: number; icons?: number } | undefined;
+  if (layoutDefinition.zoneIconSizes && typeof layoutDefinition.zoneIconSizes === "object") {
+    const z = layoutDefinition.zoneIconSizes;
+    zoneIconSizesFeat = {};
+    if (z.prep_time != null && Number.isFinite(Number(z.prep_time))) {
+      const n = Number(z.prep_time);
+      if (n >= 10 && n <= 32) zoneIconSizesFeat.prep_time = n;
+    }
+    if (z.icons != null && Number.isFinite(Number(z.icons))) {
+      const n = Number(z.icons);
+      if (n >= 10 && n <= 32) zoneIconSizesFeat.icons = n;
+    }
+    if (Object.keys(zoneIconSizesFeat).length === 0) zoneIconSizesFeat = undefined;
+  }
+  let nameLineHeightFeat: number | undefined;
+  if (layoutDefinition.nameLineHeight != null && Number.isFinite(Number(layoutDefinition.nameLineHeight))) {
+    const lh = Number(layoutDefinition.nameLineHeight);
+    if (lh >= 0.9 && lh <= 2) nameLineHeightFeat = lh;
+  }
+  let pricePaddingRightFeat: number | undefined;
+  if (layoutDefinition.pricePaddingRightPx != null && Number.isFinite(Number(layoutDefinition.pricePaddingRightPx))) {
+    const n = Math.round(Number(layoutDefinition.pricePaddingRightPx));
+    if (n >= 0 && n <= 24) pricePaddingRightFeat = n;
+  }
   let contentRowGapPx: number | null = null;
   if (layoutDefinition.contentRowGapPx != null && Number.isFinite(Number(layoutDefinition.contentRowGapPx))) {
     const n = Math.round(Number(layoutDefinition.contentRowGapPx));
@@ -1157,6 +1249,12 @@ export async function updateFeaturedPresentationTemplateLayout(
     ...(priceLineHeight ? { priceLineHeight } : {}),
     ...(zoneAlignmentFeat ? { zoneAlignment: zoneAlignmentFeat } : {}),
     ...(macroZonesFeat ? { macroZones: macroZonesFeat } : {}),
+    ...(contentPaddingSidesFeat ? { contentPaddingSides: contentPaddingSidesFeat } : {}),
+    ...(zoneIconSizesFeat ? { zoneIconSizes: zoneIconSizesFeat } : {}),
+    ...(nameLineHeightFeat != null ? { nameLineHeight: nameLineHeightFeat } : {}),
+    ...(pricePaddingRightFeat != null && pricePaddingRightFeat > 0
+      ? { pricePaddingRightPx: pricePaddingRightFeat }
+      : {}),
   };
   const { error } = await supabase
     .from("menu_featured_presentation_templates")

@@ -259,6 +259,43 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
       ? Math.max(0, Math.min(24, Math.round(Number(initialLayout.contentPaddingPx))))
       : DEFAULT_CONTENT_PADDING_PX
   );
+  const initSides = initialLayout?.contentPaddingSides;
+  const [usePaddingSides, setUsePaddingSides] = useState(
+    () =>
+      !!(
+        initSides &&
+        typeof initSides.top === "number" &&
+        typeof initSides.right === "number" &&
+        typeof initSides.bottom === "number" &&
+        typeof initSides.left === "number"
+      )
+  );
+  const [paddingSides, setPaddingSides] = useState(() => ({
+    top: Math.max(0, Math.min(24, Math.round(Number(initSides?.top ?? 4)))),
+    right: Math.max(0, Math.min(24, Math.round(Number(initSides?.right ?? 0)))),
+    bottom: Math.max(0, Math.min(24, Math.round(Number(initSides?.bottom ?? 0)))),
+    left: Math.max(0, Math.min(24, Math.round(Number(initSides?.left ?? 4)))),
+  }));
+  const [zoneIconPrep, setZoneIconPrep] = useState<number | "">(
+    initialLayout?.zoneIconSizes?.prep_time != null && Number.isFinite(initialLayout.zoneIconSizes.prep_time)
+      ? Number(initialLayout.zoneIconSizes.prep_time)
+      : ""
+  );
+  const [zoneIconArticle, setZoneIconArticle] = useState<number | "">(
+    initialLayout?.zoneIconSizes?.icons != null && Number.isFinite(initialLayout.zoneIconSizes.icons)
+      ? Number(initialLayout.zoneIconSizes.icons)
+      : ""
+  );
+  const [nameLineHeightInput, setNameLineHeightInput] = useState<number | "">(
+    initialLayout?.nameLineHeight != null && Number.isFinite(initialLayout.nameLineHeight)
+      ? Number(initialLayout.nameLineHeight)
+      : ""
+  );
+  const [pricePaddingRightPx, setPricePaddingRightPx] = useState(
+    initialLayout?.pricePaddingRightPx != null && Number.isFinite(initialLayout.pricePaddingRightPx)
+      ? Math.max(0, Math.min(24, Math.round(Number(initialLayout.pricePaddingRightPx))))
+      : 0
+  );
   const [contentRowGapPx, setContentRowGapPx] = useState<number>(
     initialLayout?.contentRowGapPx != null && Number.isFinite(initialLayout.contentRowGapPx)
       ? Math.max(0, Math.min(24, Math.round(Number(initialLayout.contentRowGapPx))))
@@ -358,6 +395,18 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     if (byLine != null && byLine.length > 0) return byLine;
     return groupZonesIntoRowsByWidthPercent(zoneOrderForRows, zoneWidthPercent, zoneWidths);
   }, [zoneOrderForRows, zoneLineNumbers, zoneWidthPercent, zoneWidths]);
+
+  const previewPaddingStyle = useMemo((): React.CSSProperties => {
+    if (usePaddingSides) {
+      return {
+        paddingTop: paddingSides.top,
+        paddingRight: paddingSides.right,
+        paddingBottom: paddingSides.bottom,
+        paddingLeft: paddingSides.left,
+      };
+    }
+    return { padding: contentPaddingPx };
+  }, [usePaddingSides, paddingSides, contentPaddingPx]);
 
   const computeSuggestedHeight = useCallback(() => {
     let total = 0;
@@ -462,8 +511,21 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
           imageObjectFit: macroImageObjectFit,
           heightMode: macroHeightMode,
           heightReference: macroHeightReference,
+          contentScaleToFit: macroContentScaleToFit,
         });
       }
+      if (usePaddingSides) {
+        (payload as Record<string, unknown>).contentPaddingSides = { ...paddingSides };
+      }
+      const zis: Record<string, number> = {};
+      if (zoneIconPrep !== "" && Number.isFinite(Number(zoneIconPrep))) zis.prep_time = Math.max(10, Math.min(32, Number(zoneIconPrep)));
+      if (zoneIconArticle !== "" && Number.isFinite(Number(zoneIconArticle))) zis.icons = Math.max(10, Math.min(32, Number(zoneIconArticle)));
+      if (Object.keys(zis).length > 0) (payload as Record<string, unknown>).zoneIconSizes = zis;
+      if (nameLineHeightInput !== "" && Number.isFinite(Number(nameLineHeightInput))) {
+        const lh = Number(nameLineHeightInput);
+        if (lh >= 0.9 && lh <= 2) (payload as Record<string, unknown>).nameLineHeight = lh;
+      }
+      if (pricePaddingRightPx > 0) (payload as Record<string, unknown>).pricePaddingRightPx = pricePaddingRightPx;
       const updateFn = onUpdateLayout ?? updatePresentationTemplateLayout;
       let result: Awaited<ReturnType<typeof updateFn>>;
       try {
@@ -513,6 +575,12 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     macroHeightReference,
     macroContentScaleToFit,
     zoneAlignment,
+    usePaddingSides,
+    paddingSides,
+    zoneIconPrep,
+    zoneIconArticle,
+    nameLineHeightInput,
+    pricePaddingRightPx,
   ]);
 
   const renderPreviewBlock = (type: string, inRow: boolean, widthPercent?: number) => {
@@ -726,7 +794,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
           }
         >
           {!macroEnabled || !zoneOrder.includes("image") ? (
-            <div className="flex flex-col flex-1" style={{ padding: `${contentPaddingPx}px` }}>
+            <div className="flex flex-col flex-1" style={previewPaddingStyle}>
               {zoneRows.map((row, rowIdx) => (
                 <div
                   key={rowIdx}
@@ -750,7 +818,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                   >
                     <span className="text-xs font-medium text-slate-700">Imagem</span>
                   </div>
-                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, padding: `${contentPaddingPx}px` }}>
+                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, ...previewPaddingStyle }}>
                     {zoneRows.map((row, rowIdx) => (
                       <div
                         key={rowIdx}
@@ -764,7 +832,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                 </>
               ) : (
                 <>
-                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, padding: `${contentPaddingPx}px` }}>
+                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, ...previewPaddingStyle }}>
                     {zoneRows.map((row, rowIdx) => (
                       <div
                         key={rowIdx}
@@ -797,7 +865,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                   <div className="flex items-center justify-center border-b-2 border-dashed border-green-500 bg-amber-100/90 min-h-[60px]">
                     <span className="text-xs font-medium text-slate-700">Imagem</span>
                   </div>
-                  <div className="overflow-auto flex flex-col min-h-0" style={{ padding: `${contentPaddingPx}px` }}>
+                  <div className="overflow-auto flex flex-col min-h-0" style={previewPaddingStyle}>
                     {zoneRows.map((row, rowIdx) => (
                       <div
                         key={rowIdx}
@@ -811,7 +879,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                 </>
               ) : (
                 <>
-                  <div className="overflow-auto flex flex-col min-h-0 border-b-2 border-dashed border-slate-400" style={{ padding: `${contentPaddingPx}px` }}>
+                  <div className="overflow-auto flex flex-col min-h-0 border-b-2 border-dashed border-slate-400" style={previewPaddingStyle}>
                     {zoneRows.map((row, rowIdx) => (
                       <div
                         key={rowIdx}
@@ -955,6 +1023,101 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                 </button>
               ))}
             </div>
+            <label className="flex items-center gap-2 mt-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={usePaddingSides}
+                onChange={(e) => setUsePaddingSides(e.target.checked)}
+                className="rounded border-slate-500"
+              />
+              <span className="text-slate-300 text-sm">Padding assimétrico (cima, direita, baixo, esquerda)</span>
+            </label>
+            {usePaddingSides && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(["top", "right", "bottom", "left"] as const).map((k) => (
+                  <label key={k} className="flex items-center gap-1 text-xs text-slate-400">
+                    {k === "top" ? "Cima" : k === "right" ? "Dir" : k === "bottom" ? "Baixo" : "Esq"}
+                    <input
+                      type="number"
+                      min={0}
+                      max={24}
+                      className="w-12 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
+                      value={paddingSides[k]}
+                      onChange={(e) =>
+                        setPaddingSides((p) => ({
+                          ...p,
+                          [k]: Math.max(0, Math.min(24, Number(e.target.value) || 0)),
+                        }))
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-slate-300 text-sm font-medium mb-1">Ícones (px, opcional)</label>
+            <div className="flex flex-wrap gap-4">
+              <label className="text-slate-400 text-xs">
+                Tempo prep.
+                <input
+                  type="number"
+                  min={10}
+                  max={32}
+                  step={0.5}
+                  placeholder="18"
+                  className="ml-1 w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
+                  value={zoneIconPrep}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setZoneIconPrep(v === "" ? "" : Number(v));
+                  }}
+                />
+              </label>
+              <label className="text-slate-400 text-xs">
+                Ícones artigo
+                <input
+                  type="number"
+                  min={10}
+                  max={32}
+                  step={0.5}
+                  placeholder="22"
+                  className="ml-1 w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
+                  value={zoneIconArticle}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setZoneIconArticle(v === "" ? "" : Number(v));
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+          <div>
+            <label className="block text-slate-300 text-sm font-medium mb-1">Nome: line-height (opcional, ex. 1.15)</label>
+            <input
+              type="number"
+              min={0.9}
+              max={2}
+              step={0.05}
+              className="w-24 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
+              value={nameLineHeightInput}
+              onChange={(e) => {
+                const v = e.target.value;
+                setNameLineHeightInput(v === "" ? "" : Number(v));
+              }}
+              placeholder="—"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-300 text-sm font-medium mb-1">Preço: padding direita (px)</label>
+            <input
+              type="number"
+              min={0}
+              max={24}
+              className="w-20 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
+              value={pricePaddingRightPx}
+              onChange={(e) => setPricePaddingRightPx(Math.max(0, Math.min(24, Number(e.target.value) || 0)))}
+            />
           </div>
           <div>
             <label htmlFor="content-row-gap" className="block text-slate-300 text-sm font-medium mb-1">
