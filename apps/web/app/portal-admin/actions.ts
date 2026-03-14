@@ -634,12 +634,12 @@ export async function setSectionAsDefault(_prev: { error?: string } | null, form
 
 export async function updateCategory(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
-  const id = (formData.get("id") as string)?.trim() ?? "";
-  const name = (formData.get("name") as string)?.trim() ?? "";
-  const sortOrder = parseInt((formData.get("sort_order") as string) ?? "0", 10);
-  const sectionId = (formData.get("section_id") as string)?.trim() || null;
-  const presentationTemplateId = (formData.get("presentation_template_id") as string)?.trim() || null;
-  const sampleImageId = (formData.get("sample_image_id") as string)?.trim() || null;
+  const id = getFormDataValue(formData, "id")?.trim() ?? "";
+  const name = getFormDataValue(formData, "name")?.trim() ?? "";
+  const sortOrder = parseInt(getFormDataValue(formData, "sort_order") ?? "0", 10);
+  const sectionId = getFormDataValue(formData, "section_id")?.trim() || null;
+  const presentationTemplateId = getFormDataValue(formData, "presentation_template_id")?.trim() || null;
+  const sampleImageId = getFormDataValue(formData, "sample_image_id")?.trim() || null;
   if (!id || !name) return { error: "ID e nome obrigatórios" };
   if (!sectionId) return { error: "Secção obrigatória." };
   const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
@@ -664,7 +664,7 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
 
 export async function deleteCategory(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
-  const id = (formData.get("id") as string)?.trim() ?? "";
+  const id = getFormDataValue(formData, "id")?.trim() ?? "";
   if (!id) return { error: "ID obrigatório" };
   const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
   if (!row) return { error: "Categoria não encontrada" };
@@ -680,7 +680,7 @@ export async function deleteCategory(_prev: { error?: string } | null, formData:
 
 export async function sortSectionCategoriesAlphabetically(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
-  const sectionId = (formData.get("sectionId") as string)?.trim() ?? "";
+  const sectionId = getFormDataValue(formData, "sectionId")?.trim() ?? "";
   if (!sectionId) return { error: "ID da secção obrigatório" };
   const { data: section } = await supabase.from("menu_sections").select("store_id").eq("id", sectionId).single();
   if (!section) return { error: "Secção não encontrada" };
@@ -704,8 +704,8 @@ export async function sortSectionCategoriesAlphabetically(_prev: { error?: strin
 
 export async function reorderCategories(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
-  const sectionId = (formData.get("sectionId") as string)?.trim() ?? "";
-  const categoryIdsRaw = formData.get("categoryIds") as string | null;
+  const sectionId = getFormDataValue(formData, "sectionId")?.trim() ?? "";
+  const categoryIdsRaw = getFormDataValue(formData, "categoryIds");
   if (!sectionId || !categoryIdsRaw) return { error: "sectionId e categoryIds obrigatórios" };
   let categoryIds: string[];
   try {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useFormState } from "react-dom";
 import { updateCategory, deleteCategory } from "../../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
@@ -27,7 +26,6 @@ export function CategoryRow({
   sections: Section[];
   presentationTemplates: PresentationTemplate[];
   imageSamples?: ImageSample[];
-  /** Store id for upload; when set, shows "Carregar imagem sample" in edit mode. */
   storeId?: string;
   /** When true, only render content (no buttons); parent renders buttons outside. */
   contentOnly?: boolean;
@@ -38,7 +36,6 @@ export function CategoryRow({
   /** When contentOnly, called when Cancelar is clicked. */
   onCancelClick?: () => void;
 }) {
-  const router = useRouter();
   const [internalEditing, setInternalEditing] = useState(false);
   const editing = contentOnly ? (controlledEditing ?? false) : internalEditing;
   const setEditing = contentOnly
@@ -52,47 +49,11 @@ export function CategoryRow({
   const deleteFormRef = useRef<HTMLFormElement>(null);
 
   const [selectedSampleId, setSelectedSampleId] = useState(category.sample_image_id ?? "");
-  const [newSamples, setNewSamples] = useState<ImageSample[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (editing) {
       setSelectedSampleId(category.sample_image_id ?? "");
     }
   }, [editing, category.sample_image_id]);
-
-  const allSamples = [...imageSamples, ...newSamples];
-
-  const handleUploadSample = async () => {
-    const input = fileInputRef.current;
-    if (!storeId || !input?.files?.length) return;
-    const file = input.files[0];
-    if (!file || file.size === 0) return;
-    setUploadError(null);
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.set("file", file);
-      form.set("store_id", storeId);
-      const res = await fetch("/api/portal-admin/settings/image-samples/upload", {
-        method: "POST",
-        body: form,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setUploadError(data.error ?? `Erro ${res.status}`);
-        return;
-      }
-      const newSample: ImageSample = { id: data.id, name: data.name ?? null };
-      setNewSamples((prev) => [...prev, newSample]);
-      setSelectedSampleId(data.id);
-      input.value = "";
-      router.refresh();
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleDeleteClick = () => {
     if (!confirm(`Apagar a categoria «${category.name}»? Os itens deixarão de estar associados a esta categoria.`)) return;
@@ -126,46 +87,19 @@ export function CategoryRow({
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </Select>
-          <div className="flex flex-wrap items-end gap-2 mb-0">
-            <Select
-              id={`edit-cat-sample-${category.id}`}
-              name="sample_image_id"
-              label="Imagem sample"
-              wrapperClassName="mb-0"
-              value={selectedSampleId}
-              onChange={(e) => setSelectedSampleId(e.target.value)}
-            >
-              <option value="">Nenhuma</option>
-              {allSamples.map((s) => (
-                <option key={s.id} value={s.id}>{s.name || s.id}</option>
-              ))}
-            </Select>
-            {storeId && (
-              <div className="flex flex-col gap-1">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="text-sm text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-emerald-700 file:text-slate-100 file:text-sm"
-                  aria-label="Ficheiro da imagem sample"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleUploadSample}
-                  disabled={uploading}
-                  className="py-1 px-2 text-sm"
-                >
-                  {uploading ? "A carregar…" : "Carregar imagem sample"}
-                </Button>
-              </div>
-            )}
-          </div>
-          {uploadError && (
-            <div className="w-full mt-1">
-              <Alert variant="error">{uploadError}</Alert>
-            </div>
-          )}
+          <Select
+            id={`edit-cat-sample-${category.id}`}
+            name="sample_image_id"
+            label="Imagem sample"
+            wrapperClassName="mb-0"
+            value={selectedSampleId}
+            onChange={(e) => setSelectedSampleId(e.target.value)}
+          >
+            <option value="">Nenhuma</option>
+            {imageSamples.map((s) => (
+              <option key={s.id} value={s.id}>{s.name || s.id}</option>
+            ))}
+          </Select>
           <Input id={`edit-cat-sort-${category.id}`} name="sort_order" label="Ordem" type="number" defaultValue={category.sort_order} className="w-24" wrapperClassName="mb-0" />
           <SubmitButton variant="primary" submitting={updateSubmitting} loadingText="A guardar…">Guardar</SubmitButton>
           <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
