@@ -23,6 +23,10 @@ import {
   type ContentFontSize,
   type ContentFontWeight,
   type ContentLineHeight,
+  DEFAULT_MACRO_ZONES,
+  MACRO_IMAGE_OBJECT_FIT_LABELS,
+  normalizeMacroZones,
+  type MacroImageObjectFit,
 } from "@/lib/presentation-templates";
 import { updatePresentationTemplateLayout } from "@/app/portal-admin/actions";
 import { Button, Input, Alert } from "@/components/admin";
@@ -284,6 +288,23 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
   const [saved, setSaved] = useState(false);
   const [suggestedHeightMessage, setSuggestedHeightMessage] = useState<string | null>(null);
 
+  const initMacro = normalizeMacroZones(initialLayout?.macroZones);
+  const [macroEnabled, setMacroEnabled] = useState(() => !!initMacro);
+  const [macroDirection, setMacroDirection] = useState<"horizontal" | "vertical">(
+    () => initMacro?.direction ?? DEFAULT_MACRO_ZONES.direction
+  );
+  const [macroSplitPercent, setMacroSplitPercent] = useState(() => initMacro?.splitPercent ?? DEFAULT_MACRO_ZONES.splitPercent);
+  const [macroImageFirst, setMacroImageFirst] = useState(() => initMacro?.imageFirst ?? DEFAULT_MACRO_ZONES.imageFirst);
+  const [macroImageObjectFit, setMacroImageObjectFit] = useState<MacroImageObjectFit>(
+    () => initMacro?.imageObjectFit ?? DEFAULT_MACRO_ZONES.imageObjectFit
+  );
+  const [macroHeightMode, setMacroHeightMode] = useState<"auto" | "match_reference">(
+    () => initMacro?.heightMode ?? DEFAULT_MACRO_ZONES.heightMode
+  );
+  const [macroHeightReference, setMacroHeightReference] = useState<"image" | "content">(
+    () => initMacro?.heightReference ?? DEFAULT_MACRO_ZONES.heightReference
+  );
+
   const moveUp = useCallback((index: number) => {
     if (index <= 0) return;
     setZoneOrder((prev) => {
@@ -314,11 +335,15 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
 
   const availableToAdd = LAYOUT_ZONE_TYPES.filter((t) => !zoneOrder.includes(t));
 
+  const zoneOrderForRows = useMemo(
+    () => (macroEnabled ? zoneOrder.filter((z) => z !== "image") : zoneOrder),
+    [macroEnabled, zoneOrder]
+  );
   const zoneRows = useMemo(() => {
-    const byLine = groupZonesIntoRowsByLineNumber(zoneOrder, zoneLineNumbers);
+    const byLine = groupZonesIntoRowsByLineNumber(zoneOrderForRows, zoneLineNumbers);
     if (byLine != null && byLine.length > 0) return byLine;
-    return groupZonesIntoRowsByWidthPercent(zoneOrder, zoneWidthPercent, zoneWidths);
-  }, [zoneOrder, zoneLineNumbers, zoneWidthPercent, zoneWidths]);
+    return groupZonesIntoRowsByWidthPercent(zoneOrderForRows, zoneWidthPercent, zoneWidths);
+  }, [zoneOrderForRows, zoneLineNumbers, zoneWidthPercent, zoneWidths]);
 
   const computeSuggestedHeight = useCallback(() => {
     let total = 0;
@@ -368,6 +393,10 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
       setError("Indique pelo menos um campo na ordem.");
       return;
     }
+    if (macroEnabled && !zoneOrder.includes("image")) {
+      setError("Macro-zonas requer o campo Imagem na ordem. Adicione Imagem ou desactive macro-zonas.");
+      return;
+    }
     setError(null);
     setSaving(true);
     setSaved(false);
@@ -406,6 +435,16 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         if (effective !== defaultH) heightsToSave[z] = effective;
       });
       if (Object.keys(heightsToSave).length > 0) payload.zoneHeights = heightsToSave;
+      if (macroEnabled && zoneOrder.includes("image")) {
+        (payload as Record<string, unknown>).macroZones = normalizeMacroZones({
+          direction: macroDirection,
+          splitPercent: macroSplitPercent,
+          imageFirst: macroImageFirst,
+          imageObjectFit: macroImageObjectFit,
+          heightMode: macroHeightMode,
+          heightReference: macroHeightReference,
+        });
+      }
       const updateFn = onUpdateLayout ?? updatePresentationTemplateLayout;
       let result: Awaited<ReturnType<typeof updateFn>>;
       try {
@@ -446,6 +485,13 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     nameFontWeight,
     priceFontSize,
     priceLineHeight,
+    macroEnabled,
+    macroDirection,
+    macroSplitPercent,
+    macroImageFirst,
+    macroImageObjectFit,
+    macroHeightMode,
+    macroHeightReference,
   ]);
 
   const renderPreviewBlock = (type: string, inRow: boolean, widthPercent?: number) => {
@@ -483,34 +529,274 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     );
   };
 
+  const sp = macroSplitPercent;
+  const rest = 100 - sp;
+
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
+        <h3 className="text-slate-200 font-medium mb-2">Zonas do canvas (macro-layout)</h3>
+        <p className="text-slate-400 text-sm mb-3">
+          Divide o card em duas áreas: <strong className="text-slate-300">imagem</strong> e{" "}
+          <strong className="text-slate-300">conteúdo</strong> (demais campos). Desactivado = layout clássico (imagem em cima a largura total).
+        </p>
+        <label className="flex items-center gap-2 cursor-pointer mb-3">
+          <input
+            type="checkbox"
+            checked={macroEnabled}
+            onChange={(e) => {
+              const on = e.target.checked;
+              setMacroEnabled(on);
+              if (on && !zoneOrder.includes("image")) {
+                setZoneOrder((prev) => ["image", ...prev.filter((z) => z !== "image")]);
+                setZoneWidthPercent((prev) => ({ ...prev, image: 100 }));
+              }
+            }}
+            className="rounded border-slate-500"
+          />
+          <span className="text-slate-200">Dividir canvas em 2 zonas (imagem + conteúdo)</span>
+        </label>
+        {macroEnabled && (
+          <div className="space-y-4 border-t border-slate-600 pt-4">
+            <div>
+              <span className="block text-slate-300 text-sm font-medium mb-2">Orientação</span>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="macro-dir"
+                    checked={macroDirection === "horizontal"}
+                    onChange={() => setMacroDirection("horizontal")}
+                    className="rounded border-slate-500"
+                  />
+                  <span className="text-slate-200">Horizontal (lado a lado)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="macro-dir"
+                    checked={macroDirection === "vertical"}
+                    onChange={() => setMacroDirection("vertical")}
+                    className="rounded border-slate-500"
+                  />
+                  <span className="text-slate-200">Vertical (empilhado)</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <span className="block text-slate-300 text-sm font-medium mb-2">
+                Posição da imagem:{" "}
+                {macroDirection === "horizontal"
+                  ? macroImageFirst
+                    ? "esquerda"
+                    : "direita"
+                  : macroImageFirst
+                    ? "cima"
+                    : "baixo"}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant={macroImageFirst ? "primary" : "outline"}
+                  className="!px-3 !py-1.5 text-sm"
+                  onClick={() => setMacroImageFirst(true)}
+                >
+                  {macroDirection === "horizontal" ? "Imagem à esquerda" : "Imagem em cima"}
+                </Button>
+                <Button
+                  type="button"
+                  variant={!macroImageFirst ? "primary" : "outline"}
+                  className="!px-3 !py-1.5 text-sm"
+                  onClick={() => setMacroImageFirst(false)}
+                >
+                  {macroDirection === "horizontal" ? "Imagem à direita" : "Imagem em baixo"}
+                </Button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-slate-300 text-sm font-medium mb-1">
+                Proporção zona imagem: {sp}% (conteúdo {rest}%)
+              </label>
+              <input
+                type="range"
+                min={10}
+                max={90}
+                value={sp}
+                onChange={(e) => setMacroSplitPercent(Number(e.target.value))}
+                className="w-full max-w-md accent-emerald-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="macro-object-fit" className="block text-slate-300 text-sm font-medium mb-1">
+                Imagem no espaço (object-fit)
+              </label>
+              <select
+                id="macro-object-fit"
+                className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm max-w-md"
+                value={macroImageObjectFit}
+                onChange={(e) => setMacroImageObjectFit(e.target.value as MacroImageObjectFit)}
+              >
+                {(Object.entries(MACRO_IMAGE_OBJECT_FIT_LABELS) as [MacroImageObjectFit, string][]).map(([k, label]) => (
+                  <option key={k} value={k}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {macroDirection === "horizontal" && (
+              <div>
+                <span className="block text-slate-300 text-sm font-medium mb-2">Altura entre colunas</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={macroHeightMode === "auto"}
+                    onChange={() => setMacroHeightMode("auto")}
+                    className="rounded border-slate-500"
+                  />
+                  <span className="text-slate-200">Automático (linha ajusta à maior coluna)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer mt-1">
+                  <input
+                    type="radio"
+                    checked={macroHeightMode === "match_reference"}
+                    onChange={() => setMacroHeightMode("match_reference")}
+                    className="rounded border-slate-500"
+                  />
+                  <span className="text-slate-200">Igualar altura mínima (imagem vs conteúdo)</span>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div aria-describedby="preview-description">
         <h3 className="text-slate-200 font-medium mb-2">Pré-visualização do card</h3>
         <p id="preview-description" className="text-slate-400 text-sm mb-3">
           Representação aproximada do card no menu público. A ordem e as zonas refletem as definições abaixo.
         </p>
-        {canvasHeight === null && (
+        {canvasHeight === null && !macroEnabled && (
           <p className="text-slate-500 text-sm mb-2">Altura definida pelo conteúdo (mínimo possível).</p>
+        )}
+        {macroEnabled && macroDirection === "vertical" && (
+          <p className="text-slate-500 text-sm mb-2">
+            Vista em coluna: altura total ~{canvasHeight ?? DEFAULT_CANVAS_HEIGHT}px (macro vertical).
+          </p>
         )}
         <div
           className="max-w-sm rounded-xl border-2 border-dashed border-slate-500 bg-slate-100/50 overflow-hidden flex flex-col"
-          style={canvasHeight != null && canvasHeight > 0 ? { minHeight: `${canvasHeight}px` } : undefined}
+          style={
+            macroEnabled && macroDirection === "vertical"
+              ? { minHeight: `${canvasHeight ?? DEFAULT_CANVAS_HEIGHT}px` }
+              : canvasHeight != null && canvasHeight > 0
+                ? { minHeight: `${canvasHeight}px` }
+                : undefined
+          }
         >
-          <div className="flex flex-col flex-1" style={{ padding: `${contentPaddingPx}px` }}>
-            {zoneRows.map((row, rowIdx) => (
-              <div
-                key={rowIdx}
-                className={`flex items-stretch ${row.length > 1 ? "flex flex-row border-t-2 border-dashed border-slate-400" : ""}`}
-                style={{
-                  ...(rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}),
-                  ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}),
-                }}
-              >
-                {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
-              </div>
-            ))}
-          </div>
+          {!macroEnabled || !zoneOrder.includes("image") ? (
+            <div className="flex flex-col flex-1" style={{ padding: `${contentPaddingPx}px` }}>
+              {zoneRows.map((row, rowIdx) => (
+                <div
+                  key={rowIdx}
+                  className={`flex items-stretch ${row.length > 1 ? "flex flex-row border-t-2 border-dashed border-slate-400" : ""}`}
+                  style={{
+                    ...(rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}),
+                    ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}),
+                  }}
+                >
+                  {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
+                </div>
+              ))}
+            </div>
+          ) : macroDirection === "horizontal" ? (
+            <div className="flex w-full flex-row items-stretch min-h-[180px]">
+              {macroImageFirst ? (
+                <>
+                  <div
+                    className="flex flex-col items-center justify-center border-2 border-dashed border-green-500 bg-amber-100/90 px-1 py-2 text-center shrink-0"
+                    style={{ width: `${sp}%` }}
+                  >
+                    <span className="text-xs font-medium text-slate-700">Imagem</span>
+                  </div>
+                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, padding: `${contentPaddingPx}px` }}>
+                    {zoneRows.map((row, rowIdx) => (
+                      <div
+                        key={rowIdx}
+                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
+                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
+                      >
+                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, padding: `${contentPaddingPx}px` }}>
+                    {zoneRows.map((row, rowIdx) => (
+                      <div
+                        key={rowIdx}
+                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
+                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
+                      >
+                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className="flex flex-col items-center justify-center border-2 border-dashed border-green-500 bg-amber-100/90 px-1 py-2 text-center shrink-0"
+                    style={{ width: `${sp}%` }}
+                  >
+                    <span className="text-xs font-medium text-slate-700">Imagem</span>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div
+              className="grid w-full flex-1 min-h-0"
+              style={{
+                minHeight: canvasHeight ?? DEFAULT_CANVAS_HEIGHT,
+                gridTemplateRows: macroImageFirst ? `${sp}fr ${rest}fr` : `${rest}fr ${sp}fr`,
+              }}
+            >
+              {macroImageFirst ? (
+                <>
+                  <div className="flex items-center justify-center border-b-2 border-dashed border-green-500 bg-amber-100/90 min-h-[60px]">
+                    <span className="text-xs font-medium text-slate-700">Imagem</span>
+                  </div>
+                  <div className="overflow-auto flex flex-col min-h-0" style={{ padding: `${contentPaddingPx}px` }}>
+                    {zoneRows.map((row, rowIdx) => (
+                      <div
+                        key={rowIdx}
+                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
+                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
+                      >
+                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="overflow-auto flex flex-col min-h-0 border-b-2 border-dashed border-slate-400" style={{ padding: `${contentPaddingPx}px` }}>
+                    {zoneRows.map((row, rowIdx) => (
+                      <div
+                        key={rowIdx}
+                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
+                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
+                      >
+                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-center border-t-2 border-dashed border-green-500 bg-amber-100/90 min-h-[60px]">
+                    <span className="text-xs font-medium text-slate-700">Imagem</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

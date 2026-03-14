@@ -848,6 +848,14 @@ export async function updatePresentationTemplateLayout(
     nameFontWeight?: string;
     priceFontSize?: string;
     priceLineHeight?: string;
+    macroZones?: {
+      direction?: string;
+      splitPercent?: number;
+      imageFirst?: boolean;
+      imageObjectFit?: string;
+      heightMode?: string;
+      heightReference?: string;
+    } | null;
   }
 ): Promise<{ error?: string }> {
   portalDebugLog("presentation_template_layout", { step: "entry", templateId: (templateId ?? "").slice(0, 8) });
@@ -937,6 +945,28 @@ export async function updatePresentationTemplateLayout(
       ? layoutDefinition.priceLineHeight
       : null;
 
+  const MACRO_FITS = new Set(["cover", "contain", "fill", "none", "scale-down"]);
+  let macroZonesPayload: Record<string, unknown> | undefined;
+  if (layoutDefinition.macroZones && typeof layoutDefinition.macroZones === "object" && zones.includes("image")) {
+    const m = layoutDefinition.macroZones;
+    const direction = m.direction === "vertical" ? "vertical" : "horizontal";
+    let sp = Math.round(Number(m.splitPercent));
+    if (!Number.isFinite(sp)) sp = 40;
+    sp = Math.max(10, Math.min(90, sp));
+    const imageObjectFit =
+      typeof m.imageObjectFit === "string" && MACRO_FITS.has(m.imageObjectFit) ? m.imageObjectFit : "cover";
+    const heightMode = m.heightMode === "match_reference" ? "match_reference" : "auto";
+    const heightReference = m.heightReference === "content" ? "content" : "image";
+    macroZonesPayload = {
+      direction,
+      splitPercent: sp,
+      imageFirst: Boolean(m.imageFirst),
+      imageObjectFit,
+      heightMode,
+      heightReference,
+    };
+  }
+
   const payload = {
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
@@ -951,6 +981,7 @@ export async function updatePresentationTemplateLayout(
     ...(nameFontWeight ? { nameFontWeight } : {}),
     ...(priceFontSize ? { priceFontSize } : {}),
     ...(priceLineHeight ? { priceLineHeight } : {}),
+    ...(macroZonesPayload ? { macroZones: macroZonesPayload } : {}),
   };
   const { error } = await supabase
     .from("menu_presentation_templates")
@@ -1061,6 +1092,28 @@ export async function updateFeaturedPresentationTemplateLayout(
       ? layoutDefinition.priceLineHeight
       : null;
 
+  const MACRO_FITS_F = new Set(["cover", "contain", "fill", "none", "scale-down"]);
+  let macroZonesFeat: Record<string, unknown> | undefined;
+  if (layoutDefinition.macroZones && typeof layoutDefinition.macroZones === "object" && zones.includes("image")) {
+    const m = layoutDefinition.macroZones;
+    const direction = m.direction === "vertical" ? "vertical" : "horizontal";
+    let sp = Math.round(Number(m.splitPercent));
+    if (!Number.isFinite(sp)) sp = 40;
+    sp = Math.max(10, Math.min(90, sp));
+    const imageObjectFit =
+      typeof m.imageObjectFit === "string" && MACRO_FITS_F.has(m.imageObjectFit) ? m.imageObjectFit : "cover";
+    const heightMode = m.heightMode === "match_reference" ? "match_reference" : "auto";
+    const heightReference = m.heightReference === "content" ? "content" : "image";
+    macroZonesFeat = {
+      direction,
+      splitPercent: sp,
+      imageFirst: Boolean(m.imageFirst),
+      imageObjectFit,
+      heightMode,
+      heightReference,
+    };
+  }
+
   const payload = {
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
@@ -1075,6 +1128,7 @@ export async function updateFeaturedPresentationTemplateLayout(
     ...(nameFontWeight ? { nameFontWeight } : {}),
     ...(priceFontSize ? { priceFontSize } : {}),
     ...(priceLineHeight ? { priceLineHeight } : {}),
+    ...(macroZonesFeat ? { macroZones: macroZonesFeat } : {}),
   };
   const { error } = await supabase
     .from("menu_featured_presentation_templates")

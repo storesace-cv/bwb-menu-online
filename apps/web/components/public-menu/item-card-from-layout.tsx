@@ -14,9 +14,12 @@ import {
   DEFAULT_ZONE_HEIGHTS,
   DEFAULT_CONTENT_PADDING_PX,
   DEFAULT_CONTENT_ROW_GAP_PX,
+  DEFAULT_CANVAS_HEIGHT,
   parseZoneWidthPercent,
   groupZonesIntoRowsByLineNumber,
   groupZonesIntoRowsByWidthPercent,
+  normalizeMacroZones,
+  OBJECT_FIT_TO_CLASS,
 } from "@/lib/presentation-templates";
 import { formatPrice } from "@/lib/format-price";
 import { MenuIcon } from "../menu-icons";
@@ -351,36 +354,218 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     }
   };
 
+  const macroZones = useMemo(
+    () => normalizeMacroZones(layoutDefinition.macroZones),
+    [layoutDefinition.macroZones]
+  );
+  const useMacroLayout = Boolean(macroZones && zoneOrder.includes("image"));
+
+  const contentZoneOrder = useMemo(
+    () => (useMacroLayout ? zoneOrder.filter((z) => z !== "image") : zoneOrder),
+    [useMacroLayout, zoneOrder]
+  );
+
   const zoneRows = useMemo(() => {
-    const byLine = groupZonesIntoRowsByLineNumber(zoneOrder, layoutDefinition.zoneLineNumbers);
+    const order = useMacroLayout ? contentZoneOrder : zoneOrder;
+    const byLine = groupZonesIntoRowsByLineNumber(order, layoutDefinition.zoneLineNumbers);
     if (byLine != null && byLine.length > 0) return byLine;
     if (
       (layoutDefinition.zoneWidthPercent && Object.keys(layoutDefinition.zoneWidthPercent).length > 0) ||
       (layoutDefinition.zoneWidths && Object.keys(layoutDefinition.zoneWidths).length > 0)
     ) {
       return groupZonesIntoRowsByWidthPercent(
-        zoneOrder,
+        order,
         layoutDefinition.zoneWidthPercent,
         layoutDefinition.zoneWidths
       );
     }
     const defaultZoneWidthPercent: Record<string, number> = {};
-    if (zoneOrder.includes("name")) defaultZoneWidthPercent["name"] = 75;
-    if (zoneOrder.includes("price")) defaultZoneWidthPercent["price"] = 25;
-    if (zoneOrder.includes("price_old")) defaultZoneWidthPercent["price_old"] = 25;
-    return groupZonesIntoRowsByWidthPercent(zoneOrder, defaultZoneWidthPercent, undefined);
+    if (order.includes("name")) defaultZoneWidthPercent["name"] = 75;
+    if (order.includes("price")) defaultZoneWidthPercent["price"] = 25;
+    if (order.includes("price_old")) defaultZoneWidthPercent["price_old"] = 25;
+    return groupZonesIntoRowsByWidthPercent(order, defaultZoneWidthPercent, undefined);
   }, [
+    useMacroLayout,
+    contentZoneOrder,
     zoneOrder,
     layoutDefinition.zoneWidths,
     layoutDefinition.zoneWidthPercent,
     layoutDefinition.zoneLineNumbers,
   ]);
+
   const hasImage = zoneOrder.includes("image");
-  const imageRowIndex = zoneRows.findIndex((row) => row.length === 1 && row[0] === "image");
-  const contentRows = useMemo(
-    () => zoneRows.filter((_, idx) => idx !== imageRowIndex),
-    [zoneRows, imageRowIndex]
+  const imageRowIndex = useMacroLayout ? -1 : zoneRows.findIndex((row) => row.length === 1 && row[0] === "image");
+  const contentRows = useMemo(() => {
+    if (useMacroLayout) return zoneRows;
+    return zoneRows.filter((_, idx) => idx !== imageRowIndex);
+  }, [useMacroLayout, zoneRows, imageRowIndex]);
+
+  const objectFitClass = macroZones
+    ? OBJECT_FIT_TO_CLASS[macroZones.imageObjectFit]
+    : "object-cover";
+
+  const renderContentBlock = () => (
+    <div
+      className="flex flex-col flex-1 min-h-0 min-w-0"
+      style={{ padding: `${contentPaddingPx}px` }}
+    >
+      {contentRows.map((row, rowIdx) => {
+        const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
+        if (row.length === 1) {
+          const type = row[0];
+          const el = renderZone(type);
+          const minH = getEffectiveZoneHeight(type, zoneHeights);
+          const wrapperStyle: React.CSSProperties = { ...rowStyle };
+          if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
+          return el != null ? (
+            <div key={`r-${rowIdx}`} style={wrapperStyle}>
+              {el}
+            </div>
+          ) : null;
+        }
+        return (
+          <div
+            key={`r-${rowIdx}`}
+            className="flex items-center flex-nowrap"
+            style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
+          >
+            {row.map((type) => {
+              const el = renderZone(type);
+              const minH = getEffectiveZoneHeight(type, zoneHeights);
+              const pct = parseZoneWidthPercent(
+                type,
+                layoutDefinition.zoneWidthPercent,
+                layoutDefinition.zoneWidths
+              );
+              const wrapperStyle: React.CSSProperties = { flex: `0 0 ${pct}%`, boxSizing: "border-box" };
+              if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
+              return el != null ? (
+                <div key={type} className="min-w-0" style={wrapperStyle}>
+                  {el}
+                </div>
+              ) : null;
+            })}
+          </div>
+        );
+      })}
+    </div>
   );
+
+  const renderMacroImageButton = () => {
+    const imgH = imageHeightPx != null ? `${imageHeightPx}px` : undefined;
+    return (
+      <button
+        type="button"
+        onClick={() => setImageModalOpen(true)}
+        className="flex w-full min-h-[120px] flex-1 flex-col overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
+        style={imgH ? { minHeight: imgH } : undefined}
+        aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
+      >
+        {effectiveSrc === "" ? (
+          <span className="block min-h-[120px] w-full flex-1 bg-gray-100" aria-hidden />
+        ) : (
+          <img
+            src={effectiveSrc}
+            alt={item.menu_name ?? ""}
+            className={`min-h-[120px] w-full flex-1 border-0 ${objectFitClass}`}
+            style={{ minHeight: imgH ?? "120px" }}
+            onError={handleImageError}
+          />
+        )}
+      </button>
+    );
+  };
+
+  if (useMacroLayout && macroZones) {
+    const mz = macroZones;
+    const sp = mz.splitPercent;
+    const rest = 100 - sp;
+    const verticalBaseH = minHeight ?? layoutDefinition.canvasHeight ?? DEFAULT_CANVAS_HEIGHT;
+    const matchRefMin =
+      mz.direction === "horizontal" && mz.heightMode === "match_reference"
+        ? Math.max(
+            imageHeightPx ?? DEFAULT_ZONE_HEIGHTS.image,
+            160
+          )
+        : undefined;
+
+    const imageZone = (
+      <div className="flex h-full min-h-0 min-w-0 flex-col bg-gray-100">{renderMacroImageButton()}</div>
+    );
+    const contentZone = (
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">{renderContentBlock()}</div>
+    );
+
+    return (
+      <li className="list-none flex h-full">
+        <article
+          className="flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md"
+          style={
+            mz.direction === "vertical"
+              ? { minHeight: verticalBaseH }
+              : minHeight != null
+                ? { minHeight: `${minHeight}px` }
+                : undefined
+          }
+        >
+          {mz.direction === "horizontal" ? (
+            <div
+              className="flex w-full flex-row items-stretch"
+              style={matchRefMin != null ? { minHeight: matchRefMin } : undefined}
+            >
+              {mz.imageFirst ? (
+                <>
+                  <div className="min-w-0 shrink-0 border-r border-gray-100/80" style={{ width: `${sp}%` }}>
+                    {imageZone}
+                  </div>
+                  <div className="min-w-0 flex-1" style={{ width: `${rest}%` }}>
+                    {contentZone}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="min-w-0 flex-1" style={{ width: `${rest}%` }}>
+                    {contentZone}
+                  </div>
+                  <div className="min-w-0 shrink-0 border-l border-gray-100/80" style={{ width: `${sp}%` }}>
+                    {imageZone}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div
+              className="grid min-h-0 w-full flex-1"
+              style={{
+                minHeight: verticalBaseH,
+                gridTemplateRows: mz.imageFirst ? `${sp}fr ${rest}fr` : `${rest}fr ${sp}fr`,
+              }}
+            >
+              {mz.imageFirst ? (
+                <>
+                  <div className="min-h-0 min-w-0 overflow-hidden">{imageZone}</div>
+                  <div className="min-h-0 min-w-0 overflow-y-auto border-t border-gray-100/80">{contentZone}</div>
+                </>
+              ) : (
+                <>
+                  <div className="min-h-0 min-w-0 overflow-y-auto border-b border-gray-100/80">{contentZone}</div>
+                  <div className="min-h-0 min-w-0 overflow-hidden">{imageZone}</div>
+                </>
+              )}
+            </div>
+          )}
+        </article>
+        <ImageIngredientsModal
+          open={imageModalOpen}
+          onClose={() => setImageModalOpen(false)}
+          imageSrc={effectiveSrc}
+          imageAlt={item.menu_name ?? ""}
+          descriptionText={item.menu_description ?? null}
+          ingredientsText={item.menu_ingredients}
+        />
+      </li>
+    );
+  }
 
   return (
     <li className="list-none h-full flex">

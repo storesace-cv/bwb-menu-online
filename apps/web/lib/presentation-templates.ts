@@ -32,6 +32,76 @@ export type ContentFontWeight = "semibold" | "bold";
 /** Altura de linha para o preço. */
 export type ContentLineHeight = "none" | "normal";
 
+/** object-fit CSS para a zona imagem (macro-zonas). */
+export type MacroImageObjectFit = "cover" | "contain" | "fill" | "none" | "scale-down";
+
+/**
+ * Duas macro-zonas: imagem + conteúdo (demais campos).
+ * - direction horizontal: esquerda/direita conforme imageFirst.
+ * - direction vertical: cima/baixo conforme imageFirst.
+ * - splitPercent: % do eixo principal da zona imagem (resto = conteúdo).
+ */
+export interface MacroZonesConfig {
+  direction: "vertical" | "horizontal";
+  /** 10–90: percentagem do eixo principal para a zona imagem */
+  splitPercent: number;
+  /** true: imagem esquerda (horizontal) ou cima (vertical); false: direita / baixo */
+  imageFirst: boolean;
+  imageObjectFit: MacroImageObjectFit;
+  /** auto: alturas naturais; match_reference: ambas zonas igualam à referência em altura (horizontal) */
+  heightMode: "auto" | "match_reference";
+  /** Quem define altura comum quando heightMode = match_reference */
+  heightReference: "image" | "content";
+}
+
+export const DEFAULT_MACRO_ZONES: MacroZonesConfig = {
+  direction: "horizontal",
+  splitPercent: 40,
+  imageFirst: true,
+  imageObjectFit: "cover",
+  heightMode: "auto",
+  heightReference: "image",
+};
+
+export const MACRO_IMAGE_OBJECT_FIT_LABELS: Record<MacroImageObjectFit, string> = {
+  cover: "Cover (preencher)",
+  contain: "Contain (integral)",
+  fill: "Esticar",
+  none: "Natural",
+  "scale-down": "Scale down",
+};
+
+export function normalizeMacroZones(m: Partial<MacroZonesConfig> | null | undefined): MacroZonesConfig | null {
+  if (m == null || typeof m !== "object") return null;
+  const direction = m.direction === "vertical" ? "vertical" : "horizontal";
+  let split = Math.round(Number(m.splitPercent));
+  if (!Number.isFinite(split)) split = DEFAULT_MACRO_ZONES.splitPercent;
+  split = Math.max(10, Math.min(90, split));
+  const imageFirst = Boolean(m.imageFirst);
+  const fits: MacroImageObjectFit[] = ["cover", "contain", "fill", "none", "scale-down"];
+  const imageObjectFit = fits.includes(m.imageObjectFit as MacroImageObjectFit)
+    ? (m.imageObjectFit as MacroImageObjectFit)
+    : "cover";
+  const heightMode = m.heightMode === "match_reference" ? "match_reference" : "auto";
+  const heightReference = m.heightReference === "content" ? "content" : "image";
+  return {
+    direction,
+    splitPercent: split,
+    imageFirst,
+    imageObjectFit,
+    heightMode,
+    heightReference,
+  };
+}
+
+export const OBJECT_FIT_TO_CLASS: Record<MacroImageObjectFit, string> = {
+  cover: "object-cover",
+  contain: "object-contain",
+  fill: "object-fill",
+  none: "object-none",
+  "scale-down": "object-scale-down",
+};
+
 export interface LayoutDefinition {
   /** Altura mínima do card em px. Omitir ou 0 = altura mínima automática (conteúdo). */
   canvasHeight?: number;
@@ -58,6 +128,8 @@ export interface LayoutDefinition {
   priceFontSize?: ContentFontSize;
   /** Altura de linha do preço ("none" = leading-none); default "normal". */
   priceLineHeight?: ContentLineHeight;
+  /** Se definido e zoneOrder contém "image": canvas em duas macro-zonas (imagem + restantes campos). Omitido = layout legacy. */
+  macroZones?: MacroZonesConfig;
 }
 
 /** Presets de padding interno (px) para a UI. 0 = sem padding. */
