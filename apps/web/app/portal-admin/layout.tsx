@@ -39,7 +39,7 @@ export default async function PortalAdminLayout({
           {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass} prefetch={false}>Tenants</Link>}
           {mode === "global" && <Link href="/portal-admin/import/mappings" className={linkClass} prefetch={false}>Mapeamentos</Link>}
           {(mode === "global" || mode === "tenant") && (
-            <a href="/portal-admin/settings" className={linkClass}>Definições</a>
+            <Link href="/portal-admin/settings" className={linkClass} prefetch={false}>Definições</Link>
           )}
           <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
           {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
@@ -120,7 +120,7 @@ export default async function PortalAdminLayout({
           {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass} prefetch={false}>Tenants</Link>}
           {mode === "global" && <Link href="/portal-admin/import/mappings" className={linkClass} prefetch={false}>Mapeamentos</Link>}
           {(mode === "global" || (mode === "tenant" && canAccessSettings)) && (
-            <a href="/portal-admin/settings" className={linkClass}>Definições</a>
+            <Link href="/portal-admin/settings" className={linkClass} prefetch={false}>Definições</Link>
           )}
           <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
           {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
@@ -151,7 +151,7 @@ export default async function PortalAdminLayout({
             {mode === "global" && <Link href="/portal-admin/tenants" className={linkClass} prefetch={false}>Tenants</Link>}
             {mode === "global" && <Link href="/portal-admin/import/mappings" className={linkClass} prefetch={false}>Mapeamentos</Link>}
             {(mode === "global" || mode === "tenant") && (
-              <a href="/portal-admin/settings" className={linkClass}>Definições</a>
+              <Link href="/portal-admin/settings" className={linkClass} prefetch={false}>Definições</Link>
             )}
             <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
             {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
