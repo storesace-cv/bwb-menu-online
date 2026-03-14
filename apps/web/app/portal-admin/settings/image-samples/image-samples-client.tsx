@@ -4,6 +4,55 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Alert } from "@/components/admin";
 
+const MAX_DIMENSION = 800;
+const WEBP_QUALITY = 0.85;
+
+/** Resize image (longest side ≤ MAX_DIMENSION) and convert to WebP. Returns null if not an image or on error. */
+function resizeAndConvertToWebP(file: File): Promise<File | null> {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith("image/")) {
+      resolve(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(w, h));
+      const cw = Math.round(w * scale);
+      const ch = Math.round(h * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(null);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, cw, ch);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(null);
+            return;
+          }
+          const baseName = file.name.replace(/\.[^.]+$/i, "").trim() || "image";
+          resolve(new File([blob], `${baseName}.webp`, { type: "image/webp" }));
+        },
+        "image/webp",
+        WEBP_QUALITY
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
 export function ImageSamplesClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -22,8 +71,11 @@ export function ImageSamplesClient() {
     const file = input.files[0];
     setLoading(true);
     try {
+      const processed = await resizeAndConvertToWebP(file);
+      const fileToUpload = processed ?? file;
+
       const formData = new FormData();
-      formData.set("file", file);
+      formData.set("file", fileToUpload);
       if (name.trim()) formData.set("name", name.trim());
 
       const res = await fetch("/api/portal-admin/settings/image-samples/upload", {
@@ -50,7 +102,7 @@ export function ImageSamplesClient() {
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4">
       <div>
         <label htmlFor="image-sample-file" className="block text-sm font-medium text-slate-300 mb-1">
-          Ficheiro (JPG, PNG ou WebP, máx. 10 MB)
+          Ficheiro (JPG, PNG ou WebP, máx. 10 MB) — a app redimensiona e converte para WebP
         </label>
         <input
           ref={fileInputRef}
