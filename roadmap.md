@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-14 (Paridade carrossel em smartphones: rolagem vertical e ajuste de altura; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-14 (Destaques em mobile: overflow visible para ver toda a área na vertical; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -234,6 +234,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Destaques contidos no bloco preto em smartphones:** A altura fixa da secção (contentHeight × scale) e o overflow hidden passaram a aplicar-se apenas em PC/tablet (`!isSmallScreen`); em smartphones a section não tem altura fixa e cresce com o conteúdo, para o bloco preto envolver sempre o carrossel e os dots. Ficheiro: `featured-carousel-section.tsx`.
 - **Destaques em mobile: escala proporcional ao container:** Em smartphones, o bloco do carrossel (div com role="region") passou a ter altura definida (min(600px, 85vh)) e overflow hidden; o conteúdo interno (slots) é medido e escalado com transform: scale(mobileScale) para caber dentro do container (ResizeObserver + refs). Ficheiro: `featured-carousel-section.tsx`.
 - **Paridade carrossel em smartphones:** (1) Navegação por scroll vertical com o dedo sobre a área do carrossel (equivalente à roda do rato em desktop): touchmove com preventDefault quando o gesto é predominantemente vertical; touchend com deltaY dominante chama goNext/goPrev; conflito com swipe horizontal resolvido por |deltaY| vs |deltaX|; respeita prefers-reduced-motion. (2) Ajuste automático do bloco em mobile: sectionHeightStyle (height proporcional ao scale, overflow hidden) passou a aplicar-se também em smartphones quando scale &lt; 1. Ficheiro: `featured-carousel-section.tsx`.
+- **Destaques em mobile: ver toda a área na vertical:** Em smartphones, o contentor da region (div com role="region") passou a usar apenas minHeight e overflow: visible (sem altura fixa nem overflow hidden), e o wrapper de cada slot do cartão usa overflow-visible em mobile, para o conteúdo não ser cortado e se ver toda a parte dos destaques ao scrollar a página. Ficheiro: `featured-carousel-section.tsx`.
 
 ---
 

@@ -267,7 +267,7 @@ export function FeaturedCarouselSection({
           zIndex: isCenter ? 2 : 1,
         }}
       >
-        <div className="w-full overflow-hidden rounded-2xl" style={wrapperSize}>
+        <div className={`w-full rounded-2xl ${isSmallScreen ? "overflow-visible" : "overflow-hidden"}`} style={wrapperSize}>
           <CardComponent
             item={item}
             categoryName={categoryName}
@@ -331,11 +331,7 @@ export function FeaturedCarouselSection({
             className="relative w-full flex justify-center px-4"
             style={{
               minHeight: `${carouselMinHeight}px`,
-              ...(isSmallScreen && {
-                height: "min(600px, 85vh)",
-                overflow: "hidden",
-              }),
-              ...(!isSmallScreen && { overflow: "visible" }),
+              overflow: "visible",
             }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
