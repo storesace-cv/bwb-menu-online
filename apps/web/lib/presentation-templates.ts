@@ -25,6 +25,9 @@ export type LayoutZoneType = (typeof LAYOUT_ZONE_TYPES)[number];
 /** Largura da zona no layout: linha inteira, metade (50%) ou um quarto (25%). Consecutivos half/quarter ficam na mesma linha. */
 export type ZoneWidth = "full" | "half" | "quarter";
 
+/** Alinhamento do conteúdo da zona no card. */
+export type ZoneAlignment = "left" | "center" | "right";
+
 /** Tamanho de fonte para nome e preço no card. */
 export type ContentFontSize = "sm" | "base" | "lg";
 /** Peso de fonte para o nome do artigo. */
@@ -134,6 +137,8 @@ export interface LayoutDefinition {
   priceFontSize?: ContentFontSize;
   /** Altura de linha do preço ("none" = leading-none); default "normal". */
   priceLineHeight?: ContentLineHeight;
+  /** Alinhamento por tipo de zona (esquerda, centro, direita). Omitido = "left". */
+  zoneAlignment?: Record<string, ZoneAlignment>;
   /** Se definido e zoneOrder contém "image": canvas em duas macro-zonas (imagem + restantes campos). Omitido = layout legacy. */
   macroZones?: MacroZonesConfig;
 }

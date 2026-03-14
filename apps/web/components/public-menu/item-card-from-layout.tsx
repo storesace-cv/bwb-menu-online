@@ -5,6 +5,7 @@ import type { PublicMenuItem } from "@/lib/supabase";
 import type {
   LayoutDefinition,
   ZoneWidth,
+  ZoneAlignment,
   ContentFontSize,
   ContentFontWeight,
   ContentLineHeight,
@@ -60,6 +61,20 @@ function getEffectiveZoneHeight(type: string, zoneHeights: Record<string, number
 function getEffectiveWidth(type: string, zoneWidths: Record<string, ZoneWidth> | undefined): ZoneWidth {
   if (zoneWidths?.[type]) return zoneWidths[type];
   return type === "price_old" || type === "price" ? "half" : "full";
+}
+
+const ALIGNMENT_CLASSES: Record<ZoneAlignment, string> = {
+  left: "text-left items-start",
+  center: "text-center items-center",
+  right: "text-right items-end",
+};
+
+function getEffectiveAlignment(
+  type: string,
+  zoneAlignment: Record<string, ZoneAlignment> | undefined
+): ZoneAlignment {
+  if (zoneAlignment?.[type]) return zoneAlignment[type];
+  return type === "price" || type === "price_old" ? "right" : "left";
 }
 
 /** Agrupa zoneOrder em linhas conforme zoneWidths (compatível com o editor). */
@@ -330,7 +345,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         ) : null;
       case "price_old":
         return item.is_promotion && (item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)) != null ? (
-          <div className="flex-1 min-w-0 text-center text-sm text-gray-400 line-through" aria-label="Preço antigo">
+          <div className="flex-1 min-w-0 text-sm text-gray-400 line-through" aria-label="Preço antigo">
             {item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)}
           </div>
         ) : null;
@@ -338,7 +353,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         return (item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)) != null ? (
           <div
             className={[
-              "italic text-right shrink-0",
+              "italic shrink-0",
               item.is_promotion ? "text-amber-700" : "text-gray-900",
               item.is_promotion ? "text-lg" : priceSizeClass,
               priceLeadClass,
@@ -417,8 +432,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           const minH = getEffectiveZoneHeight(type, zoneHeights);
           const wrapperStyle: React.CSSProperties = { ...rowStyle };
           if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
+          const alignClass = ALIGNMENT_CLASSES[getEffectiveAlignment(type, layoutDefinition.zoneAlignment)];
           return el != null ? (
-            <div key={`r-${rowIdx}`} style={wrapperStyle}>
+            <div key={`r-${rowIdx}`} className={`flex flex-col ${alignClass}`} style={wrapperStyle}>
               {el}
             </div>
           ) : null;
@@ -439,8 +455,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
               );
               const wrapperStyle: React.CSSProperties = { flex: `0 0 ${pct}%`, boxSizing: "border-box" };
               if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
+              const alignClass = ALIGNMENT_CLASSES[getEffectiveAlignment(type, layoutDefinition.zoneAlignment)];
               return el != null ? (
-                <div key={type} className="min-w-0" style={wrapperStyle}>
+                <div key={type} className={`min-w-0 flex flex-col ${alignClass}`} style={wrapperStyle}>
                   {el}
                 </div>
               ) : null;
@@ -507,8 +524,13 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         {mz.contentScaleToFit ? (
           <div className="h-full min-h-0 w-full overflow-hidden">
             <div
-              className="flex min-h-0 min-w-0 flex-col"
-              style={{ transform: "scale(0.9)", transformOrigin: "top left" }}
+              className="flex min-w-0 flex-col"
+              style={{
+                width: "111.11%",
+                height: "111.11%",
+                transform: "scale(0.9)",
+                transformOrigin: "top left",
+              }}
             >
               {renderContentBlock()}
             </div>

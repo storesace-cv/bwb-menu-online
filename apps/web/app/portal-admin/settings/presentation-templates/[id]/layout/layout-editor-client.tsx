@@ -20,6 +20,7 @@ import {
   type LayoutDefinition,
   type LayoutZoneType,
   type ZoneWidth,
+  type ZoneAlignment,
   type ContentFontSize,
   type ContentFontWeight,
   type ContentLineHeight,
@@ -307,6 +308,16 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
   const [macroContentScaleToFit, setMacroContentScaleToFit] = useState(
     () => initMacro?.contentScaleToFit ?? false
   );
+  const VALID_ALIGNMENTS: ZoneAlignment[] = ["left", "center", "right"];
+  const [zoneAlignment, setZoneAlignment] = useState<Record<string, ZoneAlignment>>(() => {
+    const out: Record<string, ZoneAlignment> = {};
+    if (initialLayout?.zoneAlignment && typeof initialLayout.zoneAlignment === "object") {
+      for (const [k, v] of Object.entries(initialLayout.zoneAlignment)) {
+        if (VALID_ALIGNMENTS.includes(v as ZoneAlignment)) out[k] = v as ZoneAlignment;
+      }
+    }
+    return out;
+  });
 
   const moveUp = useCallback((index: number) => {
     if (index <= 0) return;
@@ -438,6 +449,11 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         if (effective !== defaultH) heightsToSave[z] = effective;
       });
       if (Object.keys(heightsToSave).length > 0) payload.zoneHeights = heightsToSave;
+      const alignmentToSave: Record<string, ZoneAlignment> = {};
+      zoneOrder.forEach((z) => {
+        alignmentToSave[z] = (zoneAlignment[z] ?? "left") as ZoneAlignment;
+      });
+      if (Object.keys(alignmentToSave).length > 0) (payload as Record<string, unknown>).zoneAlignment = alignmentToSave;
       if (macroEnabled && zoneOrder.includes("image")) {
         (payload as Record<string, unknown>).macroZones = normalizeMacroZones({
           direction: macroDirection,
@@ -496,6 +512,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     macroHeightMode,
     macroHeightReference,
     macroContentScaleToFit,
+    zoneAlignment,
   ]);
 
   const renderPreviewBlock = (type: string, inRow: boolean, widthPercent?: number) => {
@@ -1019,6 +1036,9 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
 
       <div>
         <h3 className="text-slate-200 font-medium mb-2">Ordem dos campos</h3>
+        <p className="text-slate-400 text-sm mb-2">
+          Campos com o mesmo Nº Linha aparecem na mesma linha no menu, da esquerda para a direita pela ordem da lista (Subir/Descer alteram essa ordem).
+        </p>
         <ul className="space-y-1">
           {zoneOrder.map((type, index) => (
             <li
@@ -1091,6 +1111,19 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                       onChange={(e) => setZoneHeight(type, Number(e.target.value) || ZONE_HEIGHT_MIN)}
                     />
                   )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="text-slate-400 text-xs">Alinhamento</label>
+                  <select
+                    className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-xs"
+                    value={zoneAlignment[type] ?? "left"}
+                    onChange={(e) => setZoneAlignment((prev) => ({ ...prev, [type]: e.target.value as ZoneAlignment }))}
+                    aria-label={`Alinhamento ${LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type}`}
+                  >
+                    <option value="left">Esquerda</option>
+                    <option value="center">Centralizado</option>
+                    <option value="right">Direita</option>
+                  </select>
                 </div>
                 <div className="flex gap-1">
                   <Button

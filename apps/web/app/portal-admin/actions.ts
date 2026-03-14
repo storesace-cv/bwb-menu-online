@@ -857,6 +857,7 @@ export async function updatePresentationTemplateLayout(
       heightReference?: string;
       contentScaleToFit?: boolean;
     } | null;
+    zoneAlignment?: Record<string, string> | null;
   }
 ): Promise<{ error?: string }> {
   portalDebugLog("presentation_template_layout", { step: "entry", templateId: (templateId ?? "").slice(0, 8) });
@@ -946,6 +947,17 @@ export async function updatePresentationTemplateLayout(
       ? layoutDefinition.priceLineHeight
       : null;
 
+  const ZONE_ALIGNMENT_VALUES = new Set(["left", "center", "right"]);
+  let zoneAlignmentPayload: Record<string, string> | undefined;
+  if (layoutDefinition.zoneAlignment && typeof layoutDefinition.zoneAlignment === "object") {
+    zoneAlignmentPayload = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneAlignment)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "string" || !ZONE_ALIGNMENT_VALUES.has(val)) continue;
+      zoneAlignmentPayload[key] = val;
+    }
+    if (Object.keys(zoneAlignmentPayload).length === 0) zoneAlignmentPayload = undefined;
+  }
+
   const MACRO_FITS = new Set(["cover", "contain", "fill", "none", "scale-down", "cover_1_1"]);
   let macroZonesPayload: Record<string, unknown> | undefined;
   if (layoutDefinition.macroZones && typeof layoutDefinition.macroZones === "object" && zones.includes("image")) {
@@ -983,6 +995,7 @@ export async function updatePresentationTemplateLayout(
     ...(nameFontWeight ? { nameFontWeight } : {}),
     ...(priceFontSize ? { priceFontSize } : {}),
     ...(priceLineHeight ? { priceLineHeight } : {}),
+    ...(zoneAlignmentPayload ? { zoneAlignment: zoneAlignmentPayload } : {}),
     ...(macroZonesPayload ? { macroZones: macroZonesPayload } : {}),
   };
   const { error } = await supabase
@@ -1094,6 +1107,17 @@ export async function updateFeaturedPresentationTemplateLayout(
       ? layoutDefinition.priceLineHeight
       : null;
 
+  const ZONE_ALIGNMENT_VALUES_F = new Set(["left", "center", "right"]);
+  let zoneAlignmentFeat: Record<string, string> | undefined;
+  if (layoutDefinition.zoneAlignment && typeof layoutDefinition.zoneAlignment === "object") {
+    zoneAlignmentFeat = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneAlignment)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || typeof val !== "string" || !ZONE_ALIGNMENT_VALUES_F.has(val)) continue;
+      zoneAlignmentFeat[key] = val;
+    }
+    if (Object.keys(zoneAlignmentFeat).length === 0) zoneAlignmentFeat = undefined;
+  }
+
   const MACRO_FITS_F = new Set(["cover", "contain", "fill", "none", "scale-down", "cover_1_1"]);
   let macroZonesFeat: Record<string, unknown> | undefined;
   if (layoutDefinition.macroZones && typeof layoutDefinition.macroZones === "object" && zones.includes("image")) {
@@ -1131,6 +1155,7 @@ export async function updateFeaturedPresentationTemplateLayout(
     ...(nameFontWeight ? { nameFontWeight } : {}),
     ...(priceFontSize ? { priceFontSize } : {}),
     ...(priceLineHeight ? { priceLineHeight } : {}),
+    ...(zoneAlignmentFeat ? { zoneAlignment: zoneAlignmentFeat } : {}),
     ...(macroZonesFeat ? { macroZones: macroZonesFeat } : {}),
   };
   const { error } = await supabase

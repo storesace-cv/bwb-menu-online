@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-14 (Altura zona conteúdo = zona imagem em layout horizontal; checkbox "Reduzir texto para caber"; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-14 (Editor de layouts: preço visível com scale inverse; ordem horizontal; alinhamento por zona; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -203,6 +203,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Object-fit "Cover 1:1" (macro-zonas):** Nova opção "Cover 1:1" em Imagem no espaço (object-fit): área da imagem em quadrado (lado = largura da zona), imagem com object-fit cover e object-position center (ex.: 16:9 cortada nos lados). Tipo `MacroImageObjectFit` com `cover_1_1`; renderer com wrapper `aspect-square` quando activo; validação em actions para persistir o valor.
 - **Altura zona conteúdo = zona imagem (macro horizontal):** Em layout horizontal com macro-zonas, a altura da linha passa a ser definida pela zona da imagem: com Cover 1:1 usa-se `aspect-ratio` no contentor da linha (altura = lado do quadrado); com `heightMode === "match_reference"` e referência imagem usa-se `height` fixa em vez de só `minHeight`, para a zona de conteúdo não ultrapassar a altura da imagem. Zona de conteúdo com `overflow-auto` e `min-h-0`.
 - **Checkbox "Reduzir texto para caber na zona":** Em Modelos de apresentação → Editar layout, com macro horizontal: nova opção "Reduzir texto para caber na zona" (`contentScaleToFit` em `macroZones`). Quando activa, o conteúdo da zona de texto é envolvido num wrapper com `transform: scale(0.9)` e `transform-origin: top left` para caber no espaço visível sem truncar. Tipo e `normalizeMacroZones` em `presentation-templates.ts`; persistência em `updatePresentationTemplateLayout` e `updateFeaturedPresentationTemplateLayout`.
+- **Editor de layouts: preço visível com "Reduzir texto" e alinhamento por zona:** Com "Reduzir texto para caber na zona" activo, o wrapper de scale passou a usar inverse scale (`width`/`height: 111.11%` + `scale(0.9)`) para que todo o conteúdo (incluindo preço) fique visível sem ser cortado. Em "Ordem dos campos" foi adicionado texto de ajuda: campos na mesma linha aparecem da esquerda para a direita pela ordem da lista (Subir/Descer). Novo campo **Alinhamento** por zona (Esquerda, Centralizado, Direita) via pulldown em cada campo; tipo `ZoneAlignment` e `zoneAlignment` em `LayoutDefinition`; aplicação no renderer (wrapper com `text-left`/`text-center`/`text-right` e `items-start`/`items-center`/`items-end`); persistência em `updatePresentationTemplateLayout` e `updateFeaturedPresentationTemplateLayout`.
 
 ---
 
