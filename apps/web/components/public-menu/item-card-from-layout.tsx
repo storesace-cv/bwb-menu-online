@@ -503,7 +503,20 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
       <div className="flex h-full min-h-0 min-w-0 flex-col bg-gray-100">{renderMacroImageButton()}</div>
     );
     const contentZone = (
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">{renderContentBlock()}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">
+        {mz.contentScaleToFit ? (
+          <div className="h-full min-h-0 w-full overflow-hidden">
+            <div
+              className="flex min-h-0 min-w-0 flex-col"
+              style={{ transform: "scale(0.9)", transformOrigin: "top left" }}
+            >
+              {renderContentBlock()}
+            </div>
+          </div>
+        ) : (
+          renderContentBlock()
+        )}
+      </div>
     );
 
     return (
@@ -520,8 +533,16 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         >
           {mz.direction === "horizontal" ? (
             <div
-              className="flex w-full flex-row items-stretch"
-              style={matchRefMin != null ? { minHeight: matchRefMin } : undefined}
+              className="flex w-full flex-row items-stretch overflow-hidden"
+              style={
+                isCover1_1
+                  ? { aspectRatio: `${100 / sp}` }
+                  : mz.heightMode === "match_reference" && mz.heightReference === "image" && matchRefMin != null
+                    ? { height: matchRefMin }
+                    : matchRefMin != null
+                      ? { minHeight: matchRefMin }
+                      : undefined
+              }
             >
               {mz.imageFirst ? (
                 <>

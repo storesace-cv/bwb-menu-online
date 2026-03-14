@@ -304,6 +304,9 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
   const [macroHeightReference, setMacroHeightReference] = useState<"image" | "content">(
     () => initMacro?.heightReference ?? DEFAULT_MACRO_ZONES.heightReference
   );
+  const [macroContentScaleToFit, setMacroContentScaleToFit] = useState(
+    () => initMacro?.contentScaleToFit ?? false
+  );
 
   const moveUp = useCallback((index: number) => {
     if (index <= 0) return;
@@ -492,6 +495,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     macroImageObjectFit,
     macroHeightMode,
     macroHeightReference,
+    macroContentScaleToFit,
   ]);
 
   const renderPreviewBlock = (type: string, inRow: boolean, widthPercent?: number) => {
@@ -644,27 +648,38 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
               </select>
             </div>
             {macroDirection === "horizontal" && (
-              <div>
-                <span className="block text-slate-300 text-sm font-medium mb-2">Altura entre colunas</span>
+              <>
+                <div>
+                  <span className="block text-slate-300 text-sm font-medium mb-2">Altura entre colunas</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={macroHeightMode === "auto"}
+                      onChange={() => setMacroHeightMode("auto")}
+                      className="rounded border-slate-500"
+                    />
+                    <span className="text-slate-200">Automático (linha ajusta à maior coluna)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer mt-1">
+                    <input
+                      type="radio"
+                      checked={macroHeightMode === "match_reference"}
+                      onChange={() => setMacroHeightMode("match_reference")}
+                      className="rounded border-slate-500"
+                    />
+                    <span className="text-slate-200">Igualar altura mínima (imagem vs conteúdo)</span>
+                  </label>
+                </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="radio"
-                    checked={macroHeightMode === "auto"}
-                    onChange={() => setMacroHeightMode("auto")}
+                    type="checkbox"
+                    checked={macroContentScaleToFit}
+                    onChange={(e) => setMacroContentScaleToFit(e.target.checked)}
                     className="rounded border-slate-500"
                   />
-                  <span className="text-slate-200">Automático (linha ajusta à maior coluna)</span>
+                  <span className="text-slate-200">Reduzir texto para caber na zona</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer mt-1">
-                  <input
-                    type="radio"
-                    checked={macroHeightMode === "match_reference"}
-                    onChange={() => setMacroHeightMode("match_reference")}
-                    className="rounded border-slate-500"
-                  />
-                  <span className="text-slate-200">Igualar altura mínima (imagem vs conteúdo)</span>
-                </label>
-              </div>
+              </>
             )}
           </div>
         )}

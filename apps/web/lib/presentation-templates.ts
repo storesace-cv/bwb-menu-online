@@ -52,6 +52,8 @@ export interface MacroZonesConfig {
   heightMode: "auto" | "match_reference";
   /** Quem define altura comum quando heightMode = match_reference */
   heightReference: "image" | "content";
+  /** Quando true, aplica scale proporcional ao texto da zona de conteúdo para caber na altura disponível (horizontal) */
+  contentScaleToFit?: boolean;
 }
 
 export const DEFAULT_MACRO_ZONES: MacroZonesConfig = {
@@ -85,6 +87,7 @@ export function normalizeMacroZones(m: Partial<MacroZonesConfig> | null | undefi
     : "cover";
   const heightMode = m.heightMode === "match_reference" ? "match_reference" : "auto";
   const heightReference = m.heightReference === "content" ? "content" : "image";
+  const contentScaleToFit = Boolean(m.contentScaleToFit);
   return {
     direction,
     splitPercent: split,
@@ -92,6 +95,7 @@ export function normalizeMacroZones(m: Partial<MacroZonesConfig> | null | undefi
     imageObjectFit,
     heightMode,
     heightReference,
+    contentScaleToFit,
   };
 }
 

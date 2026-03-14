@@ -855,6 +855,7 @@ export async function updatePresentationTemplateLayout(
       imageObjectFit?: string;
       heightMode?: string;
       heightReference?: string;
+      contentScaleToFit?: boolean;
     } | null;
   }
 ): Promise<{ error?: string }> {
@@ -964,6 +965,7 @@ export async function updatePresentationTemplateLayout(
       imageObjectFit,
       heightMode,
       heightReference,
+      contentScaleToFit: Boolean(m.contentScaleToFit),
     };
   }
 
@@ -1111,6 +1113,7 @@ export async function updateFeaturedPresentationTemplateLayout(
       imageObjectFit,
       heightMode,
       heightReference,
+      contentScaleToFit: Boolean(m.contentScaleToFit),
     };
   }
 
