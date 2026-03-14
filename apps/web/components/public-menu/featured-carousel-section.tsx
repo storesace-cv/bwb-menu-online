@@ -256,7 +256,7 @@ export function FeaturedCarouselSection({
     return (
       <div
         key={`${slot}-${index}`}
-        className="flex-shrink-0 rounded-2xl overflow-hidden"
+        className={`flex-shrink-0 rounded-2xl ${isSmallScreen ? "" : "overflow-hidden"}`}
         style={{
           position: "absolute",
           left: slotLeft,
