@@ -633,6 +633,11 @@ export async function setSectionAsDefault(_prev: { error?: string } | null, form
 }
 
 export async function updateCategory(_prev: { error?: string } | null, formData: FormData) {
+  // #region agent log
+  try {
+    console.log("[debug-2129fe]", JSON.stringify({ sessionId: "2129fe", hypothesisId: "categories", location: "updateCategory:entry", message: "updateCategory called", timestamp: Date.now() }));
+  } catch (_) {}
+  // #endregion
   const supabase = await createClient();
   const id = getFormDataValue(formData, "id")?.trim() ?? "";
   const name = getFormDataValue(formData, "name")?.trim() ?? "";
@@ -640,6 +645,11 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
   const sectionId = getFormDataValue(formData, "section_id")?.trim() || null;
   const presentationTemplateId = getFormDataValue(formData, "presentation_template_id")?.trim() || null;
   const sampleImageId = getFormDataValue(formData, "sample_image_id")?.trim() || null;
+  // #region agent log
+  try {
+    console.log("[debug-2129fe]", JSON.stringify({ sessionId: "2129fe", hypothesisId: "categories", location: "updateCategory:parsed", message: "form parsed", data: { id: id ? "ok" : "empty", name: name ? "ok" : "empty", sectionId: sectionId ? "ok" : "empty" }, timestamp: Date.now() }));
+  } catch (_) {}
+  // #endregion
   if (!id || !name) return { error: "ID e nome obrigatórios" };
   if (!sectionId) return { error: "Secção obrigatória." };
   const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
@@ -656,7 +666,14 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
       sample_image_id: sampleImageId || null,
     })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    // #region agent log
+    try {
+      console.log("[debug-2129fe]", JSON.stringify({ sessionId: "2129fe", hypothesisId: "categories", location: "updateCategory:dbError", message: "supabase update error", data: { errorMessage: error.message }, timestamp: Date.now() }));
+    } catch (_) {}
+    // #endregion
+    return { error: error.message };
+  }
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/categories");
   return null;
@@ -676,6 +693,11 @@ export async function deleteCategory(_prev: { error?: string } | null, formData:
   revalidatePath("/portal-admin/menu");
   revalidatePath("/portal-admin/settings/categories");
   return null;
+}
+
+/** Form action wrapper for delete category (no inline function in Client Component). */
+export async function deleteCategoryFormAction(formData: FormData): Promise<void> {
+  await deleteCategory(null, formData);
 }
 
 export async function sortSectionCategoriesAlphabetically(_prev: { error?: string } | null, formData: FormData) {

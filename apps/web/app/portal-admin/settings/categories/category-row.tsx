@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useFormState } from "react-dom";
-import { updateCategory, deleteCategory } from "../../actions";
+import { updateCategory, deleteCategoryFormAction } from "../../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { Input, Select, Button, Alert, SubmitButton } from "@/components/admin";
 
@@ -130,7 +130,7 @@ export function CategoryRow({
       <Button type="button" variant="outline" onClick={() => setEditing(true)} className="py-1 px-2 text-sm">
         Editar
       </Button>
-      <form ref={deleteFormRef} action={(fd: FormData) => { void deleteCategory(null, fd); }} className="inline">
+      <form ref={deleteFormRef} action={deleteCategoryFormAction} className="inline">
         <input type="hidden" name="id" value={category.id} />
         <Button type="button" variant="danger" onClick={handleDeleteClick} className="py-1 px-2 text-sm">
           Apagar
