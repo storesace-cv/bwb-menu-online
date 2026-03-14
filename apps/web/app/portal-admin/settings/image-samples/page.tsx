@@ -10,12 +10,6 @@ export const dynamic = "force-dynamic";
 
 const BUCKET = "menu-images";
 
-function debugLog2129fe(payload: { hypothesisId: string; location: string; message: string; data?: Record<string, unknown> }) {
-  try {
-    console.log("[debug-2129fe]", JSON.stringify({ sessionId: "2129fe", ...payload, timestamp: Date.now() }));
-  } catch (_) {}
-}
-
 function previewUrl(imageBasePath: string): string {
   const base = typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string"
     ? process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/, "")
@@ -26,19 +20,10 @@ function previewUrl(imageBasePath: string): string {
 
 export default async function ImageSamplesPage() {
   try {
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "E", location: "image-samples:try-started", message: "page try started" });
-    // #endregion
     const headersList = await headers();
     const host = getPortalHost(headersList);
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "E", location: "image-samples:after-headers", message: "headers/host ok", data: { host } });
-    // #endregion
     const supabase = await createClient();
     const { data: storeId } = await supabase.rpc("get_store_id_by_hostname", { p_hostname: host });
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "E", location: "image-samples:after-storeId", message: "storeId ok", data: { storeId } });
-    // #endregion
 
     if (storeId) {
       return (
@@ -52,9 +37,6 @@ export default async function ImageSamplesPage() {
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "E", location: "image-samples:after-getUser", message: "getUser ok", data: { hasUser: !!user } });
-    // #endregion
     if (!user) {
       return (
         <div>
@@ -66,9 +48,6 @@ export default async function ImageSamplesPage() {
     }
 
     const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "E", location: "image-samples:after-isSuper", message: "isSuper ok", data: { isSuper } });
-    // #endregion
     if (!isSuper) {
       return (
         <div>
@@ -80,21 +59,15 @@ export default async function ImageSamplesPage() {
       );
     }
 
-    const { data: samples, error: samplesError } = await supabase
+    const { data: samples } = await supabase
       .from("image_samples")
       .select("id, name, image_base_path, created_at")
       .order("created_at", { ascending: false });
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "E", location: "image-samples:after-samples", message: "samples query done", data: { count: (samples ?? []).length, error: samplesError?.message ?? null } });
-    // #endregion
 
     const samplesWithPreview = (samples ?? []).map((s) => ({
       ...s,
       preview_url: previewUrl(s.image_base_path ?? ""),
     }));
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "D", location: "image-samples:before-return", message: "about to return JSX", data: { samplesLen: samplesWithPreview.length } });
-    // #endregion
 
     return (
       <div>
@@ -153,9 +126,6 @@ export default async function ImageSamplesPage() {
       </div>
     );
   } catch (e) {
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "E", location: "image-samples:catch", message: "page catch", data: { error: String(e), name: (e as Error)?.name, digest: (e as Error & { digest?: string })?.digest } });
-    // #endregion
     console.error("[image-samples]", e);
     return (
       <div>

@@ -13,36 +13,18 @@ const THEME_WRAPPER_CLASS =
 const PORTAL_LOGIN = "/portal-admin/login";
 const CHANGE_PASSWORD = "/portal-admin/change-password";
 
-function debugLog2129fe(payload: { hypothesisId: string; location: string; message: string; data?: Record<string, unknown> }) {
-  try {
-    console.log("[debug-2129fe]", JSON.stringify({ sessionId: "2129fe", ...payload, timestamp: Date.now() }));
-  } catch (_) {}
-}
-
 export default async function PortalAdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // #region agent log
-  debugLog2129fe({ hypothesisId: "A", location: "layout:entry", message: "layout started" });
-  // #endregion
   const headersList = await headers();
-  // #region agent log
-  debugLog2129fe({ hypothesisId: "A", location: "layout:after-headers", message: "headers() ok" });
-  // #endregion
   const host = getPortalHost(headersList);
   const pathname = headersList.get("x-pathname") ?? "/portal-admin";
-  // #region agent log
-  debugLog2129fe({ hypothesisId: "B", location: "layout:after-getPortalHost", message: "getPortalHost ok", data: { host, pathname } });
-  // #endregion
   const nextActionHeader = (headersList.get("next-action") ?? headersList.get("Next-Action") ?? "").trim();
   const portalActionPost = headersList.get("x-portal-action-post") === "1";
   const isActionPost = nextActionHeader !== "" || portalActionPost;
   const mode = getPortalMode(host, pathname);
-  // #region agent log
-  debugLog2129fe({ hypothesisId: "B", location: "layout:after-getPortalMode", message: "getPortalMode ok", data: { mode } });
-  // #endregion
 
   if (isActionPost) {
     // #region agent log
@@ -76,9 +58,6 @@ export default async function PortalAdminLayout({
   }
 
   try {
-    // #region agent log
-    debugLog2129fe({ hypothesisId: "A", location: "layout:try-started", message: "layout try block" });
-    // #endregion
     const isLoginPage = pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/");
     const isRsc = headersList.get("rsc") === "1" || headersList.get("RSC") === "1";
 
