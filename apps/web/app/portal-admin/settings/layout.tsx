@@ -13,6 +13,10 @@ export default async function PortalAdminSettingsLayout({
   children: React.ReactNode;
 }) {
   const headersList = await headers();
+  const nextAction = (headersList.get("next-action") ?? headersList.get("Next-Action") ?? "").trim();
+  const portalActionPost = headersList.get("x-portal-action-post") === "1";
+  if (nextAction !== "" || portalActionPost) return <>{children}</>;
+
   const host = getPortalHost(headersList);
   const pathname = headersList.get("x-pathname") ?? "/portal-admin/settings";
   const mode = getPortalMode(host, pathname);

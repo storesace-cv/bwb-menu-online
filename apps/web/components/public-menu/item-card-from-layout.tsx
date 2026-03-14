@@ -201,6 +201,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     setEffectiveSrc(imageSrc);
   }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
+  const noDefaultSample =
+    sampleImageUsage === "none" || sampleImageUsage === "category_only" || sampleImageUsage === "article_only";
+  const handleImageError = () => setEffectiveSrc(noDefaultSample ? "" : FALLBACK_IMAGE);
   const zoneOrder = layoutDefinition.zoneOrder ?? [];
   const minHeight = layoutDefinition.canvasHeight != null && layoutDefinition.canvasHeight > 0
     ? layoutDefinition.canvasHeight
@@ -259,7 +262,11 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             style={imageHeightPx != null ? { height: `${imageHeightPx}px`, minHeight: `${imageHeightPx}px` } : undefined}
             aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
           >
-            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full max-w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
+            {effectiveSrc === "" ? (
+              <span className="block w-full h-full min-h-0 overflow-hidden bg-gray-100" aria-hidden style={imageHeightPx != null ? { height: `${imageHeightPx}px` } : undefined} />
+            ) : (
+              <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full max-w-full object-cover border-0" onError={handleImageError} />
+            )}
           </button>
         );
       case "icons":

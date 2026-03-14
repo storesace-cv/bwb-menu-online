@@ -20,7 +20,7 @@ async function ensureMenuImagesBucket(admin: SupabaseClient): Promise<void> {
   }
 }
 
-/** POST: multipart form-data file (required), name (optional). Superadmin only. */
+/** POST: multipart form-data file (required), name (optional), store_id (optional; required for tenants). Superadmin can omit store_id for global samples; tenants must send store_id. */
 export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -32,10 +32,6 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
-  if (!isSuper) {
-    return NextResponse.json({ error: "Forbidden: superadmin only" }, { status: 403 });
   }
 
   let formData: FormData;
@@ -65,6 +61,19 @@ export async function POST(request: NextRequest) {
   }
 
   const name = (formData.get("name") as string)?.trim() || file.name.replace(/\.[^.]+$/i, "").trim() || "Sample";
+  const storeIdRaw = (formData.get("store_id") as string)?.trim() || null;
+  const storeId = storeIdRaw && /^[0-9a-f-]{36}$/i.test(storeIdRaw) ? storeIdRaw : null;
+
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) {
+    if (!storeId) {
+      return NextResponse.json({ error: "store_id obrigatório para utilizadores não superadmin" }, { status: 400 });
+    }
+    const { data: canAccess } = await supabase.rpc("current_user_can_access_settings", { p_store_id: storeId });
+    if (!canAccess) {
+      return NextResponse.json({ error: "Sem acesso a esta loja" }, { status: 403 });
+    }
+  }
 
   const admin = createServiceClient(url, serviceKey, { auth: { persistSession: false } });
 
@@ -75,9 +84,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
+  const insertPayload: { name: string | null; image_base_path: string; store_id?: string | null } = {
+    name: name || null,
+    image_base_path: "pending",
+  };
+  if (storeId != null) insertPayload.store_id = storeId;
+
   const { data: row, error: insertErr } = await admin
     .from("image_samples")
-    .insert({ name: name || null, image_base_path: "pending" })
+    .insert(insertPayload)
     .select("id")
     .single();
 

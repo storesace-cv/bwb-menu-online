@@ -100,6 +100,9 @@ export function ItemCardDestaque1({
     setEffectiveSrc(imageSrc);
   }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
+  const noDefaultSample =
+    sampleImageUsage === "none" || sampleImageUsage === "category_only" || sampleImageUsage === "article_only";
+  const handleImageError = () => setEffectiveSrc(noDefaultSample ? "" : FALLBACK_IMAGE);
 
   const useLayout =
     layoutDefinition != null &&
@@ -270,12 +273,13 @@ export function ItemCardDestaque1({
           alt=""
           aria-hidden
           className="absolute w-0 h-0 opacity-0 pointer-events-none"
-          onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
+          onError={handleImageError}
         />
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(${effectiveSrc})`,
+            backgroundImage: effectiveSrc !== "" ? `url(${effectiveSrc})` : undefined,
+            backgroundColor: effectiveSrc === "" ? "rgb(107 114 128)" : undefined,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

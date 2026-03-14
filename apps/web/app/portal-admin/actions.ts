@@ -1706,15 +1706,15 @@ export async function updateStoreSettings(_prev: { error?: string } | null, form
 export async function updateImageSource(_prev: { error?: string } | null, formData: FormData) {
   try {
     const supabase = await createClient();
-    const storeId = (formData.get("store_id") as string)?.trim() ?? "";
+    const storeId = (getFormDataValue(formData, "store_id") ?? "").trim();
     if (!storeId) return { error: "Loja obrigatória" };
     const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: storeId });
     if (!hasAccess) return { error: "Sem acesso a esta loja" };
 
-    const raw = (formData.get("image_source") as string)?.trim() ?? "storage";
+    const raw = (getFormDataValue(formData, "image_source") ?? "").trim() || "storage";
     const imageSource = raw === "url" || raw === "legacy_path" ? raw : "storage";
 
-    const sampleRaw = (formData.get("sample_image_usage") as string)?.trim() ?? "category_only";
+    const sampleRaw = (getFormDataValue(formData, "sample_image_usage") ?? "").trim() || "category_only";
     const sampleImageUsage =
       sampleRaw === "none" || sampleRaw === "article_only" ? sampleRaw : "category_only";
 

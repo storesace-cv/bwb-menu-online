@@ -38,6 +38,9 @@ export function ItemCardRestaurante2({
     setEffectiveSrc(imageSrc);
   }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
+  const noDefaultSample =
+    sampleImageUsage === "none" || sampleImageUsage === "category_only" || sampleImageUsage === "article_only";
+  const handleImageError = () => setEffectiveSrc(noDefaultSample ? "" : FALLBACK_IMAGE);
 
   const modal = (
     <ImageIngredientsModal
@@ -60,7 +63,11 @@ export function ItemCardRestaurante2({
             className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
             aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
           >
-            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
+            {effectiveSrc === "" ? (
+              <span className="block w-full aspect-[4/3] overflow-hidden bg-gray-100" aria-hidden />
+            ) : (
+              <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={handleImageError} />
+            )}
           </button>
         </div>
         <div className={`px-3 pt-0 flex justify-end items-center gap-1.5 flex-wrap min-h-[16px] ${zoneRowClass}`}>
@@ -164,12 +171,16 @@ export function ItemCardRestaurante2({
           className="block flex-[1_1_0] min-w-0 aspect-square max-w-[268px] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
-          <img
-            src={effectiveSrc}
-            alt={item.menu_name ?? ""}
-            className="h-full w-full object-cover border-0 min-h-0"
-            onError={() => setEffectiveSrc(FALLBACK_IMAGE)}
-          />
+          {effectiveSrc === "" ? (
+            <span className="block w-full aspect-square overflow-hidden bg-gray-100" aria-hidden />
+          ) : (
+            <img
+              src={effectiveSrc}
+              alt={item.menu_name ?? ""}
+              className="h-full w-full object-cover border-0 min-h-0"
+              onError={handleImageError}
+            />
+          )}
         </button>
         <div className="flex-[2_2_0] flex flex-col min-w-0 p-3 sm:p-4">
           <h3 className="font-bold text-lg text-gray-900 text-left mt-0 mb-1">{item.menu_name}</h3>

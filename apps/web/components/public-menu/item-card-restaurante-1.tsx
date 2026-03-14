@@ -39,11 +39,22 @@ function fallbackForItem(
   item: PublicMenuItem,
   sampleImageUsage?: string
 ): string {
-  const useCategorySample = sampleImageUsage === "category_only" || sampleImageUsage == null;
-  if (useCategorySample && item.category_sample_image_base_path != null && item.category_sample_image_base_path !== "") {
-    return storageUrl(item.category_sample_image_base_path, "640.webp");
+  if (sampleImageUsage === "none" || sampleImageUsage === "article_only") {
+    return "";
   }
-  return FALLBACK_IMAGE;
+  if (sampleImageUsage === "category_only") {
+    if (item.category_sample_image_base_path != null && item.category_sample_image_base_path !== "") {
+      return storageUrl(item.category_sample_image_base_path, "640.webp");
+    }
+    return "";
+  }
+  if (sampleImageUsage == null) {
+    if (item.category_sample_image_base_path != null && item.category_sample_image_base_path !== "") {
+      return storageUrl(item.category_sample_image_base_path, "640.webp");
+    }
+    return FALLBACK_IMAGE;
+  }
+  return "";
 }
 
 export function getImageSrc(
@@ -168,6 +179,10 @@ export function ItemCardRestaurante1({
     setEffectiveSrc(imageSrc);
   }, [imageSrc]);
   const hasIngredients = item.menu_ingredients != null && item.menu_ingredients.trim() !== "";
+  const noDefaultSample =
+    sampleImageUsage === "none" || sampleImageUsage === "category_only" || sampleImageUsage === "article_only";
+  const handleImageError = () => setEffectiveSrc(noDefaultSample ? "" : FALLBACK_IMAGE);
+  const imagePlaceholderClass = "block w-full aspect-[4/3] overflow-hidden bg-gray-100";
 
   const modal = (
     <ImageIngredientsModal
@@ -191,7 +206,11 @@ export function ItemCardRestaurante1({
             className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
             aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
           >
-            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
+            {effectiveSrc === "" ? (
+              <span className={imagePlaceholderClass} aria-hidden />
+            ) : (
+              <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={handleImageError} />
+            )}
           </button>
         </div>
         {/* Linha 2: ícones (A) */}
@@ -292,7 +311,11 @@ export function ItemCardRestaurante1({
           className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
           aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
         >
-          <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={() => setEffectiveSrc(FALLBACK_IMAGE)} />
+          {effectiveSrc === "" ? (
+            <span className={imagePlaceholderClass} aria-hidden />
+          ) : (
+            <img src={effectiveSrc} alt={item.menu_name ?? ""} className="h-full w-full object-cover border-0" onError={handleImageError} />
+          )}
         </button>
         <div className="p-3 flex flex-col flex-1 min-h-0 min-w-0">
           <div className="flex justify-end items-center gap-1.5 flex-wrap min-h-[28px] shrink-0">

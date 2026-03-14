@@ -37,6 +37,7 @@ export default async function CategoriesPage() {
   const { data: imageSamples } = await supabase
     .from("image_samples")
     .select("id, name")
+    .or(`store_id.is.null,store_id.eq.${storeId}`)
     .order("name");
 
   type CategoryItem = { id: string; name: string; sort_order: number; section_id: string | null; presentation_template_id?: string | null; sample_image_id?: string | null };
@@ -104,6 +105,7 @@ export default async function CategoriesPage() {
         <Card>
           {categories && categories.length > 0 ? (
             <CategoriesListClient
+              storeId={storeId}
               sections={sections ?? []}
               categoriesBySectionId={Object.fromEntries(categoriesBySectionId)}
               uncategorized={uncategorized}

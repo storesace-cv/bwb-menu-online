@@ -40,6 +40,7 @@ type PresentationTemplate = { id: string; name: string };
 type ImageSample = { id: string; name: string | null };
 
 type Props = {
+  storeId: string;
   sections: SectionItem[];
   categoriesBySectionId: Record<string, CategoryItem[]>;
   uncategorized: CategoryItem[];
@@ -51,6 +52,7 @@ function SortableSectionCard({
   section,
   sectionCategories,
   sections,
+  storeId,
   presentationTemplates,
   imageSamples,
   onOrdenar,
@@ -59,6 +61,7 @@ function SortableSectionCard({
   section: SectionItem;
   sectionCategories: CategoryItem[];
   sections: SectionItem[];
+  storeId: string;
   presentationTemplates: PresentationTemplate[];
   imageSamples: ImageSample[];
   onOrdenar: (sectionId: string) => void;
@@ -142,6 +145,7 @@ function SortableSectionCard({
                 key={c.id}
                 category={c}
                 sections={sections}
+                storeId={storeId}
                 presentationTemplates={presentationTemplates}
                 imageSamples={imageSamples}
               />
@@ -185,11 +189,13 @@ function CategoryDndContext({
 function SortableCategoryCard({
   category,
   sections,
+  storeId,
   presentationTemplates,
   imageSamples,
 }: {
   category: CategoryItem;
   sections: SectionItem[];
+  storeId: string;
   presentationTemplates: PresentationTemplate[];
   imageSamples: ImageSample[];
 }) {
@@ -236,6 +242,7 @@ function SortableCategoryCard({
             <CategoryRow
               category={category}
               sections={sections}
+              storeId={storeId}
               presentationTemplates={presentationTemplates}
               imageSamples={imageSamples}
               contentOnly
@@ -264,6 +271,7 @@ function SortableCategoryCard({
 }
 
 export function CategoriesListClient({
+  storeId,
   sections,
   categoriesBySectionId,
   uncategorized,
@@ -320,6 +328,7 @@ export function CategoriesListClient({
                 section={s}
                 sectionCategories={sectionCategories}
                 sections={sections}
+                storeId={storeId}
                 presentationTemplates={presentationTemplates}
                 imageSamples={imageSamples}
                 onOrdenar={handleOrdenar}
