@@ -309,7 +309,7 @@ export function FeaturedCarouselSection({
             aria-label="Destaques"
             className={isSmallScreen ? "relative w-full flex justify-center px-0 sm:px-2" : "relative w-full flex justify-center px-4"}
             style={{
-              minHeight: `${carouselMinHeight}px`,
+              minHeight: isSmallScreen ? 360 : carouselMinHeight,
               overflow: "visible",
             }}
             onTouchStart={handleTouchStart}
@@ -322,10 +322,18 @@ export function FeaturedCarouselSection({
                 style={{
                   width: "100%",
                   maxWidth: MOBILE_CONTAINER_MAX_WIDTH,
-                  height: MOBILE_CAROUSEL_HEIGHT,
                   overflow: "visible",
                 }}
               >
+                <div
+                  aria-hidden
+                  style={{
+                    width: "78vw",
+                    maxWidth: MOBILE_SLOT_MAX_WIDTH,
+                    minWidth: MOBILE_SLOT_MIN_WIDTH,
+                    aspectRatio: "435/600",
+                  }}
+                />
                 {n === 1 ? (
                   renderSlot(0, "center")
                 ) : (
@@ -381,8 +389,8 @@ export function FeaturedCarouselSection({
                 <span
                   className="rounded-full block flex-shrink-0 border-2 border-transparent"
                   style={{
-                    width: index === activeIndex ? 12 : 8,
-                    height: index === activeIndex ? 12 : 8,
+                    width: index === activeIndex ? 6 : 4,
+                    height: index === activeIndex ? 6 : 4,
                     backgroundColor: index === activeIndex ? "var(--menu-primary)" : "transparent",
                     borderColor: index === activeIndex ? "var(--menu-primary)" : "rgba(0,0,0,0.2)",
                   }}
