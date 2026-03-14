@@ -521,7 +521,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     const inner =
       effectiveSrc === "" ? (
         <span
-          className={`block bg-gray-100 ${isCover1_1 ? "h-full w-full min-h-0" : "min-h-[120px] w-full flex-1"}`}
+          className={`block bg-white ${isCover1_1 ? "h-full w-full min-h-0" : "min-h-[120px] w-full flex-1"}`}
           aria-hidden
         />
       ) : (
@@ -537,12 +537,12 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
       <button
         type="button"
         onClick={() => setImageModalOpen(true)}
-        className={`flex w-full flex-1 flex-col overflow-hidden bg-gray-100 text-left focus:outline-none border-0 ${isCover1_1 ? "" : "min-h-[120px]"}`}
+        className={`flex w-full flex-1 flex-col overflow-hidden p-0 text-left focus:outline-none border-0 ${isCover1_1 ? "" : "min-h-[120px]"}`}
         style={!isCover1_1 && imgH ? { minHeight: imgH } : undefined}
         aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
       >
         {isCover1_1 ? (
-          <div className="w-full aspect-square overflow-hidden shrink-0">{inner}</div>
+          <div className="w-full h-full min-h-0 aspect-square overflow-hidden shrink-0">{inner}</div>
         ) : (
           inner
         )}
@@ -564,7 +564,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         : undefined;
 
     const imageZone = (
-      <div className="flex h-full min-h-0 min-w-0 flex-col bg-gray-100">{renderMacroImageButton()}</div>
+      <div className="flex h-full min-h-0 min-w-0 flex-col">{renderMacroImageButton()}</div>
     );
     const contentZone = (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">
