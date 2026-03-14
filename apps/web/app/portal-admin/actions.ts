@@ -945,7 +945,7 @@ export async function updatePresentationTemplateLayout(
       ? layoutDefinition.priceLineHeight
       : null;
 
-  const MACRO_FITS = new Set(["cover", "contain", "fill", "none", "scale-down"]);
+  const MACRO_FITS = new Set(["cover", "contain", "fill", "none", "scale-down", "cover_1_1"]);
   let macroZonesPayload: Record<string, unknown> | undefined;
   if (layoutDefinition.macroZones && typeof layoutDefinition.macroZones === "object" && zones.includes("image")) {
     const m = layoutDefinition.macroZones;
@@ -1092,7 +1092,7 @@ export async function updateFeaturedPresentationTemplateLayout(
       ? layoutDefinition.priceLineHeight
       : null;
 
-  const MACRO_FITS_F = new Set(["cover", "contain", "fill", "none", "scale-down"]);
+  const MACRO_FITS_F = new Set(["cover", "contain", "fill", "none", "scale-down", "cover_1_1"]);
   let macroZonesFeat: Record<string, unknown> | undefined;
   if (layoutDefinition.macroZones && typeof layoutDefinition.macroZones === "object" && zones.includes("image")) {
     const m = layoutDefinition.macroZones;

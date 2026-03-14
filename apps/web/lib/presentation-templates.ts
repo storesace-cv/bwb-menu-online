@@ -32,8 +32,8 @@ export type ContentFontWeight = "semibold" | "bold";
 /** Altura de linha para o preço. */
 export type ContentLineHeight = "none" | "normal";
 
-/** object-fit CSS para a zona imagem (macro-zonas). */
-export type MacroImageObjectFit = "cover" | "contain" | "fill" | "none" | "scale-down";
+/** object-fit CSS para a zona imagem (macro-zonas). cover_1_1 = quadrado (lado = largura da zona), imagem cover centrada. */
+export type MacroImageObjectFit = "cover" | "contain" | "fill" | "none" | "scale-down" | "cover_1_1";
 
 /**
  * Duas macro-zonas: imagem + conteúdo (demais campos).
@@ -69,6 +69,7 @@ export const MACRO_IMAGE_OBJECT_FIT_LABELS: Record<MacroImageObjectFit, string> 
   fill: "Esticar",
   none: "Natural",
   "scale-down": "Scale down",
+  cover_1_1: "Cover 1:1",
 };
 
 export function normalizeMacroZones(m: Partial<MacroZonesConfig> | null | undefined): MacroZonesConfig | null {
@@ -78,7 +79,7 @@ export function normalizeMacroZones(m: Partial<MacroZonesConfig> | null | undefi
   if (!Number.isFinite(split)) split = DEFAULT_MACRO_ZONES.splitPercent;
   split = Math.max(10, Math.min(90, split));
   const imageFirst = Boolean(m.imageFirst);
-  const fits: MacroImageObjectFit[] = ["cover", "contain", "fill", "none", "scale-down"];
+  const fits: MacroImageObjectFit[] = ["cover", "contain", "fill", "none", "scale-down", "cover_1_1"];
   const imageObjectFit = fits.includes(m.imageObjectFit as MacroImageObjectFit)
     ? (m.imageObjectFit as MacroImageObjectFit)
     : "cover";
@@ -100,6 +101,7 @@ export const OBJECT_FIT_TO_CLASS: Record<MacroImageObjectFit, string> = {
   fill: "object-fill",
   none: "object-none",
   "scale-down": "object-scale-down",
+  cover_1_1: "object-cover",
 };
 
 export interface LayoutDefinition {

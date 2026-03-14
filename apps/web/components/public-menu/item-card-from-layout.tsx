@@ -451,26 +451,36 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     </div>
   );
 
+  const isCover1_1 = macroZones?.imageObjectFit === "cover_1_1";
   const renderMacroImageButton = () => {
     const imgH = imageHeightPx != null ? `${imageHeightPx}px` : undefined;
+    const inner =
+      effectiveSrc === "" ? (
+        <span
+          className={`block bg-gray-100 ${isCover1_1 ? "h-full w-full min-h-0" : "min-h-[120px] w-full flex-1"}`}
+          aria-hidden
+        />
+      ) : (
+        <img
+          src={effectiveSrc}
+          alt={item.menu_name ?? ""}
+          className={`border-0 ${isCover1_1 ? "h-full w-full object-cover object-center" : `min-h-[120px] w-full flex-1 ${objectFitClass}`}`}
+          style={isCover1_1 ? undefined : { minHeight: imgH ?? "120px" }}
+          onError={handleImageError}
+        />
+      );
     return (
       <button
         type="button"
         onClick={() => setImageModalOpen(true)}
-        className="flex w-full min-h-[120px] flex-1 flex-col overflow-hidden bg-gray-100 text-left focus:outline-none border-0"
-        style={imgH ? { minHeight: imgH } : undefined}
+        className={`flex w-full flex-1 flex-col overflow-hidden bg-gray-100 text-left focus:outline-none border-0 ${isCover1_1 ? "" : "min-h-[120px]"}`}
+        style={!isCover1_1 && imgH ? { minHeight: imgH } : undefined}
         aria-label={`Ver imagem e ingredientes de ${item.menu_name ?? "artigo"}`}
       >
-        {effectiveSrc === "" ? (
-          <span className="block min-h-[120px] w-full flex-1 bg-gray-100" aria-hidden />
+        {isCover1_1 ? (
+          <div className="w-full aspect-square overflow-hidden shrink-0">{inner}</div>
         ) : (
-          <img
-            src={effectiveSrc}
-            alt={item.menu_name ?? ""}
-            className={`min-h-[120px] w-full flex-1 border-0 ${objectFitClass}`}
-            style={{ minHeight: imgH ?? "120px" }}
-            onError={handleImageError}
-          />
+          inner
         )}
       </button>
     );
