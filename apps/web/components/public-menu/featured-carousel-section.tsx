@@ -24,9 +24,12 @@ const CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP = 905;
 const SLOT_CENTER_LEFT_DESKTOP = (CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP - CARD_WIDTH_DESKTOP) / 2;
 const SLOT_RIGHT_LEFT_DESKTOP = CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP - CARD_WIDTH_DESKTOP;
 
-/** Mobile: mesmo ratio 435:600, largura limitada ao viewport. */
-const CARD_WIDTH_MOBILE = "min(435px, 90vw)";
-const CAROUSEL_MIN_HEIGHT_MOBILE = 600;
+/** Mobile (layout novo): altura da region e do contentor, offset dos slots. */
+const MOBILE_CAROUSEL_HEIGHT = 520;
+const MOBILE_SLOT_OFFSET_PX = 120;
+const MOBILE_SLOT_MAX_WIDTH = 320;
+const MOBILE_SLOT_MIN_WIDTH = 280;
+const MOBILE_CONTAINER_MAX_WIDTH = 430;
 
 export function FeaturedCarouselSection({
   featuredItems,
@@ -71,9 +74,7 @@ export function FeaturedCarouselSection({
   const touchStartY = useRef<number | null>(null);
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const contentWrapperRef = useRef<HTMLDivElement>(null);
-  const mobileSlotsWrapperRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number | null>(null);
-  const [mobileScale, setMobileScale] = useState(1);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -101,36 +102,9 @@ export function FeaturedCarouselSection({
     return () => cancelAnimationFrame(id);
   }, [isSmallScreen, n]);
 
-  useEffect(() => {
-    if (!isSmallScreen) {
-      setMobileScale(1);
-      return;
-    }
-    const container = carouselContainerRef.current;
-    const content = mobileSlotsWrapperRef.current;
-    if (!container || !content) return;
-
-    const updateScale = () => {
-      const cw = container.clientWidth;
-      const ch = container.clientHeight;
-      const contentW = mobileSlotsWrapperRef.current?.offsetWidth ?? 0;
-      const contentH = mobileSlotsWrapperRef.current?.offsetHeight ?? 0;
-      if (contentW <= 0 || contentH <= 0) return;
-      const s = Math.min(1, cw / contentW, ch / contentH);
-      setMobileScale(s);
-    };
-
-    updateScale();
-    const ro = new ResizeObserver(() => {
-      requestAnimationFrame(updateScale);
-    });
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [isSmallScreen, n]);
-
-  const cardWidth = isSmallScreen ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP;
-  const cardHeight = isSmallScreen ? CAROUSEL_MIN_HEIGHT_MOBILE : CARD_HEIGHT_DESKTOP;
-  const carouselMinHeight = isSmallScreen ? CAROUSEL_MIN_HEIGHT_MOBILE : CARD_HEIGHT_DESKTOP;
+  const cardWidth = CARD_WIDTH_DESKTOP;
+  const cardHeight = CARD_HEIGHT_DESKTOP;
+  const carouselMinHeight = isSmallScreen ? MOBILE_CAROUSEL_HEIGHT : CARD_HEIGHT_DESKTOP;
   const overlapInsidePx = OVERLAP_INSIDE_PX_DESKTOP;
   const leftTranslateX = `calc(-100% + ${CARD_WIDTH_DESKTOP / 2 + overlapInsidePx}px)`;
   const rightTranslateX = `${CARD_WIDTH_DESKTOP / 2 - overlapInsidePx}px`;
@@ -231,49 +205,54 @@ export function FeaturedCarouselSection({
   const renderSlot = (index: number, slot: "left" | "center" | "right") => {
     const { item, categoryName } = featuredItems[index];
     const isCenter = slot === "center";
-    const slotWidth: React.CSSProperties["width"] =
-      typeof cardWidth === "number" ? cardWidth : cardWidth;
-    const wrapperSize: React.CSSProperties =
-      typeof cardWidth === "number"
-        ? { width: "100%", height: cardHeight }
-        : { width: "100%", aspectRatio: "435/600" };
-    const isDesktop = typeof cardWidth === "number";
-    const slotLeft = isDesktop
-      ? slot === "left"
+    const slotWidthStyle: React.CSSProperties = isSmallScreen
+      ? { width: "78vw", maxWidth: MOBILE_SLOT_MAX_WIDTH, minWidth: MOBILE_SLOT_MIN_WIDTH }
+      : { width: cardWidth };
+    const wrapperSize: React.CSSProperties = isSmallScreen
+      ? { width: "100%", aspectRatio: "435/600" }
+      : { width: "100%", height: cardHeight };
+    const slotLeft: string | number = isSmallScreen
+      ? "50%"
+      : slot === "left"
         ? 0
         : slot === "center"
           ? SLOT_CENTER_LEFT_DESKTOP
-          : SLOT_RIGHT_LEFT_DESKTOP
-      : "50%";
-    const slotTransform = isDesktop
-      ? undefined
-      : isCenter
-        ? "translateX(-50%)"
-        : slot === "left"
-          ? `translateX(${leftTranslateX})`
-          : `translateX(${rightTranslateX})`;
+          : SLOT_RIGHT_LEFT_DESKTOP;
+    const slotTransform = isSmallScreen
+      ? slot === "left"
+        ? `translateX(calc(-50% - ${MOBILE_SLOT_OFFSET_PX}px))`
+        : slot === "center"
+          ? "translateX(-50%)"
+          : `translateX(calc(-50% + ${MOBILE_SLOT_OFFSET_PX}px))`
+      : undefined;
+    const slotTransformOrigin =
+      slot === "left" ? "right center" : slot === "right" ? "left center" : "center center";
 
     return (
       <div
         key={`${slot}-${index}`}
-        className={`flex-shrink-0 rounded-2xl ${isSmallScreen ? "" : "overflow-hidden"}`}
+        className={isSmallScreen ? "rounded-2xl" : "flex-shrink-0 rounded-2xl overflow-hidden"}
         style={{
           position: "absolute",
           left: slotLeft,
           top: 0,
-          width: slotWidth,
+          ...slotWidthStyle,
           ...(slotTransform !== undefined && { transform: slotTransform }),
-          transformOrigin: slot === "left" ? "right center" : slot === "right" ? "left center" : "center center",
+          transformOrigin: slotTransformOrigin,
           zIndex: isCenter ? 2 : 1,
         }}
       >
-        <div className={`w-full rounded-2xl ${isSmallScreen ? "overflow-visible" : "overflow-hidden"}`} style={wrapperSize}>
+        <div
+          className={isSmallScreen ? "w-full rounded-2xl overflow-hidden" : "w-full rounded-2xl overflow-hidden"}
+          style={wrapperSize}
+        >
           <CardComponent
             item={item}
             categoryName={categoryName}
             currencyCode={currencyCode}
             imageSource={imageSource}
             layoutDefinition={featuredLayoutDefinition ?? null}
+            {...(isSmallScreen && { articleMinHeight: "100%" })}
           />
         </div>
       </div>
@@ -289,7 +268,7 @@ export function FeaturedCarouselSection({
     ? "min(905px, 100vw)"
     : CAROUSEL_SLOTS_CONTAINER_WIDTH_DESKTOP;
   const rawScale = isSmallScreen ? (scaleMobile ?? 1) : (scaleDesktop ?? 1);
-  const scale = Number.isFinite(rawScale) && rawScale >= 0.75 && rawScale <= 1 ? rawScale : 1;
+  const scale = isSmallScreen ? 1 : (Number.isFinite(rawScale) && rawScale >= 0.75 && rawScale <= 1 ? rawScale : 1);
   const sectionHeightStyle =
     scale < 1 && contentHeight != null
       ? { height: contentHeight * scale, overflow: "hidden" as const }
@@ -328,7 +307,7 @@ export function FeaturedCarouselSection({
             tabIndex={0}
             role="region"
             aria-label="Destaques"
-            className="relative w-full flex justify-center px-4"
+            className={isSmallScreen ? "relative w-full flex justify-center px-0 sm:px-2" : "relative w-full flex justify-center px-4"}
             style={{
               minHeight: `${carouselMinHeight}px`,
               overflow: "visible",
@@ -339,32 +318,23 @@ export function FeaturedCarouselSection({
           >
             {isSmallScreen ? (
               <div
-                className="absolute left-1/2 top-1/2"
+                className="relative overflow-visible mx-auto"
                 style={{
-                  transform: `translate(-50%, -50%) scale(${mobileScale})`,
-                  transformOrigin: "center center",
+                  width: "100%",
+                  maxWidth: MOBILE_CONTAINER_MAX_WIDTH,
+                  height: MOBILE_CAROUSEL_HEIGHT,
+                  overflow: "visible",
                 }}
               >
-                <div
-                  ref={mobileSlotsWrapperRef}
-                  className="relative overflow-visible flex-shrink-0 mx-auto"
-                  style={{
-                    width: slotsContainerWidth,
-                    minWidth: typeof slotsContainerWidth === "number" ? slotsContainerWidth : undefined,
-                    maxWidth: "100%",
-                    minHeight: carouselMinHeight,
-                  }}
-                >
-                  {n === 1 ? (
-                    renderSlot(0, "center")
-                  ) : (
-                    <>
-                      {renderSlot(prevIndex, "left")}
-                      {renderSlot(activeIndex, "center")}
-                      {renderSlot(nextIndex, "right")}
-                    </>
-                  )}
-                </div>
+                {n === 1 ? (
+                  renderSlot(0, "center")
+                ) : (
+                  <>
+                    {renderSlot(prevIndex, "left")}
+                    {renderSlot(activeIndex, "center")}
+                    {renderSlot(nextIndex, "right")}
+                  </>
+                )}
               </div>
             ) : (
               <div

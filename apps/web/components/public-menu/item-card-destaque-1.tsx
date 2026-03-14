@@ -82,12 +82,14 @@ export function ItemCardDestaque1({
   currencyCode,
   imageSource,
   layoutDefinition,
+  articleMinHeight: articleMinHeightProp,
 }: {
   item: PublicMenuItem;
   categoryName?: string;
   currencyCode?: string;
   imageSource?: string;
   layoutDefinition?: LayoutDefinition | null;
+  articleMinHeight?: string | number;
 }) {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const imageSrc = getImageSrc(item, imageSource);
@@ -126,13 +128,14 @@ export function ItemCardDestaque1({
     if (contentZoneOrder.includes("price_old")) defaultZoneWidthPercent["price_old"] = 25;
     return groupZonesIntoRowsByWidthPercent(contentZoneOrder, defaultZoneWidthPercent, undefined);
   }, [useLayout, contentZoneOrder, layoutDefinition]);
-  const minHeight =
+  const minHeightFromLayout =
     useLayout &&
     layoutDefinition!.canvasHeight != null &&
     Number.isFinite(layoutDefinition!.canvasHeight) &&
     layoutDefinition!.canvasHeight > 0
       ? layoutDefinition!.canvasHeight
       : DEFAULT_CANVAS_HEIGHT;
+  const minHeight = articleMinHeightProp != null ? articleMinHeightProp : minHeightFromLayout;
   const contentPaddingPx =
     useLayout && layoutDefinition!.contentPaddingPx != null && Number.isFinite(layoutDefinition!.contentPaddingPx)
       ? Math.max(CONTENT_PADDING_MIN, Math.min(CONTENT_PADDING_MAX, Math.round(Number(layoutDefinition!.contentPaddingPx))))
@@ -258,7 +261,7 @@ export function ItemCardDestaque1({
     <li className="list-none h-full flex shrink-0">
       <article
         className="relative rounded-xl overflow-hidden w-full flex flex-col justify-end min-h-[280px]"
-        style={{ minHeight }}
+        style={{ minHeight: typeof minHeight === "number" ? `${minHeight}px` : minHeight }}
       >
         <img
           src={imageSrc}

@@ -214,6 +214,8 @@ export type FeaturedCardProps = {
   categoryName?: string;
   imageSource?: string;
   layoutDefinition?: LayoutDefinition | null;
+  /** Quando definido (ex. "100%"), usa-se no article em vez do minHeight do layout. Útil no carrossel mobile. */
+  articleMinHeight?: string | number;
 };
 
 type PresentationCardComponent = ComponentType<PresentationCardProps>;

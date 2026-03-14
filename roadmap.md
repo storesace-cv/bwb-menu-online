@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-14 (Slot exterior sem overflow-hidden em mobile; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (Layout mobile do carrossel de destaques; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -204,6 +204,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Modelo Restaurante 2: imagem com largura máxima 268px:** A foto no card deixou de crescer com o viewport: o botão da imagem usa `flex-[1_1_0] min-w-0 aspect-square max-w-[268px]`, mantendo a secção de texto sempre visível e com pelo menos o dobro da largura da imagem; em células estreitas mantém-se proporção 1:2.
 - **Modal da imagem: DESCRIÇÃO e INGREDIENTES:** Na janela que abre ao clicar na imagem do artigo (ImageIngredientsModal), por baixo da imagem passou a mostrar-se a secção DESCRIÇÃO (texto do artigo) e a secção INGREDIENTES (rótulo em itálico + conteúdo). Aplicado no modal exportado (Restaurante 1, Restaurante 2) e no modal local de item-card-from-layout.
 - **Destaques (Escolhas do Chef) menores em smartphones:** Em viewports ≤768px o carrossel de destaques usa cartão mais estreito (min(220px, 62vw)), altura 360px e scale/overlap ajustados (0.9, 20px), para os 3 registos (esquerda, centro, direita) serem visíveis na totalidade; desktop mantém 320px/85vw e 504px.
+- **Carrossel de destaques: layout mobile novo (sem scale, 430×520, slots 78vw):** Em smartphones (≤768px) o bloco de destaques passou ao layout desejado: sem `transform: scale` no wrapper; region com `min-height: 520px` e `px-0 sm:px-2`; contentor relativo 430×520px (sem absolute/scale); slots com largura 78vw (max 320px, min 280px) e offset 120px (left/center/right com translateX); card de destaque com prop opcional `articleMinHeight` para `min-height: 100%` no article em mobile. Desktop/tablet inalterado.
 - **RLS Security Advisor (migration 064):** RLS ativado em `public.app_schema_migrations` e `public.import_field_mappings`; políticas superadmin (FOR ALL TO authenticated, current_user_is_superadmin) em catalog_items, roles, store_domains, store_integration_sessions, store_integrations, user_role_bindings. Erros e sugestões do Supabase Security Advisor resolvidos.
 - **Performance Advisor RLS (migration 065):** Políticas em `public.profiles` passaram a usar `(select auth.uid())` para avaliação única por query (InitPlan); políticas em `public.import_runs` unificadas numa por ação (SELECT com superadmin OR store_access; INSERT/UPDATE/DELETE só superadmin), eliminando múltiplas políticas permissivas para SELECT.
 - **Query Performance índices (migration 066):** Índices em `menu_items(catalog_item_id)` e `menu_category_items(menu_item_id)` para acelerar queries PostgREST (LATERAL join a catalog_items, batch por menu_item_id) e RPCs do menu (public_menu_initial_by_hostname, get_resolved_prices_for_store, etc.).
