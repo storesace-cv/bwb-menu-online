@@ -1779,9 +1779,9 @@ export async function deleteImageSample(_prev: { error?: string } | null, formDa
   return null;
 }
 
-/** Form action wrapper: only FormData, for use in Server Component form (no inline function). */
-export async function deleteImageSampleFormAction(formData: FormData) {
-  return deleteImageSample(null, formData);
+/** Form action wrapper: only FormData, for use in Server Component form (no inline function). Returns void for form action type. */
+export async function deleteImageSampleFormAction(formData: FormData): Promise<void> {
+  await deleteImageSample(null, formData);
 }
 
 export async function updateSectionTitleAppearance(_prev: { error?: string } | null, formData: FormData) {
