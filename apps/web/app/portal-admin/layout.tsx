@@ -27,9 +27,7 @@ export default async function PortalAdminLayout({
   const mode = getPortalMode(host, pathname);
 
   if (isActionPost) {
-    // #region agent log
     portalDebugLog("presentation_template_layout", { step: "layout_early_return", pathname, host });
-    // #endregion
     const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";
     return (
       <div className={THEME_WRAPPER_CLASS}>

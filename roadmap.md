@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-14 (Lista de samples em grelha 2–3 colunas; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-14 (Fix Definições → Categorias: server action no delete, prefetch desativado, timeout 8s e refresh; remoção de regiões agent log; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -198,6 +198,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Resiliência página Image samples:** Na página `/portal-admin/settings/image-samples`, a lógica assíncrona (query a `image_samples`, `store_settings`, etc.) passou a estar envolvida em try/catch; em caso de exceção é mostrada UI de fallback com mensagem "Erro ao carregar os dados. Tente novamente.", link "← Definições" e link "Tentar de novo" (reload da rota), evitando error boundary e "Fetch failed" sem contexto.
 - **Image samples: form action como server action:** O formulário de apagar sample usava um wrapper inline `(fd) => deleteImageSample(null, fd)` no `action`, o que provocava em produção o erro "Functions cannot be passed directly to Client Components". Corrigido com uma server action dedicada `deleteImageSampleFormAction(formData)` em `actions.ts` (retorna `Promise<void>`) e uso de `action={deleteImageSampleFormAction}` na página; instrumentação de debug removida após confirmação.
 - **Lista de samples em 2–3 colunas:** Na página Definições → Image samples, a "Lista de samples" passou a ser apresentada em grelha responsiva (`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4`): 1 coluna em mobile, 2 em sm, 3 em lg. Cada item é um card vertical (imagem em cima com aspect-square, nome, path e botão Apagar em baixo), poupando espaço no ecrã.
+- **Fix Definições → Categorias (Guardar, Fetch failed, botão preso):** Formulário de apagar categoria passou a usar server action dedicada `deleteCategoryFormAction(formData)` em vez de função inline no Client Component, eliminando "Fetch failed" no POST. Links "Definições" (layout e página Categorias) com `prefetch={false}` para evitar GET RSC sem cookies. Timeout de loading do botão Guardar reduzido para 8 s (`use-form-submit-loading.ts`) e, quando o loading termina (resposta ou timeout), é feito `router.refresh()` em `category-row.tsx` para actualizar a lista e desbloquear a UX. Remoção dos comentários `#region agent log` / `#endregion` no layout e em `updatePresentationTemplateLayout`.
 
 ---
 
