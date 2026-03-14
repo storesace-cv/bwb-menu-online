@@ -384,7 +384,7 @@ export function FeaturedCarouselSection({
                 aria-label={`Ir para destaque ${index + 1}`}
                 aria-selected={index === activeIndex}
                 onClick={() => setActiveIndex(index)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
+                className="min-w-[22px] min-h-[22px] flex items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--menu-primary)]"
               >
                 <span
                   className="rounded-full block flex-shrink-0 border-2 border-transparent"
