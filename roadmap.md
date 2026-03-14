@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Destaques contidos no bloco preto em smartphones; roadmap, commit, push, deploy e verificação no container).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-13 (Destaques em mobile: escala proporcional ao container; roadmap, commit, push, deploy e verificação no container).
 
 ---
 
@@ -232,6 +232,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Slider destaques: 1 (base) à esquerda por defeito:** Os dois sliders de tamanho do bloco de destaques passaram a usar `dir="rtl"` no `<input type="range">`, de modo que o valor 1 (tamanho base) fique à esquerda e 1/4 (75%) à direita; o valor por defeito 1 mostra o cursor à esquerda, permitindo "diminuir" deslizando para a direita. Ficheiro: `settings-form.tsx`.
 - **Altura do bloco de destaques proporcional à escala:** Quando o tamanho do bloco de destaques é reduzido (scale &lt; 1), a secção do carrossel passou a reservar altura em layout igual a `altura_natural × scale` (medição com ref + useEffect), com `overflow: hidden` e `transformOrigin: top center` no wrapper escalado, eliminando os espaços vazios acima e abaixo do bloco. Ficheiro: `featured-carousel-section.tsx`.
 - **Destaques contidos no bloco preto em smartphones:** A altura fixa da secção (contentHeight × scale) e o overflow hidden passaram a aplicar-se apenas em PC/tablet (`!isSmallScreen`); em smartphones a section não tem altura fixa e cresce com o conteúdo, para o bloco preto envolver sempre o carrossel e os dots. Ficheiro: `featured-carousel-section.tsx`.
+- **Destaques em mobile: escala proporcional ao container:** Em smartphones, o bloco do carrossel (div com role="region") passou a ter altura definida (min(600px, 85vh)) e overflow hidden; o conteúdo interno (slots) é medido e escalado com transform: scale(mobileScale) para caber dentro do container (ResizeObserver + refs). Ficheiro: `featured-carousel-section.tsx`.
 
 ---
 

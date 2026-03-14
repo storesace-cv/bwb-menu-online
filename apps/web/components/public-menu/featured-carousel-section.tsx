@@ -70,7 +70,9 @@ export function FeaturedCarouselSection({
   const touchStartX = useRef<number | null>(null);
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const contentWrapperRef = useRef<HTMLDivElement>(null);
+  const mobileSlotsWrapperRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number | null>(null);
+  const [mobileScale, setMobileScale] = useState(1);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -96,6 +98,33 @@ export function FeaturedCarouselSection({
     };
     const id = requestAnimationFrame(measure);
     return () => cancelAnimationFrame(id);
+  }, [isSmallScreen, n]);
+
+  useEffect(() => {
+    if (!isSmallScreen) {
+      setMobileScale(1);
+      return;
+    }
+    const container = carouselContainerRef.current;
+    const content = mobileSlotsWrapperRef.current;
+    if (!container || !content) return;
+
+    const updateScale = () => {
+      const cw = container.clientWidth;
+      const ch = container.clientHeight;
+      const contentW = mobileSlotsWrapperRef.current?.offsetWidth ?? 0;
+      const contentH = mobileSlotsWrapperRef.current?.offsetHeight ?? 0;
+      if (contentW <= 0 || contentH <= 0) return;
+      const s = Math.min(1, cw / contentW, ch / contentH);
+      setMobileScale(s);
+    };
+
+    updateScale();
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(updateScale);
+    });
+    ro.observe(container);
+    return () => ro.disconnect();
   }, [isSmallScreen, n]);
 
   const cardWidth = isSmallScreen ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP;
@@ -262,31 +291,69 @@ export function FeaturedCarouselSection({
             tabIndex={0}
             role="region"
             aria-label="Destaques"
-            className="relative w-full flex justify-center overflow-visible px-4"
-            style={{ minHeight: `${carouselMinHeight}px` }}
+            className="relative w-full flex justify-center px-4"
+            style={{
+              minHeight: `${carouselMinHeight}px`,
+              ...(isSmallScreen && {
+                height: "min(600px, 85vh)",
+                overflow: "hidden",
+              }),
+              ...(!isSmallScreen && { overflow: "visible" }),
+            }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onKeyDown={handleKeyDown}
           >
-            <div
-              className="relative overflow-visible flex-shrink-0 mx-auto"
-              style={{
-                width: slotsContainerWidth,
-                minWidth: typeof slotsContainerWidth === "number" ? slotsContainerWidth : undefined,
-                maxWidth: "100%",
-                minHeight: carouselMinHeight,
-              }}
-            >
-              {n === 1 ? (
-                renderSlot(0, "center")
-              ) : (
-                <>
-                  {renderSlot(prevIndex, "left")}
-                  {renderSlot(activeIndex, "center")}
-                  {renderSlot(nextIndex, "right")}
-                </>
-              )}
-            </div>
+            {isSmallScreen ? (
+              <div
+                className="absolute left-1/2 top-1/2"
+                style={{
+                  transform: `translate(-50%, -50%) scale(${mobileScale})`,
+                  transformOrigin: "center center",
+                }}
+              >
+                <div
+                  ref={mobileSlotsWrapperRef}
+                  className="relative overflow-visible flex-shrink-0 mx-auto"
+                  style={{
+                    width: slotsContainerWidth,
+                    minWidth: typeof slotsContainerWidth === "number" ? slotsContainerWidth : undefined,
+                    maxWidth: "100%",
+                    minHeight: carouselMinHeight,
+                  }}
+                >
+                  {n === 1 ? (
+                    renderSlot(0, "center")
+                  ) : (
+                    <>
+                      {renderSlot(prevIndex, "left")}
+                      {renderSlot(activeIndex, "center")}
+                      {renderSlot(nextIndex, "right")}
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div
+                className="relative overflow-visible flex-shrink-0 mx-auto"
+                style={{
+                  width: slotsContainerWidth,
+                  minWidth: typeof slotsContainerWidth === "number" ? slotsContainerWidth : undefined,
+                  maxWidth: "100%",
+                  minHeight: carouselMinHeight,
+                }}
+              >
+                {n === 1 ? (
+                  renderSlot(0, "center")
+                ) : (
+                  <>
+                    {renderSlot(prevIndex, "left")}
+                    {renderSlot(activeIndex, "center")}
+                    {renderSlot(nextIndex, "right")}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
