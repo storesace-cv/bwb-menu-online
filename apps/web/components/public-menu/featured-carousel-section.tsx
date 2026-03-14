@@ -68,6 +68,7 @@ export function FeaturedCarouselSection({
   const [activeIndex, setActiveIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const contentWrapperRef = useRef<HTMLDivElement>(null);
   const mobileSlotsWrapperRef = useRef<HTMLDivElement>(null);
@@ -145,20 +146,35 @@ export function FeaturedCarouselSection({
   const prevIndex = (activeIndex - 1 + n) % n;
   const nextIndex = (activeIndex + 1) % n;
 
+  const VERTICAL_SCROLL_THRESHOLD = 30;
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   }, []);
 
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      if (touchStartX.current == null) return;
+      if (touchStartX.current == null || touchStartY.current == null) return;
       const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
       const deltaX = endX - touchStartX.current;
+      const deltaY = endY - touchStartY.current;
       touchStartX.current = null;
+      touchStartY.current = null;
+
+      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > VERTICAL_SCROLL_THRESHOLD) {
+        if (!prefersReducedMotion) {
+          if (deltaY > 0) goNext();
+          else goPrev();
+        }
+        return;
+      }
+
       if (deltaX < -40) goNext();
       else if (deltaX > 40) goPrev();
     },
-    [goPrev, goNext]
+    [goPrev, goNext, prefersReducedMotion]
   );
 
   const handleWheelNative = useCallback(
@@ -177,6 +193,27 @@ export function FeaturedCarouselSection({
     el.addEventListener("wheel", handleWheelNative, { passive: false });
     return () => el.removeEventListener("wheel", handleWheelNative);
   }, [handleWheelNative]);
+
+  const handleTouchMoveNative = useCallback(
+    (e: TouchEvent) => {
+      if (prefersReducedMotion || touchStartX.current == null || touchStartY.current == null) return;
+      const curX = e.touches[0].clientX;
+      const curY = e.touches[0].clientY;
+      const deltaX = curX - touchStartX.current;
+      const deltaY = curY - touchStartY.current;
+      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > VERTICAL_SCROLL_THRESHOLD) {
+        e.preventDefault();
+      }
+    },
+    [prefersReducedMotion]
+  );
+
+  useEffect(() => {
+    const el = carouselContainerRef.current;
+    if (!el) return;
+    el.addEventListener("touchmove", handleTouchMoveNative, { passive: false });
+    return () => el.removeEventListener("touchmove", handleTouchMoveNative);
+  }, [handleTouchMoveNative]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -254,7 +291,7 @@ export function FeaturedCarouselSection({
   const rawScale = isSmallScreen ? (scaleMobile ?? 1) : (scaleDesktop ?? 1);
   const scale = Number.isFinite(rawScale) && rawScale >= 0.75 && rawScale <= 1 ? rawScale : 1;
   const sectionHeightStyle =
-    scale < 1 && contentHeight != null && !isSmallScreen
+    scale < 1 && contentHeight != null
       ? { height: contentHeight * scale, overflow: "hidden" as const }
       : undefined;
   const mergedSectionStyle = sectionHeightStyle
