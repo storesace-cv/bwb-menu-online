@@ -21,7 +21,9 @@ export default async function PortalAdminLayout({
   const headersList = await headers();
   const host = getPortalHost(headersList);
   const pathname = headersList.get("x-pathname") ?? "/portal-admin";
-  const isActionPost = (headersList.get("next-action") ?? headersList.get("Next-Action") ?? "").trim() !== "";
+  const nextActionHeader = (headersList.get("next-action") ?? headersList.get("Next-Action") ?? "").trim();
+  const portalActionPost = headersList.get("x-portal-action-post") === "1";
+  const isActionPost = nextActionHeader !== "" || portalActionPost;
   const mode = getPortalMode(host, pathname);
 
   if (isActionPost) {
