@@ -1779,6 +1779,11 @@ export async function deleteImageSample(_prev: { error?: string } | null, formDa
   return null;
 }
 
+/** Form action wrapper: only FormData, for use in Server Component form (no inline function). */
+export async function deleteImageSampleFormAction(formData: FormData) {
+  return deleteImageSample(null, formData);
+}
+
 export async function updateSectionTitleAppearance(_prev: { error?: string } | null, formData: FormData) {
   const supabase = await createClient();
   const storeId = (formData.get("store_id") as string)?.trim() ?? "";

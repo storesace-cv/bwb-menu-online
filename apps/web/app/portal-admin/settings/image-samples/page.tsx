@@ -4,7 +4,7 @@ import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
 import { Card } from "@/components/admin";
 import { ImageSamplesClient } from "./image-samples-client";
-import { deleteImageSample } from "../../actions";
+import { deleteImageSampleFormAction } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -136,7 +136,7 @@ export default async function ImageSamplesPage() {
                     <p className="text-slate-200 font-medium">{s.name || "Sem nome"}</p>
                     <p className="text-slate-500 text-sm truncate">{s.image_base_path}</p>
                   </div>
-                  <form action={(fd: FormData) => { void deleteImageSample(null, fd); }} className="inline">
+                  <form action={deleteImageSampleFormAction} className="inline">
                     <input type="hidden" name="id" value={s.id} />
                     <button
                       type="submit"
