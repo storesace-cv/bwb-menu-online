@@ -91,33 +91,33 @@ export default async function ImageSamplesPage() {
           {samplesWithPreview.length === 0 ? (
             <p className="text-slate-500">Nenhum sample. Carregue um acima.</p>
           ) : (
-            <ul className="space-y-4">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {samplesWithPreview.map((s) => (
-                <li key={s.id} className="flex flex-wrap items-center gap-4 p-4 rounded-lg bg-slate-800/50 border border-slate-700">
-                  {s.preview_url ? (
-                    <img
-                      src={s.preview_url}
-                      alt={s.name ?? "Sample"}
-                      className="h-20 w-20 object-cover rounded border border-slate-600"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded border border-slate-600 bg-slate-700 flex items-center justify-center text-slate-500 text-xs">
-                      —
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-slate-200 font-medium">{s.name || "Sem nome"}</p>
-                    <p className="text-slate-500 text-sm truncate">{s.image_base_path}</p>
+                <li key={s.id} className="flex flex-col rounded-lg bg-slate-800/50 border border-slate-700 overflow-hidden">
+                  <div className="aspect-square w-full bg-slate-700/50 flex items-center justify-center shrink-0">
+                    {s.preview_url ? (
+                      <img
+                        src={s.preview_url}
+                        alt={s.name ?? "Sample"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-slate-500 text-sm">—</span>
+                    )}
                   </div>
-                  <form action={deleteImageSampleFormAction} className="inline">
-                    <input type="hidden" name="id" value={s.id} />
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 text-sm rounded border border-red-600/60 text-red-400 hover:bg-red-600/20 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    >
-                      Apagar
-                    </button>
-                  </form>
+                  <div className="p-3 flex flex-col gap-2 min-w-0">
+                    <p className="text-slate-200 font-medium truncate">{s.name || "Sem nome"}</p>
+                    <p className="text-slate-500 text-sm truncate">{s.image_base_path}</p>
+                    <form action={deleteImageSampleFormAction} className="mt-auto">
+                      <input type="hidden" name="id" value={s.id} />
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 text-sm rounded border border-red-600/60 text-red-400 hover:bg-red-600/20 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      >
+                        Apagar
+                      </button>
+                    </form>
+                  </div>
                 </li>
               ))}
             </ul>
