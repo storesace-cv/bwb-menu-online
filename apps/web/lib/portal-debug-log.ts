@@ -3,6 +3,12 @@ const PREFIX = "[portal-debug]";
 const TENANTS_ACTION_LOG_MAX = 50;
 export const lastTenantsActionLogs: Array<Record<string, unknown>> = [];
 
+/** Último request visto pelo layout portal-admin (para debug do botão Guardar). */
+export let lastPortalLayoutRequest: Record<string, unknown> | null = null;
+export function setLastPortalLayoutRequest(data: Record<string, unknown>) {
+  lastPortalLayoutRequest = data;
+}
+
 /**
  * Structured one-line log for portal-admin diagnostics.
  * Output is grep-able via: docker compose logs web 2>&1 | grep '\[portal-debug\]'

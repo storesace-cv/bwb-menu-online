@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalHost, getPortalMode } from "@/lib/portal-mode";
-import { portalDebugLog } from "@/lib/portal-debug-log";
+import { portalDebugLog, setLastPortalLayoutRequest } from "@/lib/portal-debug-log";
 import Link from "next/link";
 import { RedirectTo } from "./redirect-client";
 
@@ -24,6 +24,7 @@ export default async function PortalAdminLayout({
   const nextActionHeader = (headersList.get("next-action") ?? headersList.get("Next-Action") ?? "").trim();
   const portalActionPost = headersList.get("x-portal-action-post") === "1";
   const isActionPost = nextActionHeader !== "" || portalActionPost;
+  setLastPortalLayoutRequest({ ts: new Date().toISOString(), pathname, nextActionLen: nextActionHeader.length, portalActionPost, isActionPost });
   const mode = getPortalMode(host, pathname);
 
   if (isActionPost) {
