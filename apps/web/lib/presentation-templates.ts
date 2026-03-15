@@ -244,6 +244,7 @@ export function parseZoneWidthPercent(
 /**
  * Agrupa zoneOrder em linhas pelo número de linha (zoneLineNumbers).
  * Se zoneLineNumbers existir e tiver pelo menos uma entrada, devolve linhas ordenadas por número de linha e depois por ordem em zoneOrder; senão devolve null.
+ * Dentro da mesma linha, a ordem é a de zoneOrder: primeiro na lista = esquerda no menu.
  */
 export function groupZonesIntoRowsByLineNumber(
   zoneOrder: string[],

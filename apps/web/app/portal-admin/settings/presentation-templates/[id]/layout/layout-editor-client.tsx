@@ -1200,7 +1200,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
       <div>
         <h3 className="text-slate-200 font-medium mb-2">Ordem dos campos</h3>
         <p className="text-slate-400 text-sm mb-2">
-          Campos com o mesmo Nº Linha aparecem na mesma linha no menu, da esquerda para a direita pela ordem da lista (Subir/Descer alteram essa ordem).
+          Na mesma linha, o primeiro campo na lista fica à esquerda; use Subir/Descer para alterar a ordem. Campos com o mesmo Nº Linha aparecem na mesma linha no menu, da esquerda para a direita pela ordem da lista.
         </p>
         <ul className="space-y-1">
           {zoneOrder.map((type, index) => (
@@ -1226,7 +1226,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
                   </span>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <label className="text-slate-400 text-xs">Nº Linha</label>
+                  <label className="text-slate-400 text-xs" title="Na mesma linha, o primeiro campo na lista fica à esquerda; use Subir/Descer para alterar a ordem.">Nº Linha</label>
                   <input
                     type="number"
                     min={1}
