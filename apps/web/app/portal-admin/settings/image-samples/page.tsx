@@ -91,7 +91,7 @@ export default async function ImageSamplesPage() {
           {samplesWithPreview.length === 0 ? (
             <p className="text-slate-500">Nenhum sample. Carregue um acima.</p>
           ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ul className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-12 gap-3">
               {samplesWithPreview.map((s) => (
                 <li key={s.id} className="flex flex-col rounded-lg bg-slate-800/50 border border-slate-700 overflow-hidden">
                   <div className="aspect-square w-full bg-slate-700/50 flex items-center justify-center shrink-0">
@@ -105,7 +105,7 @@ export default async function ImageSamplesPage() {
                       <span className="text-slate-500 text-sm">—</span>
                     )}
                   </div>
-                  <div className="p-3 flex flex-col gap-2 min-w-0">
+                  <div className="p-2 flex flex-col gap-1 min-w-0">
                     <p className="text-slate-200 font-medium truncate">{s.name || "Sem nome"}</p>
                     <p className="text-slate-500 text-sm truncate">{s.image_base_path}</p>
                     <form action={deleteImageSampleFormAction} className="mt-auto">
