@@ -22,6 +22,7 @@ export type MenuTableItem = {
 
 type Section = { id: string; name: string; sort_order: number | null };
 type Category = { id: string; name: string; section_id: string | null; sort_order: number | null };
+type ArticleType = { id: string; name: string; icon_code?: string | null };
 
 export function MenuItemsTableClient({
   items,
@@ -29,6 +30,7 @@ export function MenuItemsTableClient({
   itemSectionCategory,
   sections,
   categories,
+  articleTypes,
   currencyCode = "€",
 }: {
   items: MenuTableItem[];
@@ -36,6 +38,7 @@ export function MenuItemsTableClient({
   itemSectionCategory: Record<string, { sectionName: string; categoryName: string }>;
   sections: Section[];
   categories: Category[];
+  articleTypes: ArticleType[];
   currencyCode?: string;
 }) {
   const [sortRules, setSortRules] = useState<SortRule[]>(DEFAULT_SORT);
@@ -308,7 +311,7 @@ export function MenuItemsTableClient({
           >
             <h3 className="text-lg font-medium text-slate-100 mb-4">Alteração em Lote</h3>
             <p className="text-slate-400 text-sm mb-4">
-              {selectedIds.size} artigo(s) selecionado(s). Atribua Secção e/ou Categoria.
+              {selectedIds.size} artigo(s) selecionado(s). Escolha as alterações a aplicar (deixe em branco para não alterar).
             </p>
             {batchState?.error && (
               <p className="text-red-400 text-sm mb-4">{batchState.error}</p>
@@ -364,6 +367,52 @@ export function MenuItemsTableClient({
                     : null}
                 </select>
               </label>
+              <label className="block text-sm text-slate-300">
+                Tipo de artigo
+                <select
+                  name="batch_article_type_id"
+                  className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200"
+                >
+                  <option value="">— Não alterar —</option>
+                  {articleTypes.map((at) => (
+                    <option key={at.id} value={at.id}>{at.name}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-sm text-slate-300">
+                  Visível no menu
+                  <select name="batch_is_visible" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Destaque
+                  <select name="batch_is_featured" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Take-away
+                  <select name="batch_take_away" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Em promoção
+                  <select name="batch_is_promotion" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+              </div>
               <div className="flex gap-3 justify-end pt-2">
                 <Button type="button" variant="outline" onClick={() => setBatchModalOpen(false)}>
                   Cancelar

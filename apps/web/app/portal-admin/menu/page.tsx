@@ -80,6 +80,11 @@ export default async function MenuPage({
     .select("id, name, sort_order, section_id")
     .eq("store_id", storeId)
     .order("sort_order");
+  const { data: articleTypes } = await supabase
+    .from("article_types")
+    .select("id, name, icon_code")
+    .eq("store_id", storeId)
+    .order("sort_order");
   const { data: categoryItems } = await supabase
     .from("menu_category_items")
     .select("category_id, menu_item_id, sort_order");
@@ -355,6 +360,7 @@ export default async function MenuPage({
           itemSectionCategory={itemSectionCategory}
           sections={sections ?? []}
           categories={categories ?? []}
+          articleTypes={articleTypes ?? []}
           currencyCode={currencyCode}
         />
       </section>
