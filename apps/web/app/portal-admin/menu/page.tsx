@@ -2,7 +2,8 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import { getPortalHost } from "@/lib/portal-mode";
 import Link from "next/link";
-import { MenuTreeClient, type SectionNode } from "./menu-tree-client";
+import { type SectionNode } from "./menu-tree-client";
+import { MenuItemsTableClient } from "./menu-items-table-client";
 import { ExcelImportCard } from "./excel-import-card";
 import { Card, MultiSelectDropdown } from "@/components/admin";
 
@@ -104,7 +105,6 @@ export default async function MenuPage({
     }
   }
 
-  const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
   const itemsWithResolvedPrice = items.map((i) => ({
     ...i,
     menu_price_display: i.menu_price ?? resolvedPriceByItemId.get(i.id) ?? null,
@@ -117,6 +117,57 @@ export default async function MenuPage({
     const list = byCategory.get(ci.category_id) ?? [];
     list.push({ menu_item_id: ci.menu_item_id, sort_order: ci.sort_order });
     byCategory.set(ci.category_id, list);
+  }
+
+  const { data: familiaRows } = await supabase.rpc("get_import_familia_for_store", { p_store_id: storeId });
+  const itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }> = {};
+  for (const i of itemsWithResolvedPrice) {
+    itemFamilia[i.id] = { familia: null, sub_familia: null };
+  }
+  for (const row of familiaRows ?? []) {
+    if (row.menu_item_id && row.menu_item_id in itemFamilia) {
+      itemFamilia[row.menu_item_id] = {
+        familia: row.familia ?? null,
+        sub_familia: row.sub_familia ?? null,
+      };
+    }
+  }
+
+  const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
+  const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
+  const categoriesByItem = new Map<string, { category_id: string; sort_order: number; has_section: boolean; cat_name: string }[]>();
+  for (const ci of categoryItems ?? []) {
+    const cat = categoryById.get(ci.category_id);
+    if (!cat) continue;
+    const list = categoriesByItem.get(ci.menu_item_id) ?? [];
+    list.push({
+      category_id: ci.category_id,
+      sort_order: cat.sort_order ?? 999,
+      has_section: !!cat.section_id,
+      cat_name: cat.name ?? "",
+    });
+    categoriesByItem.set(ci.menu_item_id, list);
+  }
+  const itemSectionCategory: Record<string, { sectionName: string; categoryName: string }> = {};
+  for (const [menuItemId, list] of Array.from(categoriesByItem.entries())) {
+    const sorted = [...list].sort((a, b) => {
+      if (a.cat_name === "Geral" && b.cat_name !== "Geral") return 1;
+      if (b.cat_name === "Geral" && a.cat_name !== "Geral") return -1;
+      if (a.has_section !== b.has_section) return a.has_section ? -1 : 1;
+      return a.sort_order - b.sort_order;
+    });
+    const firstCatId = sorted[0]?.category_id;
+    const cat = firstCatId ? categoryById.get(firstCatId) : null;
+    const sec = cat?.section_id ? sectionById.get(cat.section_id) : null;
+    itemSectionCategory[menuItemId] = {
+      sectionName: sec?.name ?? "—",
+      categoryName: cat?.name ?? "—",
+    };
+  }
+  for (const i of itemsWithResolvedPrice) {
+    if (!(i.id in itemSectionCategory)) {
+      itemSectionCategory[i.id] = { sectionName: "—", categoryName: "—" };
+    }
   }
 
   const uncategorizedItems = itemsWithResolvedPrice.filter((i) => !itemIdsInCategory.has(i.id));
@@ -218,6 +269,23 @@ export default async function MenuPage({
   ];
   const categoryOptions = allCategories.map((c) => ({ id: c.id, label: c.name ?? "" }));
 
+  const { data: storeSettingsRow } = await supabase
+    .from("store_settings")
+    .select("settings")
+    .eq("store_id", storeId)
+    .single();
+  const settings = storeSettingsRow?.settings as { currency_code?: string } | undefined;
+  const currencyCode = settings?.currency_code ?? "€";
+
+  const flatItemIds = new Set(tree.flatMap((s) => s.categories.flatMap((c) => c.items.map((i) => i.id))));
+  const flatItems = itemsWithResolvedPrice
+    .filter((i) => flatItemIds.has(i.id))
+    .map((i) => ({
+      id: i.id,
+      menu_name_display: i.menu_name_display ?? "",
+      menu_price_display: i.menu_price_display ?? null,
+    }));
+
   return (
     <div>
       <nav className="mb-2 text-sm" aria-label="Breadcrumb">
@@ -230,7 +298,7 @@ export default async function MenuPage({
         </ol>
       </nav>
       <h1 className="text-2xl font-semibold text-slate-100 mb-2">Menu</h1>
-      <p className="text-slate-400 mb-6">Categorias e itens da loja (Secção → Categoria → Artigo).</p>
+      <p className="text-slate-400 mb-6">Artigos da loja por família e sub família (dados de importação).</p>
 
       <section className="mb-6">
         <Card>
@@ -280,12 +348,15 @@ export default async function MenuPage({
       </section>
 
       <section>
-        <h2 className="text-lg font-medium text-slate-200 mb-4">Categorias e itens</h2>
-        {tree.length === 0 ? (
-          <p className="text-slate-500">Nenhuma secção ou categoria com itens. Ajuste os filtros ou crie secções e categorias em Definições.</p>
-        ) : (
-          <MenuTreeClient tree={tree} defaultExpanded={true} />
-        )}
+        <h2 className="text-lg font-medium text-slate-200 mb-4">Familias & Sub Familias</h2>
+        <MenuItemsTableClient
+          items={flatItems}
+          itemFamilia={itemFamilia}
+          itemSectionCategory={itemSectionCategory}
+          sections={sections ?? []}
+          categories={categories ?? []}
+          currencyCode={currencyCode}
+        />
       </section>
     </div>
   );
