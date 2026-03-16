@@ -26,12 +26,6 @@ export default async function PortalAdminLayout({
   const isActionPost = nextActionHeader !== "" || portalActionPost;
   const mode = getPortalMode(host, pathname);
 
-  // #region agent log
-  if (pathname.includes("categories") || pathname.includes("settings")) {
-    portalDebugLog("agent_layout", { pathname, isActionPost, nextActionLen: nextActionHeader.length, portalActionPost, hypothesisId: "A" });
-  }
-  // #endregion
-
   if (isActionPost) {
     portalDebugLog("presentation_template_layout", { step: "layout_early_return", pathname, host });
     const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";

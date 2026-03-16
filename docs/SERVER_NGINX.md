@@ -32,6 +32,20 @@ Ficheiros que existem no servidor em `/etc/nginx/sites-available/` (e symlinks e
 
 Para detalhes da instância Supabase e variáveis de ambiente, ver [SUPABASE_INSTANCE.md](SUPABASE_INSTANCE.md).
 
+### Portal-admin: desactivar buffering da resposta (obrigatório)
+
+O **portal-admin** usa **Server Actions** e **RSC** (React Server Components). As respostas podem ser em streaming ou em formato RSC; se o Nginx **bufferizar** a resposta (`proxy_buffering on`, que é o valor por defeito), o cliente pode receber uma resposta incompleta ou incorrecta e o browser mostra **"Fetch failed"** na consola do DevTools, mesmo quando o servidor processou o pedido com sucesso (ex.: guardar uma categoria em Definições → Categorias).
+
+Este problema repete-se em várias páginas do portal-admin (Definições, Categorias, Secções, Gestão de Imagens, etc.) sempre que há formulários com Server Actions ou navegação RSC.
+
+**Solução:** No `location /` que faz proxy para a app Next.js (em `deploy/nginx/sites-available/menu.bwb.pt`), é obrigatório:
+
+- **`proxy_buffering off;`** — a resposta do upstream é enviada ao cliente em streaming; não bufferizar evita corrupção/incompletude das respostas RSC e Server Actions.
+- **`proxy_request_buffering off;`** — (recomendado) o corpo do POST é enviado em streaming ao backend.
+- **`proxy_set_header Next-Action $http_next_action;`** — reenvio explícito do header que o Next.js envia em pedidos de Server Action; garante que o header chega à app mesmo que o proxy o trate de forma especial.
+
+Se estas directivas forem removidas ou alteradas, é provável que voltem a aparecer "Fetch failed" em acções de guardar ou em navegações no portal-admin. Ao alterar a config Nginx, mantê-las. Ver também [DEBUG_PORTAL_ADMIN.md](DEBUG_PORTAL_ADMIN.md) para diagnosticar com logs `[portal-debug]`.
+
 ## Alterações à configuração Nginx
 
 Sempre que fores alterar a configuração Nginx gerida por este projeto, segue **por esta ordem**:

@@ -64,6 +64,14 @@ Com isto, após um login bem-sucedido verás também linhas `phase: "client"` co
 
 Com esta sequência consegue-se identificar a origem do problema (por exemplo pathname errado, isRsc inesperado, ou cliente a não receber o payload esperado) e corrigir com precisão.
 
+## "Fetch failed" na consola (mas a acção corre no servidor)
+
+Se no **DevTools** aparecem erros **"Fetch failed"** em pedidos POST ou GET ao portal-admin (ex.: Definições → Categorias, Secções, Gestão de Imagens), mas nos **logs do servidor** (`docker compose logs web 2>&1 | grep '\[portal-debug\]'`) a Server Action é executada com sucesso (ex.: `agent_updateCategory` com `step: "success"`), a causa é quase sempre **buffering da resposta no Nginx**.
+
+O portal-admin usa Server Actions e RSC; as respostas precisam de ser enviadas em streaming. Com `proxy_buffering on` (valor por defeito), o Nginx pode alterar ou truncar a resposta e o cliente reporta "Fetch failed" mesmo com o servidor a processar bem.
+
+**Solução:** Ver a secção **«Portal-admin: desactivar buffering da resposta (obrigatório)»** em [SERVER_NGINX.md](SERVER_NGINX.md). A config em `deploy/nginx/sites-available/menu.bwb.pt` deve incluir `proxy_buffering off`, `proxy_request_buffering off` e `proxy_set_header Next-Action $http_next_action`. Após alterar, fazer deploy ou aplicar nginx no servidor e recarregar o Nginx.
+
 ## Resultado da verificação (ecrã branco após login)
 
 Numa verificação em servidor, os pedidos a `/portal-admin/change-password` após login bem-sucedido mostraram no layout:

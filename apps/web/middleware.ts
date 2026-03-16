@@ -29,12 +29,7 @@ export function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
   requestHeaders.set("x-portal-host", host);
-  if (isPortalAdminPost) {
-    requestHeaders.set("x-portal-action-post", "1");
-    // #region agent log
-    portalDebugLog("agent_mw_post", { pathname, hasNextAction: nextAction.length > 0, hypothesisId: "A" });
-    // #endregion
-  }
+  if (isPortalAdminPost) requestHeaders.set("x-portal-action-post", "1");
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set("x-pathname", pathname);
   res.headers.set("x-portal-host", host);
