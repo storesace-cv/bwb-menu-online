@@ -330,27 +330,12 @@ const featuredRegistry: Record<string, FeaturedCardComponent> = {
 /**
  * Returns the card component for the given presentation key.
  * Fallback: modelo-restaurante-1 if key is missing or not in registry.
+ * Prato do dia: em qualquer modelo, quando o item tem daily_display_name (Gestão de Diárias)
+ * os componentes mostram automaticamente (A) nome genérico pequeno/cinzento/itálico e (B) nome do dia.
  */
 export function getPresentationCardComponent(key?: string | null): PresentationCardComponent {
   const k = (key?.trim() || DEFAULT_PRESENTATION_KEY).toLowerCase();
-  const resolved = registry[k] ?? ItemCardRestaurante1;
-  // #region agent log
-  if (!registry[k]) {
-    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" },
-      body: JSON.stringify({
-        sessionId: "2129fe",
-        hypothesisId: "H2",
-        location: "presentation-templates.ts:getPresentationCardComponent",
-        message: "getPresentationCardComponent fallback",
-        data: { key: key ?? null, normalizedKey: k, inRegistry: false },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-  return resolved;
+  return registry[k] ?? ItemCardRestaurante1;
 }
 
 /**
