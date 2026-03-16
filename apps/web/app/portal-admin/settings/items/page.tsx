@@ -93,7 +93,7 @@ export default async function SettingsItemsPage() {
     .order("sort_order");
 
   const itemIds = (items ?? []).map((i) => i.id);
-  const MCI_BATCH_SIZE = 200;
+  const MCI_BATCH_SIZE = 100;
   let mciRows: { menu_item_id: string; category_id: string }[] = [];
   let firstBatchError: string | null = null;
   let firstBatchIndex: number | null = null;
@@ -115,7 +115,7 @@ export default async function SettingsItemsPage() {
       const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
       const batchIndex = Math.floor(i / MCI_BATCH_SIZE);
       let result = await fetchMciBatch(chunk);
-      for (const delayMs of [2000, 3000]) {
+      for (const delayMs of [1500, 3000, 5000]) {
         if (isRetryableError(result.error)) {
           await new Promise((r) => setTimeout(r, delayMs));
           result = await fetchMciBatch(chunk);
@@ -171,6 +171,31 @@ export default async function SettingsItemsPage() {
       itemSectionCategory[item.id] = { sectionName: "—", categoryName: "—" };
     }
   }
+
+  // #region agent log
+  try {
+    const firstItem = items?.[0];
+    const payload = {
+      hypothesisId: "H1_H2_H5",
+      mciRowsCount: mciRows.length,
+      itemSectionCategoryKeys: Object.keys(itemSectionCategory).length,
+      sectionsCount: sections?.length ?? 0,
+      categoriesCount: categories?.length ?? 0,
+      sampleItemId: firstItem?.id ?? null,
+      sampleSectionCategory: firstItem ? itemSectionCategory[firstItem.id] ?? null : null,
+      firstItemPromo: firstItem?.is_promotion,
+      firstItemTakeAway: firstItem?.take_away,
+      firstItemPrepMinutes: firstItem?.prep_minutes,
+      firstItemKeys: firstItem ? Object.keys(firstItem) : [],
+    };
+    portalDebugLog("settings_items_debug", payload);
+    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" },
+      body: JSON.stringify({ sessionId: "2129fe", location: "page.tsx:server", message: "items page server data", data: payload, timestamp: Date.now() }),
+    }).catch(() => {});
+  } catch (_) {}
+  // #endregion
 
   const { data: storeSettingsRow } = await supabase
     .from("store_settings")
