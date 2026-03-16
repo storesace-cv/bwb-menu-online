@@ -635,7 +635,7 @@ export async function setSectionAsDefault(_prev: { error?: string } | null, form
 export async function updateCategory(_prev: { error?: string } | null, formData: FormData) {
   // #region agent log
   const idLog = getFormDataValue(formData, "id")?.trim() ?? "";
-  fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action started", data: { categoryId: idLog }, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+  portalDebugLog("agent_updateCategory", { step: "start", categoryId: idLog, hypothesisId: "B" });
   // #endregion
   try {
     const supabase = await createClient();
@@ -663,20 +663,20 @@ export async function updateCategory(_prev: { error?: string } | null, formData:
       .eq("id", id);
     if (error) {
       // #region agent log
-      fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action error", data: { error: error.message }, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+      portalDebugLog("agent_updateCategory", { step: "error", error: error.message, hypothesisId: "B" });
       // #endregion
       return { error: error.message };
     }
     revalidatePath("/portal-admin/menu");
     revalidatePath("/portal-admin/settings/categories");
     // #region agent log
-    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action success", data: {}, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+    portalDebugLog("agent_updateCategory", { step: "success", hypothesisId: "B" });
     // #endregion
     return null;
   } catch (e) {
     const err = e as Error;
     // #region agent log
-    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action throw", data: { message: err?.message }, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+    portalDebugLog("agent_updateCategory", { step: "throw", message: err?.message, hypothesisId: "B" });
     // #endregion
     return { error: err?.message ?? "Erro ao guardar categoria" };
   }

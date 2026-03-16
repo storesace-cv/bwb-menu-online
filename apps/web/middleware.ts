@@ -32,7 +32,7 @@ export function middleware(request: NextRequest) {
   if (isPortalAdminPost) {
     requestHeaders.set("x-portal-action-post", "1");
     // #region agent log
-    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "middleware.ts", message: "POST portal-admin: set x-portal-action-post", data: { pathname, hasNextAction: nextAction.length > 0 }, timestamp: Date.now(), hypothesisId: "A" }) }).catch(() => {});
+    portalDebugLog("agent_mw_post", { pathname, hasNextAction: nextAction.length > 0, hypothesisId: "A" });
     // #endregion
   }
   const res = NextResponse.next({ request: { headers: requestHeaders } });
