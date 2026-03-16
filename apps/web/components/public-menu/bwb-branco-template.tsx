@@ -328,7 +328,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
     const host = typeof window !== "undefined" ? window.location.hostname : "";
     const params = new URLSearchParams({ host, sectionId: id, currencyCode: currencyCode ?? "" });
     try {
-      const res = await fetch(`/api/public-menu/section-categories?${params}`);
+      const res = await fetch(`/api/public-menu/section-categories?${params}`, { cache: "no-store" });
       if (!res.ok) return false;
       const { categories } = (await res.json()) as { categories: PublicMenuCategory[] };
       if (Array.isArray(categories) && categories.length > 0) {

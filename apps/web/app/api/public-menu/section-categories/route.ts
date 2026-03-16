@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
       sectionId,
       currencyCode
     );
-    return NextResponse.json({ categories });
+    return NextResponse.json({ categories }, {
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to load section";
     return NextResponse.json({ error: msg }, { status: 500 });
