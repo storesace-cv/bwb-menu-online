@@ -330,6 +330,13 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         );
       }
       case "name":
+        if (zoneOrder.includes("daily_name") && item.daily_display_name) {
+          return (
+            <div className="text-sm text-gray-500 font-normal italic text-left min-w-0 truncate">
+              {item.menu_name}
+            </div>
+          );
+        }
         return (
           <h3
             className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
