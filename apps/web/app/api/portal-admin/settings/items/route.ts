@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     .order("sort_order");
 
   const itemIds = items.map((i) => i.id);
-  const MCI_BATCH_SIZE = 100;
+  const MCI_BATCH_SIZE = 50;
   let mciRows: { menu_item_id: string; category_id: string }[] = [];
 
   const fetchMciBatch = async (chunk: string[]) => {
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
   for (let i = 0; i < itemIds.length; i += MCI_BATCH_SIZE) {
     const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
     let result = await fetchMciBatch(chunk);
-    for (const delayMs of [1500, 3000, 5000]) {
+    for (const delayMs of [1500, 3000, 5000, 8000]) {
       if (isRetryableError(result.error)) {
         await new Promise((r) => setTimeout(r, delayMs));
         result = await fetchMciBatch(chunk);

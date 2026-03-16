@@ -93,7 +93,7 @@ export default async function SettingsItemsPage() {
     .order("sort_order");
 
   const itemIds = (items ?? []).map((i) => i.id);
-  const MCI_BATCH_SIZE = 100;
+  const MCI_BATCH_SIZE = 50;
   let mciRows: { menu_item_id: string; category_id: string }[] = [];
   let firstBatchError: string | null = null;
   let firstBatchIndex: number | null = null;
@@ -115,7 +115,7 @@ export default async function SettingsItemsPage() {
       const chunk = itemIds.slice(i, i + MCI_BATCH_SIZE);
       const batchIndex = Math.floor(i / MCI_BATCH_SIZE);
       let result = await fetchMciBatch(chunk);
-      for (const delayMs of [1500, 3000, 5000]) {
+      for (const delayMs of [1500, 3000, 5000, 8000]) {
         if (isRetryableError(result.error)) {
           await new Promise((r) => setTimeout(r, delayMs));
           result = await fetchMciBatch(chunk);
