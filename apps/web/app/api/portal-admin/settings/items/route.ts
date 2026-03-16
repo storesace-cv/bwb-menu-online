@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
   const { data: itemsRaw, error: itemsError } = await supabase
     .from("menu_items")
-    .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
+    .select("id, menu_name, menu_description, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, is_dish_of_the_day, is_wine, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order", { ascending: true })
     .order("menu_name", { ascending: true })

@@ -56,6 +56,8 @@ const HEADERS = [
   "Ordem",
   "Visível",
   "Destaque",
+  "Prato do Dia",
+  "Vinho",
 ];
 
 function escapeXml(s: string): string {
@@ -83,7 +85,7 @@ function listFormulaForValidation(values: string[]): string {
   return `"${escaped.slice(0, 20).join(",")}"`;
 }
 
-/** Colunas de validação (0-based): H=7 Tipo, K=10 Secção, L=11 Categoria, M=12 Promo, N=13 TA, O=14 Tempo, P=15 Ordem, Q=16 Visível, R=17 Destaque. */
+/** Colunas de validação (0-based): H=7 Tipo, K=10 Secção, L=11 Categoria, M=12 Promo, N=13 TA, O=14 Tempo, P=15 Ordem, Q=16 Visível, R=17 Destaque, S=18 Prato do Dia, T=19 Vinho. */
 const COL_TIPO = 7;
 const COL_SECCAO = 10;
 const COL_CATEGORIA = 11;
@@ -93,6 +95,8 @@ const COL_TEMPO_PREP = 14;
 const COL_ORDEM = 15;
 const COL_VISIVEL = 16;
 const COL_DESTAQUE = 17;
+const COL_PRATO_DO_DIA = 18;
+const COL_VINHO = 19;
 
 function buildDataValidationsXml(
   lastDataRow: number,
@@ -119,6 +123,8 @@ function buildDataValidationsXml(
     `<dataValidation type="whole" operator="greaterThanOrEqual" allowBlank="1" sqref="${sqref(COL_ORDEM)}"><formula1>0</formula1></dataValidation>`,
     `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_VISIVEL)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
     `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_DESTAQUE)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_PRATO_DO_DIA)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
+    `<dataValidation type="list" allowBlank="1" sqref="${sqref(COL_VINHO)}"><formula1>${escapeXml(simNao)}</formula1></dataValidation>`,
   ];
   return `<dataValidations count="${validations.length}">${validations.join("")}</dataValidations>`;
 }
@@ -150,7 +156,7 @@ function buildSheetDataXml(
     const text = escapeXml(h);
     return cell(ref, text, false, c);
   });
-  lines.push(`<row r="1" spans="1:18">${headerCells.join("")}</row>`);
+  lines.push(`<row r="1" spans="1:20">${headerCells.join("")}</row>`);
 
   // Data rows
   for (let r = 0; r < rows.length; r++) {
@@ -175,6 +181,8 @@ function buildSheetDataXml(
       row.sort_order != null ? row.sort_order : "",
       row.is_visible,
       row.is_featured,
+      row.dish_of_the_day,
+      row.wine,
     ];
     const cells = values.map((v, c) => {
       const ref = colLetter(c) + String(rowNum);
@@ -183,7 +191,7 @@ function buildSheetDataXml(
       }
       return cell(ref, escapeXml(String(v)), false, c);
     });
-    lines.push(`<row r="${rowNum}" spans="1:18">${cells.join("")}</row>`);
+    lines.push(`<row r="${rowNum}" spans="1:20">${cells.join("")}</row>`);
   }
 
   return `<sheetData>${lines.join("")}</sheetData>`;

@@ -12,7 +12,7 @@ import { sortData, type ColumnDef, type SortRule } from "@/lib/admin/bwbTableSor
 const ITEMS_SORT_STORAGE_KEY = "bwb-portal-settings-items-sort";
 const ITEMS_PER_PAGE_STORAGE_KEY = "bwb-portal-settings-items-per-page";
 const DEFAULT_ITEMS_SORT: SortRule[] = [{ key: "name", direction: "asc", type: "text" }];
-const SORTABLE_COLUMN_KEYS = new Set(["name", "price", "type", "familia", "sub_familia", "promo", "ta", "prep", "sort_order", "is_visible", "is_featured", "section", "category"]);
+const SORTABLE_COLUMN_KEYS = new Set(["name", "price", "type", "familia", "sub_familia", "promo", "ta", "prep", "sort_order", "is_visible", "is_featured", "dish_of_the_day", "wine", "section", "category"]);
 const PER_PAGE_OPTIONS = [25, 50, 100, 250] as const;
 const BACKFILL_CHUNK_SIZE = 200;
 const REST_LOAD_CHUNK_SIZE = 200;
@@ -34,6 +34,8 @@ type Item = {
   is_promotion: boolean;
   price_old: number | null;
   take_away: boolean;
+  is_dish_of_the_day?: boolean;
+  is_wine?: boolean;
   article_type_id: string | null;
   prep_minutes: number | null;
 };
@@ -162,6 +164,8 @@ export function ItemsListClient({
   const [filterTA, setFilterTA] = useState("");
   const [filterVisible, setFilterVisible] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");
+  const [filterDishOfTheDay, setFilterDishOfTheDay] = useState("");
+  const [filterWine, setFilterWine] = useState("");
 
   const [sortRules, setSortRules] = useState<SortRule[]>(DEFAULT_ITEMS_SORT);
 
@@ -249,6 +253,8 @@ export function ItemsListClient({
       { key: "sort_order", label: "", type: "number", accessor: (i) => i.sort_order },
       { key: "is_visible", label: "", type: "text", accessor: (i) => (i.is_visible ? "Sim" : "Não") },
       { key: "is_featured", label: "", type: "text", accessor: (i) => (i.is_featured ? "★" : "") },
+      { key: "dish_of_the_day", label: "", type: "text", accessor: (i) => (i.is_dish_of_the_day ? "Sim" : "Não") },
+      { key: "wine", label: "", type: "text", accessor: (i) => (i.is_wine ? "Sim" : "Não") },
     ],
     [typeById, mergedSectionCategory, mergedFamilia]
   );
@@ -431,6 +437,20 @@ export function ItemsListClient({
         render: (i) => (i.is_featured ? "★" : "—"),
       },
       {
+        key: "dish_of_the_day",
+        label: "Prato do Dia",
+        type: "text",
+        accessor: (i) => (i.is_dish_of_the_day ? "Sim" : "Não"),
+        render: (i) => (i.is_dish_of_the_day ? "Sim" : "—"),
+      },
+      {
+        key: "wine",
+        label: "Vinho",
+        type: "text",
+        accessor: (i) => (i.is_wine ? "Sim" : "Não"),
+        render: (i) => (i.is_wine ? "Sim" : "—"),
+      },
+      {
         key: "actions",
         label: "Ações",
         type: "text",
@@ -541,6 +561,30 @@ export function ItemsListClient({
           <select
             value={filterFeatured}
             onChange={(e) => setFilterFeatured(e.target.value)}
+            className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200"
+          >
+            <option value="">Todos</option>
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          Prato do Dia
+          <select
+            value={filterDishOfTheDay}
+            onChange={(e) => setFilterDishOfTheDay(e.target.value)}
+            className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200"
+          >
+            <option value="">Todos</option>
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          Vinho
+          <select
+            value={filterWine}
+            onChange={(e) => setFilterWine(e.target.value)}
             className="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-slate-200"
           >
             <option value="">Todos</option>
@@ -715,6 +759,22 @@ export function ItemsListClient({
                 <label className="block text-sm text-slate-300">
                   Em promoção
                   <select name="batch_is_promotion" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Prato do Dia
+                  <select name="batch_is_dish_of_the_day" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Vinho
+                  <select name="batch_is_wine" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
                     <option value="">Não alterar</option>
                     <option value="1">Sim</option>
                     <option value="0">Não</option>

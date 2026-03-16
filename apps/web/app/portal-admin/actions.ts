@@ -1372,6 +1372,8 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
   const isPromotion = formData.get("is_promotion") === "1";
   const priceOld = parseFloat((formData.get("price_old") as string) ?? "0");
   const takeAway = formData.get("take_away") === "1";
+  const isDishOfTheDay = formData.get("is_dish_of_the_day") === "1";
+  const isWine = formData.get("is_wine") === "1";
   const menuIngredients = (formData.get("menu_ingredients") as string)?.trim() || null;
   const allergenIds = (formData.getAll("allergen_ids") as string[]).filter((x) => x && x.trim());
   const prepMinutesRaw = (formData.get("prep_minutes") as string)?.trim() ?? "";
@@ -1390,6 +1392,8 @@ export async function createMenuItem(_prev: { error?: string } | null, formData:
       is_promotion: isPromotion,
       price_old: isPromotion && !isNaN(priceOld) ? priceOld : null,
       take_away: takeAway,
+      is_dish_of_the_day: isDishOfTheDay,
+      is_wine: isWine,
       menu_ingredients: menuIngredients,
       prep_minutes,
     })
@@ -1435,6 +1439,8 @@ export async function updateMenuItem(
   const menuIngredients = (formData.get("menu_ingredients") as string)?.trim() || null;
   const isVisible = formData.get("is_visible") === "1";
   const isFeatured = formData.get("is_featured") === "1";
+  const isDishOfTheDay = formData.get("is_dish_of_the_day") === "1";
+  const isWine = formData.get("is_wine") === "1";
   const imageUrl = (formData.get("image_url") as string)?.trim() || null;
   const sectionId = (formData.get("section_id") as string)?.trim() || null;
   const categoryId = (formData.get("category_id") as string)?.trim() || null;
@@ -1469,6 +1475,8 @@ export async function updateMenuItem(
       menu_ingredients: menuIngredients,
       is_visible: isVisible,
       is_featured: isFeatured,
+      is_dish_of_the_day: isDishOfTheDay,
+      is_wine: isWine,
       image_url: imageUrl,
       prep_minutes,
     })
@@ -1565,6 +1573,8 @@ export async function batchUpdateItemsSectionCategory(
     const batchIsFeatured = getFormDataValue(formData, "batch_is_featured") ?? "";
     const batchTakeAway = getFormDataValue(formData, "batch_take_away") ?? "";
     const batchIsPromotion = getFormDataValue(formData, "batch_is_promotion") ?? "";
+    const batchIsDishOfTheDay = getFormDataValue(formData, "batch_is_dish_of_the_day") ?? "";
+    const batchIsWine = getFormDataValue(formData, "batch_is_wine") ?? "";
 
     portalDebugLog("batch_update_section_category", {
     action: "batchUpdateItemsSectionCategory",
@@ -1581,7 +1591,9 @@ export async function batchUpdateItemsSectionCategory(
     batchIsVisible !== "" ||
     batchIsFeatured !== "" ||
     batchTakeAway !== "" ||
-    batchIsPromotion !== "";
+    batchIsPromotion !== "" ||
+    batchIsDishOfTheDay !== "" ||
+    batchIsWine !== "";
   if (!hasSectionOrCategory && !hasBatchFields)
     return { error: "Selecione pelo menos uma alteração a aplicar." };
 
@@ -1641,6 +1653,8 @@ export async function batchUpdateItemsSectionCategory(
   if (batchIsFeatured !== "") menuItemsUpdate.is_featured = batchIsFeatured === "1";
   if (batchTakeAway !== "") menuItemsUpdate.take_away = batchTakeAway === "1";
   if (batchIsPromotion !== "") menuItemsUpdate.is_promotion = batchIsPromotion === "1";
+  if (batchIsDishOfTheDay !== "") menuItemsUpdate.is_dish_of_the_day = batchIsDishOfTheDay === "1";
+  if (batchIsWine !== "") menuItemsUpdate.is_wine = batchIsWine === "1";
 
   for (const menuItemId of itemIds) {
     const { data: itemRow } = await supabase.from("menu_items").select("store_id").eq("id", menuItemId).single();

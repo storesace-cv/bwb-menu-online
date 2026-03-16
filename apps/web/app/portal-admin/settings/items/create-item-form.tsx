@@ -79,6 +79,14 @@ export function CreateItemForm({
           <input type="checkbox" name="take_away" value="1" className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500" />
           Take-away
         </label>
+        <label className="flex items-center gap-2 text-slate-300 text-sm">
+          <input type="checkbox" name="is_dish_of_the_day" value="1" className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500" />
+          Prato do Dia
+        </label>
+        <label className="flex items-center gap-2 text-slate-300 text-sm">
+          <input type="checkbox" name="is_wine" value="1" className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500" />
+          Vinho
+        </label>
       </div>
       <div>
         <label htmlFor="item-ingredients" className="block text-sm font-medium text-slate-300 mb-1">Ingredientes (texto expansível no menu)</label>

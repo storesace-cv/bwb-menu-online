@@ -31,6 +31,8 @@ const MENU_EXPORT_HEADERS = [
   "Ordem",
   "Visível",
   "Destaque",
+  "Prato do Dia",
+  "Vinho",
 ];
 
 function getTemplatePath(): string | null {
@@ -88,6 +90,8 @@ function fillMenuSheetFromRows(
       row.sort_order != null ? row.sort_order : "",
       row.is_visible,
       row.is_featured,
+      row.dish_of_the_day,
+      row.wine,
     ];
     for (let c = 0; c < values.length; c++) {
       const ref = XLSX.utils.encode_cell({ r: r + 1, c });
@@ -201,7 +205,7 @@ export async function GET() {
 
   const { data: itemsRaw } = await supabase
     .from("menu_items")
-    .select("id, item_code, menu_name, menu_description, menu_ingredients, menu_price, is_visible, is_featured, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
+    .select("id, item_code, menu_name, menu_description, menu_ingredients, menu_price, is_visible, is_featured, is_dish_of_the_day, is_wine, sort_order, is_promotion, price_old, take_away, article_type_id, prep_minutes, catalog_item_id, catalog_items(name_original)")
     .eq("store_id", storeId)
     .order("sort_order", { ascending: true })
     .order("menu_name", { ascending: true })
@@ -301,6 +305,8 @@ export async function GET() {
       sort_order: (i as { sort_order?: number | null }).sort_order ?? null,
       is_visible: (i as { is_visible?: boolean }).is_visible ? "Sim" : "Não",
       is_featured: (i as { is_featured?: boolean }).is_featured ? "Sim" : "Não",
+      dish_of_the_day: (i as { is_dish_of_the_day?: boolean }).is_dish_of_the_day ? "Sim" : "Não",
+      wine: (i as { is_wine?: boolean }).is_wine ? "Sim" : "Não",
     };
   });
 

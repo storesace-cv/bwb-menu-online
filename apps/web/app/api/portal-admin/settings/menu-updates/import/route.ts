@@ -25,6 +25,8 @@ const EXPECTED_HEADERS = [
   "Ordem",
   "Visível",
   "Destaque",
+  "Prato do Dia",
+  "Vinho",
 ];
 
 function trim(s: unknown): string {
@@ -218,6 +220,8 @@ export async function POST(request: NextRequest) {
     const orderRaw = row[col("Ordem")];
     const visibleStr = trim(row[col("Visível")]);
     const featuredStr = trim(row[col("Destaque")]);
+    const dishOfTheDayStr = trim(row[col("Prato do Dia")]);
+    const wineStr = trim(row[col("Vinho")]);
 
     const prep_minutes = prepRaw !== "" && prepRaw != null && !Number.isNaN(Number(prepRaw)) ? Number(prepRaw) : null;
     const sort_order = orderRaw !== "" && orderRaw != null && !Number.isNaN(Number(orderRaw)) ? Number(orderRaw) : null;
@@ -226,6 +230,8 @@ export async function POST(request: NextRequest) {
     const take_away = parseBool(taStr);
     const is_visible = parseBool(visibleStr);
     const is_featured = parseBool(featuredStr);
+    const is_dish_of_the_day = parseBool(dishOfTheDayStr);
+    const is_wine = parseBool(wineStr);
 
     const menu_description = descRaw ? pipePlaceholderToNewlines(descRaw) || null : null;
     const menu_ingredients = ingrRaw ? pipePlaceholderToNewlines(ingrRaw) || null : null;
@@ -241,6 +247,8 @@ export async function POST(request: NextRequest) {
       take_away,
       is_visible,
       is_featured,
+      is_dish_of_the_day,
+      is_wine,
     };
 
     const { error: updateErr } = await supabase

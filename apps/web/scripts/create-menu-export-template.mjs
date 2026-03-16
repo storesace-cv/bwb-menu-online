@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Gera menu-export-template.xlsm com folha "Menu" e cabeçalhos A–R.
+ * Gera menu-export-template.xlsm com folha "Menu" e cabeçalhos A–T.
  * O ficheiro é escrito em public/templates/menu-export-template.xlsm.
  * Para incluir as macros VBA: abra o ficheiro no Excel, adicione o módulo
  * com o conteúdo de docs/excel-vba-replace-column-d.bas, guarde.
@@ -31,6 +31,8 @@ const MENU_EXPORT_HEADERS = [
   "Ordem",
   "Visível",
   "Destaque",
+  "Prato do Dia",
+  "Vinho",
 ];
 
 const ws = XLSX.utils.aoa_to_sheet([MENU_EXPORT_HEADERS]);

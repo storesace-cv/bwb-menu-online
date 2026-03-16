@@ -416,6 +416,22 @@ export function MenuItemsTableClient({
                     <option value="0">Não</option>
                   </select>
                 </label>
+                <label className="block text-sm text-slate-300">
+                  Prato do Dia
+                  <select name="batch_is_dish_of_the_day" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-300">
+                  Vinho
+                  <select name="batch_is_wine" className="mt-1 block w-full px-3 py-2 rounded border border-slate-600 bg-slate-900 text-slate-200">
+                    <option value="">Não alterar</option>
+                    <option value="1">Sim</option>
+                    <option value="0">Não</option>
+                  </select>
+                </label>
               </div>
               <div className="flex gap-3 justify-end pt-2">
                 <Button type="button" variant="outline" onClick={() => setBatchModalOpen(false)}>

@@ -31,6 +31,8 @@ type MenuItem = {
   prep_minutes: number | null;
   is_visible: boolean;
   is_featured: boolean;
+  is_dish_of_the_day?: boolean;
+  is_wine?: boolean;
   image_url?: string | null;
   image_path?: string | null;
   image_base_path?: string | null;
@@ -450,6 +452,26 @@ export function EditItemForm({
             className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500"
           />
           Em promoção
+        </label>
+        <label className="flex items-center gap-2 text-slate-300 text-sm">
+          <input
+            type="checkbox"
+            name="is_dish_of_the_day"
+            value="1"
+            defaultChecked={item.is_dish_of_the_day ?? false}
+            className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500"
+          />
+          Prato do Dia
+        </label>
+        <label className="flex items-center gap-2 text-slate-300 text-sm">
+          <input
+            type="checkbox"
+            name="is_wine"
+            value="1"
+            defaultChecked={item.is_wine ?? false}
+            className="rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500"
+          />
+          Vinho
         </label>
       </div>
 

@@ -1,8 +1,8 @@
 /**
  * Geração do ficheiro Excel para Actualizações ao Menu.
- * Colunas: Tenant, Loja, Código, Nome, Descrição, Ingredientes, Preço, Tipo, Familia, Sub Familia, Secção, Categoria, Promo, TA, Tempo prep., Ordem, Visível, Destaque.
+ * Colunas: Tenant, Loja, Código, Nome, Descrição, Ingredientes, Preço, Tipo, Familia, Sub Familia, Secção, Categoria, Promo, TA, Tempo prep., Ordem, Visível, Destaque, Prato do Dia, Vinho.
  * Células bloqueadas: Tenant, Loja, Código, Preço, Familia, Sub Familia. Nome (menu_name) é editável.
- * Validação: listas para Tipo, Secção, Categoria, Promo, TA, Visível, Destaque; numérico para Tempo prep. e Ordem.
+ * Validação: listas para Tipo, Secção, Categoria, Promo, TA, Visível, Destaque, Prato do Dia, Vinho; numérico para Tempo prep. e Ordem.
  */
 
 import ExcelJS from "exceljs";
@@ -48,6 +48,8 @@ export type MenuExcelRow = {
   sort_order: number | null;
   is_visible: "Sim" | "Não";
   is_featured: "Sim" | "Não";
+  dish_of_the_day: "Sim" | "Não";
+  wine: "Sim" | "Não";
 };
 
 export type MenuExcelExportParams = {
@@ -134,6 +136,8 @@ export async function buildMenuUpdatesWorkbook(params: MenuExcelExportParams): P
     r.getCell(16).value = row.sort_order != null ? row.sort_order : "";
     r.getCell(17).value = row.is_visible;
     r.getCell(18).value = row.is_featured;
+    r.getCell(19).value = row.dish_of_the_day;
+    r.getCell(20).value = row.wine;
   });
 
   const lastDataRow = Math.max(2, rows.length + 1);
@@ -167,6 +171,8 @@ export async function buildMenuUpdatesWorkbook(params: MenuExcelExportParams): P
     sheet.getCell(r, 16).dataValidation = { type: "whole", operator: "greaterThanOrEqual", formulae: [0], allowBlank: true };
     sheet.getCell(r, 17).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
     sheet.getCell(r, 18).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
+    sheet.getCell(r, 19).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
+    sheet.getCell(r, 20).dataValidation = { type: "list", allowBlank: true, formulae: [simNao] };
   }
 
   // Allow user to resize columns/rows, use filters and sort while sheet is protected
@@ -192,7 +198,7 @@ export async function buildMenuUpdatesWorkbook(params: MenuExcelExportParams): P
   };
 
   // Default column widths for readability (user can resize)
-  const colWidths: (number | undefined)[] = [12, 14, 12, 22, 28, 28, 10, 14, 14, 14, 14, 14, 8, 6, 8, 6, 8, 8];
+  const colWidths: (number | undefined)[] = [12, 14, 12, 22, 28, 28, 10, 14, 14, 14, 14, 14, 8, 6, 8, 6, 8, 8, 12, 8];
   HEADERS.forEach((_, i) => {
     const w = colWidths[i];
     if (w != null) sheet.getColumn(i + 1).width = w;
