@@ -333,7 +333,24 @@ const featuredRegistry: Record<string, FeaturedCardComponent> = {
  */
 export function getPresentationCardComponent(key?: string | null): PresentationCardComponent {
   const k = (key?.trim() || DEFAULT_PRESENTATION_KEY).toLowerCase();
-  return registry[k] ?? ItemCardRestaurante1;
+  const resolved = registry[k] ?? ItemCardRestaurante1;
+  // #region agent log
+  if (!registry[k]) {
+    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" },
+      body: JSON.stringify({
+        sessionId: "2129fe",
+        hypothesisId: "H2",
+        location: "presentation-templates.ts:getPresentationCardComponent",
+        message: "getPresentationCardComponent fallback",
+        data: { key: key ?? null, normalizedKey: k, inRegistry: false },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
+  return resolved;
 }
 
 /**

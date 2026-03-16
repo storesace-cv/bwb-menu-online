@@ -527,6 +527,31 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
               <div className="space-y-2">
                 {activeSectionFilteredCategories.map((cat) => {
                   const isExpanded = expandedCategoryId === cat.id;
+                  // #region agent log
+                  const layoutDef = cat.presentation_layout_definition;
+                  const useLayout =
+                    layoutDef != null &&
+                    Array.isArray((layoutDef as { zoneOrder?: unknown[] })?.zoneOrder) &&
+                    (layoutDef as { zoneOrder: unknown[] }).zoneOrder.length > 0;
+                  fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" },
+                    body: JSON.stringify({
+                      sessionId: "2129fe",
+                      hypothesisId: "H1",
+                      location: "bwb-branco-template.tsx:category-render",
+                      message: "category presentation",
+                      data: {
+                        categoryName: cat.name,
+                        categoryId: cat.id?.slice(0, 8),
+                        presentation_component_key: cat.presentation_component_key ?? null,
+                        useLayout,
+                        zoneOrderLength: (layoutDef as { zoneOrder?: unknown[] })?.zoneOrder?.length ?? 0,
+                      },
+                      timestamp: Date.now(),
+                    }),
+                  }).catch(() => {});
+                  // #endregion
                   return (
                     <section key={cat.id} className="mb-4" style={{ marginLeft: `${categoryTitleIndentPx}px` }}>
                       <button
