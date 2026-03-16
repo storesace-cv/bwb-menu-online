@@ -330,7 +330,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         );
       }
       case "name": {
-        const showDailyInName = zoneOrder.includes("daily_name") && item.daily_display_name;
+        const showDailyInName = !zoneOrder.includes("daily_name") && !!item.daily_display_name;
         return showDailyInName ? (
           <div>
             <div
