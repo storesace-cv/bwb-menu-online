@@ -602,7 +602,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     );
     const isHorizontal = mz.direction === "horizontal";
     const contentZone = (
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {isHorizontal ? (
           <div
             className="flex h-full min-h-0 w-full flex-col"
@@ -691,11 +691,11 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
               {mz.imageFirst ? (
                 <>
                   <div className="min-h-0 min-w-0 overflow-hidden">{imageZone}</div>
-                  <div className="min-h-0 min-w-0 overflow-y-auto border-t border-gray-100/80">{contentZone}</div>
+                  <div className="min-h-0 min-w-0 overflow-hidden border-t border-gray-100/80">{contentZone}</div>
                 </>
               ) : (
                 <>
-                  <div className="min-h-0 min-w-0 overflow-y-auto border-b border-gray-100/80">{contentZone}</div>
+                  <div className="min-h-0 min-w-0 overflow-hidden border-b border-gray-100/80">{contentZone}</div>
                   <div className="min-h-0 min-w-0 overflow-hidden">{imageZone}</div>
                 </>
               )}

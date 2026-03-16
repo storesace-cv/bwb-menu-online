@@ -182,8 +182,8 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const sectionTitleColor = menu.store_settings?.section_title_color?.trim() || "";
 
   const categoryTitleAlign = menu.store_settings?.category_title_align?.trim() || "left";
-  const categoryTitleMarginBottom = menu.store_settings?.category_title_margin_bottom?.trim() || "15";
-  const categoryTitlePaddingTop = menu.store_settings?.category_title_padding_top?.trim() || "16";
+  const categoryTitleMarginBottom = menu.store_settings?.category_title_margin_bottom?.trim() || "0";
+  const categoryTitlePaddingTop = menu.store_settings?.category_title_padding_top?.trim() || "0";
   const categoryTitleIndentPx = menu.store_settings?.category_title_indent_px?.trim() || "10";
   const categoryTitleColor = menu.store_settings?.category_title_color?.trim() || "rgb(167, 143, 57)";
 
