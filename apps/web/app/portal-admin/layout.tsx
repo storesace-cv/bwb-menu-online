@@ -26,6 +26,12 @@ export default async function PortalAdminLayout({
   const isActionPost = nextActionHeader !== "" || portalActionPost;
   const mode = getPortalMode(host, pathname);
 
+  // #region agent log
+  if (pathname.includes("categories") || pathname.includes("settings")) {
+    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "portal-admin/layout.tsx", message: "layout request", data: { pathname, isActionPost, nextActionLen: nextActionHeader.length, portalActionPost }, timestamp: Date.now(), hypothesisId: "A" }) }).catch(() => {});
+  }
+  // #endregion
+
   if (isActionPost) {
     portalDebugLog("presentation_template_layout", { step: "layout_early_return", pathname, host });
     const linkClass = "text-slate-200 hover:text-emerald-400 transition-colors";

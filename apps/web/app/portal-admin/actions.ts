@@ -633,33 +633,53 @@ export async function setSectionAsDefault(_prev: { error?: string } | null, form
 }
 
 export async function updateCategory(_prev: { error?: string } | null, formData: FormData) {
-  const supabase = await createClient();
-  const id = getFormDataValue(formData, "id")?.trim() ?? "";
-  const name = getFormDataValue(formData, "name")?.trim() ?? "";
-  const sortOrder = parseInt(getFormDataValue(formData, "sort_order") ?? "0", 10);
-  const sectionId = getFormDataValue(formData, "section_id")?.trim() || null;
-  const presentationTemplateId = getFormDataValue(formData, "presentation_template_id")?.trim() || null;
-  const sampleImageId = getFormDataValue(formData, "sample_image_id")?.trim() || null;
-  if (!id || !name) return { error: "ID e nome obrigatórios" };
-  if (!sectionId) return { error: "Secção obrigatória." };
-  const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
-  if (!row) return { error: "Categoria não encontrada" };
-  const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
-  if (!hasAccess) return { error: "Sem acesso a esta loja" };
-  const { error } = await supabase
-    .from("menu_categories")
-    .update({
-      name,
-      sort_order: sortOrder,
-      section_id: sectionId,
-      presentation_template_id: presentationTemplateId || null,
-      sample_image_id: sampleImageId || null,
-    })
-    .eq("id", id);
-  if (error) return { error: error.message };
-  revalidatePath("/portal-admin/menu");
-  revalidatePath("/portal-admin/settings/categories");
-  return null;
+  // #region agent log
+  const idLog = getFormDataValue(formData, "id")?.trim() ?? "";
+  fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action started", data: { categoryId: idLog }, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+  // #endregion
+  try {
+    const supabase = await createClient();
+    const id = getFormDataValue(formData, "id")?.trim() ?? "";
+    const name = getFormDataValue(formData, "name")?.trim() ?? "";
+    const sortOrder = parseInt(getFormDataValue(formData, "sort_order") ?? "0", 10);
+    const sectionId = getFormDataValue(formData, "section_id")?.trim() || null;
+    const presentationTemplateId = getFormDataValue(formData, "presentation_template_id")?.trim() || null;
+    const sampleImageId = getFormDataValue(formData, "sample_image_id")?.trim() || null;
+    if (!id || !name) return { error: "ID e nome obrigatórios" };
+    if (!sectionId) return { error: "Secção obrigatória." };
+    const { data: row } = await supabase.from("menu_categories").select("store_id").eq("id", id).single();
+    if (!row) return { error: "Categoria não encontrada" };
+    const { data: hasAccess } = await supabase.rpc("user_has_store_access", { p_store_id: row.store_id });
+    if (!hasAccess) return { error: "Sem acesso a esta loja" };
+    const { error } = await supabase
+      .from("menu_categories")
+      .update({
+        name,
+        sort_order: sortOrder,
+        section_id: sectionId,
+        presentation_template_id: presentationTemplateId || null,
+        sample_image_id: sampleImageId || null,
+      })
+      .eq("id", id);
+    if (error) {
+      // #region agent log
+      fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action error", data: { error: error.message }, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+      // #endregion
+      return { error: error.message };
+    }
+    revalidatePath("/portal-admin/menu");
+    revalidatePath("/portal-admin/settings/categories");
+    // #region agent log
+    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action success", data: {}, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+    // #endregion
+    return null;
+  } catch (e) {
+    const err = e as Error;
+    // #region agent log
+    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2129fe" }, body: JSON.stringify({ sessionId: "2129fe", location: "actions.ts updateCategory", message: "action throw", data: { message: err?.message }, timestamp: Date.now(), hypothesisId: "B" }) }).catch(() => {});
+    // #endregion
+    return { error: err?.message ?? "Erro ao guardar categoria" };
+  }
 }
 
 export async function deleteCategory(_prev: { error?: string } | null, formData: FormData) {
