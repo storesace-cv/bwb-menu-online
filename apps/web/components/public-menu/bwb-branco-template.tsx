@@ -195,6 +195,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
   const featuredSectionLabel = menu.store_settings?.featured_section_label?.trim() || "Escolhas do Chefe";
   const featuredTemplateKey = menu.store_settings?.featured_template_key?.trim() || "modelo-destaque-1";
   const featuredLayoutDefinition = menu.featured_layout_definition ?? null;
+  const featuredLayoutDefinitionMobile = menu.featured_layout_definition_mobile ?? null;
   const imageSource = menu.store_settings?.image_source?.trim() || undefined;
   const sampleImageUsage = menu.store_settings?.sample_image_usage?.trim() || undefined;
   const carouselBackgroundColor = menu.store_settings?.featured_carousel_background_color?.trim();
@@ -450,6 +451,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
         featuredSectionLabel={featuredSectionLabel}
         featuredTemplateKey={featuredTemplateKey}
         featuredLayoutDefinition={featuredLayoutDefinition as LayoutDefinition | null}
+        featuredLayoutDefinitionMobile={featuredLayoutDefinitionMobile as LayoutDefinition | null}
         currencyCode={currencyCode}
         imageSource={imageSource}
         sampleImageUsage="category_only"
@@ -557,7 +559,7 @@ export function BwbBrancoTemplate({ menu }: { menu: PublicMenuInitialPayload | P
                           <div className="block sm:hidden">
                             <ul className="p-0 m-0 list-none grid grid-cols-1 gap-6">
                               {(cat.items ?? []).map((item) => {
-                                const layoutDef = cat.presentation_layout_definition;
+                                const layoutDef = cat.presentation_layout_definition_mobile ?? cat.presentation_layout_definition;
                                 const useLayout =
                                   layoutDef != null &&
                                   Array.isArray(layoutDef.zoneOrder) &&

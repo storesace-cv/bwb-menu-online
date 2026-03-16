@@ -810,7 +810,7 @@ export async function copyPresentationTemplate(_prev: { error?: string } | null,
   if (!sourceId || !newName) return { error: "Template de origem e nome da cópia obrigatórios." };
   const { data: source } = await supabase
     .from("menu_presentation_templates")
-    .select("id, component_key, layout_definition")
+    .select("id, component_key, layout_definition, layout_definition_mobile")
     .eq("id", sourceId)
     .single();
   if (!source) return { error: "Template de origem não encontrado." };
@@ -818,6 +818,7 @@ export async function copyPresentationTemplate(_prev: { error?: string } | null,
     name: newName,
     component_key: source.component_key,
     layout_definition: source.layout_definition ?? undefined,
+    layout_definition_mobile: source.layout_definition_mobile ?? undefined,
   });
   if (error) return { error: error.message };
   revalidatePath("/portal-admin/settings/presentation-templates");
@@ -881,9 +882,13 @@ export async function updatePresentationTemplateLayout(
     zoneIconSizes?: { prep_time?: number; icons?: number } | null;
     nameLineHeight?: number | null;
     pricePaddingRightPx?: number | null;
-  }
+    zoneSpacing?: Record<string, { marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number }> | null;
+    rowSpacingOverrides?: Record<number, number> | null;
+  },
+  options?: { forMobile?: boolean }
 ): Promise<{ error?: string }> {
-  portalDebugLog("presentation_template_layout", { step: "entry", templateId: (templateId ?? "").slice(0, 8) });
+  const forMobile = options?.forMobile === true;
+  portalDebugLog("presentation_template_layout", { step: "entry", templateId: (templateId ?? "").slice(0, 8), forMobile });
   try {
   const supabase = await createClient();
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
@@ -1045,6 +1050,32 @@ export async function updatePresentationTemplateLayout(
     };
   }
 
+  const clamp048 = (n: number) => Math.max(0, Math.min(48, Math.round(n)));
+  let zoneSpacingPayload: Record<string, { marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number }> | undefined;
+  if (layoutDefinition.zoneSpacing && typeof layoutDefinition.zoneSpacing === "object") {
+    zoneSpacingPayload = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneSpacing)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || !val || typeof val !== "object") continue;
+      const out: Record<string, number> = {};
+      for (const side of ["marginTop", "marginRight", "marginBottom", "marginLeft", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"] as const) {
+        if (val[side] != null && Number.isFinite(Number(val[side]))) out[side] = clamp048(Number(val[side]));
+      }
+      if (Object.keys(out).length > 0) zoneSpacingPayload[key] = out as { marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number };
+    }
+    if (Object.keys(zoneSpacingPayload).length === 0) zoneSpacingPayload = undefined;
+  }
+  let rowSpacingOverridesPayload: Record<number, number> | undefined;
+  if (layoutDefinition.rowSpacingOverrides && typeof layoutDefinition.rowSpacingOverrides === "object") {
+    rowSpacingOverridesPayload = {};
+    for (const [key, val] of Object.entries(layoutDefinition.rowSpacingOverrides)) {
+      const rowIdx = parseInt(key, 10);
+      if (!Number.isFinite(rowIdx) || rowIdx < 0 || typeof val !== "number" || !Number.isFinite(val)) continue;
+      const n = Math.max(0, Math.min(48, Math.round(val)));
+      rowSpacingOverridesPayload[rowIdx] = n;
+    }
+    if (Object.keys(rowSpacingOverridesPayload).length === 0) rowSpacingOverridesPayload = undefined;
+  }
+
   const payload = {
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
@@ -1053,6 +1084,8 @@ export async function updatePresentationTemplateLayout(
     ...(zoneLineNumbers ? { zoneLineNumbers } : {}),
     ...(zoneHeights ? { zoneHeights } : {}),
     ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
+    ...(rowSpacingOverridesPayload ? { rowSpacingOverrides: rowSpacingOverridesPayload } : {}),
+    ...(zoneSpacingPayload ? { zoneSpacing: zoneSpacingPayload } : {}),
     ...(contentPaddingPx !== null ? { contentPaddingPx } : {}),
     ...(contentRowGapPx !== null ? { contentRowGapPx } : {}),
     ...(nameFontSize ? { nameFontSize } : {}),
@@ -1068,9 +1101,10 @@ export async function updatePresentationTemplateLayout(
       ? { pricePaddingRightPx: pricePaddingRightPayload }
       : {}),
   };
+  const updateColumn = forMobile ? "layout_definition_mobile" : "layout_definition";
   const { error } = await supabase
     .from("menu_presentation_templates")
-    .update({ layout_definition: payload })
+    .update({ [updateColumn]: payload })
     .eq("id", id);
   if (error) {
     portalDebugLog("presentation_template_layout", { step: "db_error", error: error.message });
@@ -1089,8 +1123,10 @@ export async function updatePresentationTemplateLayout(
 /** Actualizar layout de um modelo de apresentação de Destaques (superadmin). Mesma assinatura e payload que updatePresentationTemplateLayout. */
 export async function updateFeaturedPresentationTemplateLayout(
   templateId: string,
-  layoutDefinition: Parameters<typeof updatePresentationTemplateLayout>[1]
+  layoutDefinition: Parameters<typeof updatePresentationTemplateLayout>[1],
+  options?: { forMobile?: boolean }
 ): Promise<{ error?: string }> {
+  const forMobile = options?.forMobile === true;
   try {
   const supabase = await createClient();
   const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
@@ -1251,6 +1287,31 @@ export async function updateFeaturedPresentationTemplateLayout(
     };
   }
 
+  const clamp048F = (n: number) => Math.max(0, Math.min(48, Math.round(n)));
+  let zoneSpacingFeat: Record<string, { marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number }> | undefined;
+  if (layoutDefinition.zoneSpacing && typeof layoutDefinition.zoneSpacing === "object") {
+    zoneSpacingFeat = {};
+    for (const [key, val] of Object.entries(layoutDefinition.zoneSpacing)) {
+      if (!LAYOUT_ZONE_TYPES.has(key) || !val || typeof val !== "object") continue;
+      const out: Record<string, number> = {};
+      for (const side of ["marginTop", "marginRight", "marginBottom", "marginLeft", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"] as const) {
+        if (val[side] != null && Number.isFinite(Number(val[side]))) out[side] = clamp048F(Number(val[side]));
+      }
+      if (Object.keys(out).length > 0) zoneSpacingFeat[key] = out as { marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number };
+    }
+    if (Object.keys(zoneSpacingFeat).length === 0) zoneSpacingFeat = undefined;
+  }
+  let rowSpacingOverridesFeat: Record<number, number> | undefined;
+  if (layoutDefinition.rowSpacingOverrides && typeof layoutDefinition.rowSpacingOverrides === "object") {
+    rowSpacingOverridesFeat = {};
+    for (const [key, val] of Object.entries(layoutDefinition.rowSpacingOverrides)) {
+      const rowIdx = parseInt(key, 10);
+      if (!Number.isFinite(rowIdx) || rowIdx < 0 || typeof val !== "number" || !Number.isFinite(val)) continue;
+      rowSpacingOverridesFeat[rowIdx] = Math.max(0, Math.min(48, Math.round(val)));
+    }
+    if (Object.keys(rowSpacingOverridesFeat).length === 0) rowSpacingOverridesFeat = undefined;
+  }
+
   const payload = {
     zoneOrder: zones,
     ...(canvasHeight != null && canvasHeight > 0 ? { canvasHeight } : {}),
@@ -1259,6 +1320,8 @@ export async function updateFeaturedPresentationTemplateLayout(
     ...(zoneLineNumbersFeat ? { zoneLineNumbers: zoneLineNumbersFeat } : {}),
     ...(zoneHeights ? { zoneHeights } : {}),
     ...(rowSpacingPx !== null ? { rowSpacingPx } : {}),
+    ...(rowSpacingOverridesFeat ? { rowSpacingOverrides: rowSpacingOverridesFeat } : {}),
+    ...(zoneSpacingFeat ? { zoneSpacing: zoneSpacingFeat } : {}),
     ...(contentPaddingPx !== null ? { contentPaddingPx } : {}),
     ...(contentRowGapPx !== null ? { contentRowGapPx } : {}),
     ...(nameFontSize ? { nameFontSize } : {}),
@@ -1274,9 +1337,10 @@ export async function updateFeaturedPresentationTemplateLayout(
       ? { pricePaddingRightPx: pricePaddingRightFeat }
       : {}),
   };
+  const updateColumn = forMobile ? "layout_definition_mobile" : "layout_definition";
   const { error } = await supabase
     .from("menu_featured_presentation_templates")
-    .update({ layout_definition: payload })
+    .update({ [updateColumn]: payload })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/");

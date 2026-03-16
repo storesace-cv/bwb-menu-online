@@ -233,7 +233,25 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     zoneOrder.includes("daily_name")
       ? Math.min(rowSpacingPxRaw, 2)
       : rowSpacingPxRaw;
+  const rowSpacingOverrides = layoutDefinition.rowSpacingOverrides;
+  const zoneSpacing = layoutDefinition.zoneSpacing;
   const zoneHeights = layoutDefinition.zoneHeights;
+
+  function getZoneSpacingStyle(type: string): React.CSSProperties {
+    const z = zoneSpacing?.[type];
+    if (!z || typeof z !== "object") return {};
+    const clamp = (n: number) => Math.max(0, Math.min(48, Math.round(n)));
+    const out: React.CSSProperties = {};
+    if (z.marginTop != null && Number.isFinite(z.marginTop)) out.marginTop = `${clamp(z.marginTop)}px`;
+    if (z.marginRight != null && Number.isFinite(z.marginRight)) out.marginRight = `${clamp(z.marginRight)}px`;
+    if (z.marginBottom != null && Number.isFinite(z.marginBottom)) out.marginBottom = `${clamp(z.marginBottom)}px`;
+    if (z.marginLeft != null && Number.isFinite(z.marginLeft)) out.marginLeft = `${clamp(z.marginLeft)}px`;
+    if (z.paddingTop != null && Number.isFinite(z.paddingTop)) out.paddingTop = `${clamp(z.paddingTop)}px`;
+    if (z.paddingRight != null && Number.isFinite(z.paddingRight)) out.paddingRight = `${clamp(z.paddingRight)}px`;
+    if (z.paddingBottom != null && Number.isFinite(z.paddingBottom)) out.paddingBottom = `${clamp(z.paddingBottom)}px`;
+    if (z.paddingLeft != null && Number.isFinite(z.paddingLeft)) out.paddingLeft = `${clamp(z.paddingLeft)}px`;
+    return out;
+  }
   const imageHeightPx =
     zoneHeights?.image != null && zoneHeights.image !== 0
       ? getEffectiveZoneHeight("image", zoneHeights)
@@ -501,12 +519,13 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
       }}
     >
       {contentRows.map((row, rowIdx) => {
-        const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
+        const spacingPx = rowIdx > 0 ? (rowSpacingOverrides?.[rowIdx] ?? rowSpacingPx) : 0;
+        const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${spacingPx}px` } : {};
         if (row.length === 1) {
           const type = row[0];
           const el = renderZone(type, scalable);
           const minH = getEffectiveZoneHeight(type, zoneHeights);
-          const wrapperStyle: React.CSSProperties = { ...rowStyle };
+          const wrapperStyle: React.CSSProperties = { ...rowStyle, ...getZoneSpacingStyle(type) };
           if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
           const alignClass = ALIGNMENT_CLASSES[getEffectiveAlignment(type, layoutDefinition.zoneAlignment)];
           return el != null ? (
@@ -539,13 +558,18 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
                   flex: "1 1 100%",
                   boxSizing: "border-box",
                   ...(visible[0].minH > 0 ? { minHeight: `${visible[0].minH}px` } : {}),
+                  ...getZoneSpacingStyle(visible[0].type),
                 }}
               >
                 {visible[0].el}
               </div>
             ) : (
               visible.map((c) => {
-                const wrapperStyle: React.CSSProperties = { flex: `0 0 ${c.pct}%`, boxSizing: "border-box" };
+                const wrapperStyle: React.CSSProperties = {
+                  flex: `0 0 ${c.pct}%`,
+                  boxSizing: "border-box",
+                  ...getZoneSpacingStyle(c.type),
+                };
                 if (c.minH > 0) wrapperStyle.minHeight = `${c.minH}px`;
                 return (
                   <div key={c.type} className={`min-w-0 flex flex-col ${c.alignClass}`} style={wrapperStyle}>
@@ -737,12 +761,13 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           style={{ padding: `${contentPaddingPx}px` }}
         >
           {contentRows.map((row, rowIdx) => {
-            const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
+            const spacingPx = rowIdx > 0 ? (rowSpacingOverrides?.[rowIdx] ?? rowSpacingPx) : 0;
+            const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${spacingPx}px` } : {};
             if (row.length === 1) {
               const type = row[0];
               const el = renderZone(type);
               const minH = getEffectiveZoneHeight(type, zoneHeights);
-              const wrapperStyle: React.CSSProperties = { ...rowStyle };
+              const wrapperStyle: React.CSSProperties = { ...rowStyle, ...getZoneSpacingStyle(type) };
               if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
               return el != null ? (
                 <div key={`r-${rowIdx}`} style={wrapperStyle}>
@@ -772,13 +797,18 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
                       flex: "1 1 100%",
                       boxSizing: "border-box",
                       ...(visible[0].minH > 0 ? { minHeight: `${visible[0].minH}px` } : {}),
+                      ...getZoneSpacingStyle(visible[0].type),
                     }}
                   >
                     {visible[0].el}
                   </div>
                 ) : (
                   visible.map((c) => {
-                    const wrapperStyle: React.CSSProperties = { flex: `0 0 ${c.pct}%`, boxSizing: "border-box" };
+                    const wrapperStyle: React.CSSProperties = {
+                      flex: `0 0 ${c.pct}%`,
+                      boxSizing: "border-box",
+                      ...getZoneSpacingStyle(c.type),
+                    };
                     if (c.minH > 0) wrapperStyle.minHeight = `${c.minH}px`;
                     return (
                       <div key={c.type} className="min-w-0" style={wrapperStyle}>

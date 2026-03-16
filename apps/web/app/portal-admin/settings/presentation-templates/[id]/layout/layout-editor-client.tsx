@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   LAYOUT_ZONE_TYPES,
   LAYOUT_ZONE_LABELS,
@@ -21,6 +21,7 @@ import {
   type LayoutZoneType,
   type ZoneWidth,
   type ZoneAlignment,
+  type ZoneSpacing,
   type ContentFontSize,
   type ContentFontWeight,
   type ContentLineHeight,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/presentation-templates";
 import { updatePresentationTemplateLayout } from "@/app/portal-admin/actions";
 import { Button, Input, Alert } from "@/components/admin";
+import { BoxModelInput, type BoxSides } from "./box-model-input";
 
 /** Rótulos longos para a pré-visualização (alinhados ao diagrama Modelo Restaurante 1). */
 const PREVIEW_ZONE_LABELS: Record<LayoutZoneType, string> = {
@@ -120,12 +122,17 @@ function groupZonesIntoRows(
   return rows;
 }
 
-type LayoutUpdateFn = (templateId: string, payload: Parameters<typeof updatePresentationTemplateLayout>[1]) => Promise<{ error?: string }>;
+type LayoutUpdateFn = (
+  templateId: string,
+  payload: Parameters<typeof updatePresentationTemplateLayout>[1],
+  options?: { forMobile?: boolean }
+) => Promise<{ error?: string }>;
 
 type Props = {
   templateId: string;
   templateName: string;
   initialLayout: LayoutDefinition | null;
+  initialLayoutMobile?: LayoutDefinition | null;
   /** Quando fornecido (ex.: editor de modelos de destaques), usa esta função em vez de updatePresentationTemplateLayout. */
   onUpdateLayout?: LayoutUpdateFn;
 };
@@ -204,8 +211,10 @@ function getInitialCanvasHeight(initialLayout: LayoutDefinition | null): number 
   return null;
 }
 
-export function LayoutEditorClient({ templateId, templateName, initialLayout, onUpdateLayout }: Props) {
+export function LayoutEditorClient({ templateId, templateName, initialLayout, initialLayoutMobile, onUpdateLayout }: Props) {
   const defaultLayout = getDefaultLayoutDefinition();
+  const [forMobileViewport, setForMobileViewport] = useState(false);
+  const effectiveInitial = forMobileViewport ? initialLayoutMobile : initialLayout;
   const [canvasHeight, setCanvasHeight] = useState<number | null>(() =>
     getInitialCanvasHeight(initialLayout)
   );
@@ -243,6 +252,27 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
   const [rowSpacingPx, setRowSpacingPx] = useState<number>(
     initialLayout?.rowSpacingPx ?? DEFAULT_ROW_SPACING_PX
   );
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [selectedRowGap, setSelectedRowGap] = useState<number | null>(null);
+  const [zoneSpacing, setZoneSpacing] = useState<Record<string, BoxSides>>(() => {
+    const out: Record<string, BoxSides> = {};
+    if (initialLayout?.zoneSpacing && typeof initialLayout.zoneSpacing === "object") {
+      for (const [k, v] of Object.entries(initialLayout.zoneSpacing)) {
+        if (v && typeof v === "object") out[k] = { ...v };
+      }
+    }
+    return out;
+  });
+  const [rowSpacingOverrides, setRowSpacingOverrides] = useState<Record<number, number>>(() => {
+    const out: Record<number, number> = {};
+    if (initialLayout?.rowSpacingOverrides && typeof initialLayout.rowSpacingOverrides === "object") {
+      for (const [k, v] of Object.entries(initialLayout.rowSpacingOverrides)) {
+        const idx = parseInt(k, 10);
+        if (Number.isFinite(idx) && idx >= 0 && typeof v === "number" && v >= 0 && v <= 48) out[idx] = Math.round(v);
+      }
+    }
+    return out;
+  });
   const [zoneHeights, setZoneHeights] = useState<Record<string, number>>(() => {
     const order = initialLayout?.zoneOrder?.length ? initialLayout.zoneOrder : defaultLayout.zoneOrder;
     const base = getDefaultZoneHeights(order);
@@ -357,6 +387,153 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     }
     return out;
   });
+
+  // Ao alternar viewport (Smartphone vs Desktop), carregar o layout correspondente no estado.
+  useEffect(() => {
+    const L: LayoutDefinition | null = forMobileViewport
+      ? (initialLayoutMobile ?? initialLayout)
+      : initialLayout;
+    const order = L?.zoneOrder?.length ? L.zoneOrder : defaultLayout.zoneOrder;
+
+    setCanvasHeight(L != null ? getInitialCanvasHeight(L) : null);
+    setZoneOrder(order);
+    setZoneWidths(() => {
+      if (L?.zoneWidths && typeof L.zoneWidths === "object") {
+        const valid: Record<string, ZoneWidth> = {};
+        const allowed = new Set<ZoneWidth>(["full", "half", "quarter"]);
+        for (const [k, v] of Object.entries(L.zoneWidths)) {
+          if (LAYOUT_ZONE_TYPES.includes(k as LayoutZoneType) && allowed.has(v as ZoneWidth))
+            valid[k] = v as ZoneWidth;
+        }
+        if (Object.keys(valid).length > 0) return valid;
+      }
+      return getDefaultZoneWidths(order);
+    });
+    setZoneWidthPercent(getInitialZoneWidthPercent(order, L));
+    setZoneLineNumbers(() => {
+      const out: Record<string, number> = {};
+      if (L?.zoneLineNumbers && typeof L.zoneLineNumbers === "object") {
+        order.forEach((z) => {
+          const n = L!.zoneLineNumbers![z];
+          if (typeof n === "number" && n >= 1) out[z] = Math.round(n);
+        });
+      }
+      return out;
+    });
+    setRowSpacingPx(L?.rowSpacingPx ?? DEFAULT_ROW_SPACING_PX);
+    setSelectedZone(null);
+    setSelectedRowGap(null);
+    setZoneSpacing(() => {
+      const out: Record<string, BoxSides> = {};
+      if (L?.zoneSpacing && typeof L.zoneSpacing === "object") {
+        for (const [k, v] of Object.entries(L.zoneSpacing)) {
+          if (v && typeof v === "object") out[k] = { ...v };
+        }
+      }
+      return out;
+    });
+    setRowSpacingOverrides(() => {
+      const out: Record<number, number> = {};
+      if (L?.rowSpacingOverrides && typeof L.rowSpacingOverrides === "object") {
+        for (const [k, v] of Object.entries(L.rowSpacingOverrides)) {
+          const idx = parseInt(k, 10);
+          if (Number.isFinite(idx) && idx >= 0 && typeof v === "number" && v >= 0 && v <= 48)
+            out[idx] = Math.round(v);
+        }
+      }
+      return out;
+    });
+    setZoneHeights(() => {
+      const base = getDefaultZoneHeights(order);
+      if (L?.zoneHeights && typeof L.zoneHeights === "object") {
+        for (const [k, v] of Object.entries(L.zoneHeights)) {
+          if (LAYOUT_ZONE_TYPES.includes(k as LayoutZoneType) && typeof v === "number" && Number.isFinite(v)) {
+            const n = Math.round(Number(v));
+            if (n >= 0 && n <= ZONE_HEIGHT_MAX) base[k] = n;
+          }
+        }
+      }
+      return base;
+    });
+    setContentPaddingPx(
+      L?.contentPaddingPx != null && Number.isFinite(L.contentPaddingPx)
+        ? Math.max(0, Math.min(24, Math.round(Number(L.contentPaddingPx))))
+        : DEFAULT_CONTENT_PADDING_PX
+    );
+    const sides = L?.contentPaddingSides;
+    setUsePaddingSides(
+      !!(
+        sides &&
+        typeof sides.top === "number" &&
+        typeof sides.right === "number" &&
+        typeof sides.bottom === "number" &&
+        typeof sides.left === "number"
+      )
+    );
+    setPaddingSides({
+      top: Math.max(0, Math.min(24, Math.round(Number(sides?.top ?? 4)))),
+      right: Math.max(0, Math.min(24, Math.round(Number(sides?.right ?? 0)))),
+      bottom: Math.max(0, Math.min(24, Math.round(Number(sides?.bottom ?? 0)))),
+      left: Math.max(0, Math.min(24, Math.round(Number(sides?.left ?? 4)))),
+    });
+    setZoneIconPrep(
+      L?.zoneIconSizes?.prep_time != null && Number.isFinite(L.zoneIconSizes.prep_time)
+        ? Number(L.zoneIconSizes.prep_time)
+        : ""
+    );
+    setZoneIconArticle(
+      L?.zoneIconSizes?.icons != null && Number.isFinite(L.zoneIconSizes.icons)
+        ? Number(L.zoneIconSizes.icons)
+        : ""
+    );
+    setNameLineHeightInput(
+      L?.nameLineHeight != null && Number.isFinite(L.nameLineHeight) ? Number(L.nameLineHeight) : ""
+    );
+    setPricePaddingRightPx(
+      L?.pricePaddingRightPx != null && Number.isFinite(L.pricePaddingRightPx)
+        ? Math.max(0, Math.min(24, Math.round(Number(L.pricePaddingRightPx))))
+        : 0
+    );
+    setContentRowGapPx(
+      L?.contentRowGapPx != null && Number.isFinite(L.contentRowGapPx)
+        ? Math.max(0, Math.min(24, Math.round(Number(L.contentRowGapPx))))
+        : DEFAULT_CONTENT_ROW_GAP_PX
+    );
+    setNameFontSize(
+      L?.nameFontSize === "sm" || L?.nameFontSize === "base" || L?.nameFontSize === "lg"
+        ? L.nameFontSize
+        : "lg"
+    );
+    setNameFontWeight(
+      L?.nameFontWeight === "semibold" || L?.nameFontWeight === "bold" ? L.nameFontWeight : "bold"
+    );
+    setPriceFontSize(
+      L?.priceFontSize === "sm" || L?.priceFontSize === "base" || L?.priceFontSize === "lg"
+        ? L.priceFontSize
+        : "base"
+    );
+    setPriceLineHeight(
+      L?.priceLineHeight === "none" || L?.priceLineHeight === "normal" ? L.priceLineHeight : "normal"
+    );
+    const macro = normalizeMacroZones(L?.macroZones);
+    setMacroEnabled(!!macro);
+    setMacroDirection(macro?.direction ?? DEFAULT_MACRO_ZONES.direction);
+    setMacroSplitPercent(macro?.splitPercent ?? DEFAULT_MACRO_ZONES.splitPercent);
+    setMacroImageFirst(macro?.imageFirst ?? DEFAULT_MACRO_ZONES.imageFirst);
+    setMacroImageObjectFit(macro?.imageObjectFit ?? DEFAULT_MACRO_ZONES.imageObjectFit);
+    setMacroHeightMode(macro?.heightMode ?? DEFAULT_MACRO_ZONES.heightMode);
+    setMacroHeightReference(macro?.heightReference ?? DEFAULT_MACRO_ZONES.heightReference);
+    setMacroContentScaleToFit(macro?.contentScaleToFit ?? false);
+    setZoneAlignment(() => {
+      const out: Record<string, ZoneAlignment> = {};
+      if (L?.zoneAlignment && typeof L.zoneAlignment === "object") {
+        for (const [k, v] of Object.entries(L.zoneAlignment)) {
+          if (VALID_ALIGNMENTS.includes(v as ZoneAlignment)) out[k] = v as ZoneAlignment;
+        }
+      }
+      return out;
+    });
+  }, [forMobileViewport, initialLayout, initialLayoutMobile, defaultLayout]);
 
   const moveUp = useCallback((index: number) => {
     if (index <= 0) return;
@@ -528,15 +705,33 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
         if (lh >= 0.9 && lh <= 2) (payload as Record<string, unknown>).nameLineHeight = lh;
       }
       if (pricePaddingRightPx > 0) (payload as Record<string, unknown>).pricePaddingRightPx = pricePaddingRightPx;
+      const zoneSpacingSanitized: Record<string, ZoneSpacing> = {};
+      for (const [k, v] of Object.entries(zoneSpacing)) {
+        if (!v || typeof v !== "object") continue;
+        const entry: ZoneSpacing = {};
+        for (const side of ["marginTop", "marginRight", "marginBottom", "marginLeft", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"] as const) {
+          if (v[side] != null && Number.isFinite(v[side])) entry[side] = Math.max(0, Math.min(48, Math.round(v[side]!)));
+        }
+        if (Object.keys(entry).length > 0) zoneSpacingSanitized[k] = entry;
+      }
+      if (Object.keys(zoneSpacingSanitized).length > 0) (payload as Record<string, unknown>).zoneSpacing = zoneSpacingSanitized;
+      const rowOverridesSanitized: Record<number, number> = {};
+      for (const [k, v] of Object.entries(rowSpacingOverrides)) {
+        const idx = parseInt(k, 10);
+        if (!Number.isFinite(idx) || idx < 0 || typeof v !== "number") continue;
+        rowOverridesSanitized[idx] = Math.max(0, Math.min(48, Math.round(v)));
+      }
+      if (Object.keys(rowOverridesSanitized).length > 0) (payload as Record<string, unknown>).rowSpacingOverrides = rowOverridesSanitized;
       const updateFn = onUpdateLayout ?? updatePresentationTemplateLayout;
+      const updateOptions = forMobileViewport ? { forMobile: true as const } : undefined;
       let result: Awaited<ReturnType<typeof updateFn>>;
       try {
-        result = await updateFn(templateId, payload);
+        result = await updateFn(templateId, payload, updateOptions);
       } catch (firstErr) {
         const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
         const isFetchLike = /fetch failed|failed to fetch|load failed|networkerror|network error/i.test(msg);
         if (isFetchLike) {
-          result = await updateFn(templateId, payload);
+          result = await updateFn(templateId, payload, updateOptions);
         } else {
           throw firstErr;
         }
@@ -562,6 +757,9 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     zoneLineNumbers,
     zoneHeights,
     rowSpacingPx,
+    zoneSpacing,
+    rowSpacingOverrides,
+    forMobileViewport,
     contentPaddingPx,
     contentRowGapPx,
     nameFontSize,
@@ -583,6 +781,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
     zoneIconArticle,
     nameLineHeightInput,
     pricePaddingRightPx,
+    onUpdateLayout,
   ]);
 
   const renderPreviewBlock = (type: string, inRow: boolean, widthPercent?: number) => {
@@ -623,8 +822,211 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, on
   const sp = macroSplitPercent;
   const rest = 100 - sp;
 
+  const inspectorContent = selectedZone != null ? (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-slate-200 font-medium">
+          {PREVIEW_ZONE_LABELS[selectedZone as LayoutZoneType] ?? LAYOUT_ZONE_LABELS[selectedZone as LayoutZoneType] ?? selectedZone}
+        </h4>
+        <button
+          type="button"
+          onClick={() => setSelectedZone(null)}
+          className="text-slate-400 hover:text-slate-200 text-sm"
+        >
+          Fechar
+        </button>
+      </div>
+      <BoxModelInput
+        label="Margem (px)"
+        values={zoneSpacing[selectedZone] ?? {}}
+        onChange={(v) => setZoneSpacing((prev) => ({ ...prev, [selectedZone]: { ...(prev[selectedZone] ?? {}), ...v } }))}
+        sides={["marginTop", "marginRight", "marginBottom", "marginLeft"]}
+      />
+      <BoxModelInput
+        label="Padding (px)"
+        values={zoneSpacing[selectedZone] ?? {}}
+        onChange={(v) => setZoneSpacing((prev) => ({ ...prev, [selectedZone]: { ...(prev[selectedZone] ?? {}), ...v } }))}
+        sides={["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]}
+      />
+      <div className="pt-2 border-t border-slate-600 space-y-2">
+        <label className="block text-slate-300 text-sm font-medium">Largura (%)</label>
+        <input
+          type="range"
+          min={1}
+          max={100}
+          value={zoneWidthPercent[selectedZone] ?? getDefaultWidthPercent(selectedZone)}
+          onChange={(e) => setZoneWidthPercentValue(selectedZone, Number(e.target.value))}
+          className="w-full accent-emerald-500"
+        />
+        <span className="text-slate-400 text-xs">{zoneWidthPercent[selectedZone] ?? getDefaultWidthPercent(selectedZone)} %</span>
+      </div>
+      <div>
+        <label className="block text-slate-300 text-sm font-medium mb-1">Nº Linha</label>
+        <input
+          type="number"
+          min={1}
+          className="w-20 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
+          value={zoneLineNumbers[selectedZone] ?? ""}
+          placeholder="auto"
+          onChange={(e) => {
+            const v = e.target.value.trim();
+            const n = v === "" ? 0 : parseInt(v, 10);
+            setZoneLineNumber(selectedZone, Number.isFinite(n) ? n : 0);
+          }}
+        />
+      </div>
+      <div>
+        <label className="block text-slate-300 text-sm font-medium mb-1">Altura mín. (px, 0 = auto)</label>
+        <input
+          type="number"
+          min={0}
+          max={ZONE_HEIGHT_MAX}
+          className="w-20 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
+          value={getEffectiveZoneHeight(selectedZone, zoneHeights)}
+          onChange={(e) => setZoneHeight(selectedZone, Number(e.target.value) || 0)}
+        />
+      </div>
+      <div>
+        <span className="block text-slate-300 text-sm font-medium mb-1">Alinhamento</span>
+        <div className="flex gap-2">
+          {(["left", "center", "right"] as const).map((al) => (
+            <button
+              key={al}
+              type="button"
+              className={`px-2 py-1 rounded text-sm ${(zoneAlignment[selectedZone] ?? "left") === al ? "bg-emerald-600 text-white" : "bg-slate-700 text-slate-300"}`}
+              onClick={() => setZoneAlignment((prev) => ({ ...prev, [selectedZone]: al }))}
+            >
+              {al === "left" ? "Esq" : al === "center" ? "Centro" : "Dir"}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : selectedRowGap != null ? (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-slate-200 font-medium">Espaço entre linha {selectedRowGap} e {selectedRowGap + 1}</h4>
+        <button
+          type="button"
+          onClick={() => setSelectedRowGap(null)}
+          className="text-slate-400 hover:text-slate-200 text-sm"
+        >
+          Fechar
+        </button>
+      </div>
+      <div>
+        <label className="block text-slate-300 text-sm font-medium mb-1">Espaçamento (px)</label>
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            max={48}
+            value={rowSpacingOverrides[selectedRowGap] ?? rowSpacingPx}
+            onChange={(e) =>
+              setRowSpacingOverrides((prev) => ({
+                ...prev,
+                [selectedRowGap]: Math.max(0, Math.min(48, Number(e.target.value) || 0)),
+              }))
+            }
+            className="w-20"
+          />
+          {[0, 2, 4, 8, 16].map((px) => (
+            <button
+              key={px}
+              type="button"
+              className={`rounded px-2 py-1 text-xs border ${(rowSpacingOverrides[selectedRowGap] ?? rowSpacingPx) === px ? "border-emerald-500 bg-emerald-900/40 text-emerald-200" : "border-slate-600 bg-slate-800 text-slate-300"}`}
+              onClick={() => setRowSpacingOverrides((prev) => ({ ...prev, [selectedRowGap]: px }))}
+            >
+              {px}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <p className="text-slate-500 text-sm">Clica numa zona ou num espaço entre linhas na pré-visualização para editar.</p>
+  );
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-4">
+        <span className="text-slate-300 text-sm font-medium">Vista:</span>
+        <div className="flex rounded-lg border border-slate-600 overflow-hidden">
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm ${!forMobileViewport ? "bg-emerald-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+            onClick={() => setForMobileViewport(false)}
+          >
+            Computadores e Tablets
+          </button>
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm ${forMobileViewport ? "bg-emerald-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+            onClick={() => setForMobileViewport(true)}
+          >
+            Smartphone
+          </button>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className={forMobileViewport ? "max-w-[360px]" : "max-w-[400px]"}>
+          <h3 className="text-slate-200 font-medium mb-2">Pré-visualização do card</h3>
+          <p className="text-slate-400 text-sm mb-2">Clica numa zona ou no espaço entre linhas para editar margens e espaçamento.</p>
+          <div
+            className="rounded-xl border-2 border-dashed border-slate-500 bg-slate-100/50 overflow-hidden flex flex-col mt-2"
+            style={canvasHeight != null && canvasHeight > 0 ? { minHeight: `${Math.min(280, canvasHeight)}px` } : undefined}
+          >
+            <div className="flex flex-col flex-1" style={previewPaddingStyle}>
+              {zoneRows.map((row, rowIdx) => (
+                <div key={rowIdx} className="flex flex-col">
+                  {rowIdx > 0 ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSelectedRowGap(rowIdx);
+                        setSelectedZone(null);
+                      }}
+                      className={`w-full py-0.5 min-h-[6px] flex-shrink-0 ${selectedRowGap === rowIdx ? "ring-2 ring-blue-400 bg-blue-500/20" : "bg-slate-300/50 hover:bg-slate-400/50"}`}
+                      title={`Espaço entre linha ${rowIdx} e ${rowIdx + 1}`}
+                    />
+                  ) : null}
+                  <div
+                    className={`flex items-stretch ${row.length > 1 ? "flex-row border-t-0 border-dashed border-slate-400" : ""}`}
+                    style={{
+                      ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}),
+                    }}
+                  >
+                    {row.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setSelectedZone(type);
+                          setSelectedRowGap(null);
+                        }}
+                        className={`flex min-w-0 flex-1 text-left border-0 rounded-none p-0 cursor-pointer ${selectedZone === type ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                        style={
+                          row.length > 1
+                            ? { flex: `0 0 ${parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)}%` }
+                            : undefined
+                        }
+                      >
+                        {renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths))}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
+          <h3 className="text-slate-200 font-medium mb-2">Inspector</h3>
+          {inspectorContent}
+        </div>
+      </div>
       <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
         <h3 className="text-slate-200 font-medium mb-2">Zonas do canvas (macro-layout)</h3>
         <p className="text-slate-400 text-sm mb-3">

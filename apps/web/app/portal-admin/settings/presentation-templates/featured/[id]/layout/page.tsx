@@ -39,7 +39,7 @@ export default async function FeaturedTemplateLayoutPage({ params }: Props) {
 
   const { data: template } = await supabase
     .from("menu_featured_presentation_templates")
-    .select("id, name, layout_definition")
+    .select("id, name, layout_definition, layout_definition_mobile")
     .eq("id", id)
     .single();
 
@@ -50,6 +50,13 @@ export default async function FeaturedTemplateLayoutPage({ params }: Props) {
     typeof template.layout_definition === "object" &&
     Array.isArray((template.layout_definition as LayoutDefinition).zoneOrder)
       ? (template.layout_definition as LayoutDefinition)
+      : null;
+
+  const initialLayoutMobile: LayoutDefinition | null =
+    template.layout_definition_mobile != null &&
+    typeof template.layout_definition_mobile === "object" &&
+    Array.isArray((template.layout_definition_mobile as LayoutDefinition).zoneOrder)
+      ? (template.layout_definition_mobile as LayoutDefinition)
       : null;
 
   return (
@@ -68,6 +75,7 @@ export default async function FeaturedTemplateLayoutPage({ params }: Props) {
           templateId={template.id}
           templateName={template.name}
           initialLayout={initialLayout}
+          initialLayoutMobile={initialLayoutMobile}
           onUpdateLayout={updateFeaturedPresentationTemplateLayout}
         />
       </Card>

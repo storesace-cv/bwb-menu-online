@@ -17,6 +17,8 @@ export type PublicMenuSection = {
   name: string;
   sort_order: number;
   presentation_component_key?: string;
+  presentation_layout_definition?: PublicMenuLayoutDefinition | null;
+  presentation_layout_definition_mobile?: PublicMenuLayoutDefinition | null;
   /** Cor de fundo do bloco da secção no menu público. */
   background_color?: string | null;
   /** CSS de fundo (ex.: linear-gradient). Quando definido, substitui background_color. */
@@ -32,21 +34,40 @@ export type PublicMenuCategory = {
   section_name: string | null;
   presentation_component_key?: string;
   /** When set, the menu uses ItemCardFromLayout with this definition instead of component_key. */
-  presentation_layout_definition?: {
-    canvasHeight?: number;
-    zoneOrder: string[];
-    zoneWidths?: Record<string, string>;
-    zoneHeights?: Record<string, number>;
-    rowSpacingPx?: number;
-    contentPaddingPx?: number;
-    contentRowGapPx?: number;
-    nameFontSize?: string;
-    nameFontWeight?: string;
-    priceFontSize?: string;
-    priceLineHeight?: string;
-  } | null;
+  presentation_layout_definition?: PublicMenuLayoutDefinition | null;
+  /** Optional mobile layout; when set, client uses this for viewport < breakpoint. */
+  presentation_layout_definition_mobile?: PublicMenuLayoutDefinition | null;
   items: PublicMenuItem[];
 };
+
+/** Layout definition shape for menu categories/sections (subset of LayoutDefinition). */
+export type PublicMenuLayoutDefinition = {
+  canvasHeight?: number;
+  zoneOrder: string[];
+  zoneWidths?: Record<string, string>;
+  zoneWidthPercent?: Record<string, number>;
+  zoneLineNumbers?: Record<string, number>;
+  zoneHeights?: Record<string, number>;
+  rowSpacingPx?: number;
+  rowSpacingOverrides?: Record<number, number>;
+  zoneSpacing?: Record<string, {
+    marginTop?: number;
+    marginRight?: number;
+    marginBottom?: number;
+    marginLeft?: number;
+    paddingTop?: number;
+    paddingRight?: number;
+    paddingBottom?: number;
+    paddingLeft?: number;
+  }>;
+  contentPaddingPx?: number;
+  contentRowGapPx?: number;
+  nameFontSize?: string;
+  nameFontWeight?: string;
+  priceFontSize?: string;
+  priceLineHeight?: string;
+  macroZones?: unknown;
+} | null;
 
 export type PublicArticleType = {
   id: string;
@@ -148,19 +169,7 @@ export type PublicMenuStoreSettings = {
 };
 
 /** Layout definition for featured carousel cards (same shape as presentation-templates LayoutDefinition). */
-export type PublicMenuFeaturedLayoutDefinition = {
-  canvasHeight?: number;
-  zoneOrder: string[];
-  zoneWidths?: Record<string, string>;
-  zoneHeights?: Record<string, number>;
-  rowSpacingPx?: number;
-  contentPaddingPx?: number;
-  contentRowGapPx?: number;
-  nameFontSize?: string;
-  nameFontWeight?: string;
-  priceFontSize?: string;
-  priceLineHeight?: string;
-} | null;
+export type PublicMenuFeaturedLayoutDefinition = PublicMenuLayoutDefinition;
 
 export type PublicMenuPayload = {
   store_id: string | null;
@@ -168,6 +177,8 @@ export type PublicMenuPayload = {
   store_settings?: PublicMenuStoreSettings;
   /** Layout do template de destaques selecionado pela loja (para o carrossel). */
   featured_layout_definition?: PublicMenuFeaturedLayoutDefinition;
+  /** Layout de destaques para viewport mobile; quando definido, usar em ecrãs pequenos. */
+  featured_layout_definition_mobile?: PublicMenuFeaturedLayoutDefinition;
   sections: PublicMenuSection[];
   categories: PublicMenuCategory[];
   error?: string;

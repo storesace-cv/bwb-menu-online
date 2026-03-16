@@ -36,6 +36,7 @@ export function FeaturedCarouselSection({
   featuredSectionLabel,
   featuredTemplateKey,
   featuredLayoutDefinition,
+  featuredLayoutDefinitionMobile,
   currencyCode,
   imageSource,
   sampleImageUsage,
@@ -53,6 +54,7 @@ export function FeaturedCarouselSection({
   featuredSectionLabel: string;
   featuredTemplateKey: string;
   featuredLayoutDefinition?: LayoutDefinition | null;
+  featuredLayoutDefinitionMobile?: LayoutDefinition | null;
   currencyCode: string;
   imageSource?: string;
   sampleImageUsage?: string;
@@ -254,7 +256,7 @@ export function FeaturedCarouselSection({
             currencyCode={currencyCode}
             imageSource={imageSource}
             sampleImageUsage={sampleImageUsage}
-            layoutDefinition={featuredLayoutDefinition ?? null}
+            layoutDefinition={(isSmallScreen ? (featuredLayoutDefinitionMobile ?? featuredLayoutDefinition) : featuredLayoutDefinition) ?? null}
             {...(isSmallScreen && { articleMinHeight: "100%" })}
           />
         </div>

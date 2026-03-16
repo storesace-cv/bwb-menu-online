@@ -112,6 +112,18 @@ export const OBJECT_FIT_TO_CLASS: Record<MacroImageObjectFit, string> = {
   cover_1_1: "object-cover",
 };
 
+/** Margem e padding por zona (px, 0–48). Todos opcionais. */
+export interface ZoneSpacing {
+  marginTop?: number;
+  marginRight?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  paddingTop?: number;
+  paddingRight?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+}
+
 export interface LayoutDefinition {
   /** Altura mínima do card em px. Omitir ou 0 = altura mínima automática (conteúdo). */
   canvasHeight?: number;
@@ -124,6 +136,10 @@ export interface LayoutDefinition {
   zoneLineNumbers?: Record<string, number>;
   /** Espaçamento em px entre linhas de conteúdo do card; default 8. */
   rowSpacingPx?: number;
+  /** Override de espaçamento por índice de linha (0 = entre linha 0 e 1). Quando definido, usa-se em vez de rowSpacingPx para essa linha. */
+  rowSpacingOverrides?: Record<number, number>;
+  /** Margem e padding por tipo de zona (px, 0–48). */
+  zoneSpacing?: Record<string, ZoneSpacing>;
   /** Opcional: altura mínima por tipo de zona. 0 = automática (conteúdo); > 0 = altura mínima em px. Omitido = DEFAULT_ZONE_HEIGHTS[type]. */
   zoneHeights?: Record<string, number>;
   /** Padding interno (px) do bloco de conteúdo do card; 4–24; default 12. Ignorado se contentPaddingSides estiver definido. */

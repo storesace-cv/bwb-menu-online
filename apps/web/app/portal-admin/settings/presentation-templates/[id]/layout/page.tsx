@@ -38,7 +38,7 @@ export default async function PresentationTemplateLayoutPage({ params }: Props) 
 
   const { data: template } = await supabase
     .from("menu_presentation_templates")
-    .select("id, name, layout_definition")
+    .select("id, name, layout_definition, layout_definition_mobile")
     .eq("id", id)
     .single();
 
@@ -49,6 +49,13 @@ export default async function PresentationTemplateLayoutPage({ params }: Props) 
     typeof template.layout_definition === "object" &&
     Array.isArray((template.layout_definition as LayoutDefinition).zoneOrder)
       ? (template.layout_definition as LayoutDefinition)
+      : null;
+
+  const initialLayoutMobile: LayoutDefinition | null =
+    template.layout_definition_mobile != null &&
+    typeof template.layout_definition_mobile === "object" &&
+    Array.isArray((template.layout_definition_mobile as LayoutDefinition).zoneOrder)
+      ? (template.layout_definition_mobile as LayoutDefinition)
       : null;
 
   return (
@@ -63,7 +70,7 @@ export default async function PresentationTemplateLayoutPage({ params }: Props) 
         Ajuste a altura do card e a ordem dos campos. Pode adicionar ou remover campos da lista (apenas os existentes).
       </p>
       <Card>
-        <LayoutEditorClient templateId={template.id} templateName={template.name} initialLayout={initialLayout} />
+        <LayoutEditorClient templateId={template.id} templateName={template.name} initialLayout={initialLayout} initialLayoutMobile={initialLayoutMobile} />
       </Card>
     </div>
   );
