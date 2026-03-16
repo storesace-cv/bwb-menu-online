@@ -295,7 +295,10 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
   const priceSizeClass = FONT_SIZE_CLASSES[priceFontSize];
   const priceLeadClass = LINE_HEIGHT_CLASSES[priceLineHeight];
 
-  const renderZone = (type: string) => {
+  const renderZone = (type: string, scalable = false) => {
+    const em = (n: number) => (scalable ? { fontSize: `${n}em` } : undefined);
+    const mergeStyle = (base: React.CSSProperties | undefined, add: React.CSSProperties | undefined) =>
+      add ? { ...base, ...add } : base;
     switch (type) {
       case "image":
         return (
@@ -326,53 +329,69 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           </div>
         );
       }
-      case "name":
-        return item.daily_display_name ? (
+      case "name": {
+        const showDailyInName = zoneOrder.includes("daily_name") && item.daily_display_name;
+        return showDailyInName ? (
           <div>
-            <div className={`${nameClassName} text-sm text-gray-500 font-normal italic`} style={nameStyle}>
+            <div
+              className={`${scalable ? "text-gray-500 font-normal italic" : `${nameClassName} text-sm text-gray-500 font-normal italic`}`}
+              style={mergeStyle(nameStyle, scalable ? em(0.9) : undefined)}
+            >
               {item.menu_name}
             </div>
-            <h3 className={nameClassName} style={nameStyle}>
+            <h3
+              className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
+              style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
+            >
               {item.daily_display_name}
             </h3>
           </div>
         ) : (
-          <h3 className={nameClassName} style={nameStyle}>
+          <h3
+            className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
+            style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
+          >
             {item.menu_name}
           </h3>
         );
+      }
       case "daily_name":
         return item.daily_display_name ? (
-          <h3 className={nameClassName} style={nameStyle}>
+          <h3
+            className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
+            style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
+          >
             {item.daily_display_name}
           </h3>
         ) : null;
       case "description":
         return item.menu_description ? (
-          <p className="mt-0.5 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>
+          <p className={`mt-0.5 text-gray-600 leading-relaxed text-left ${scalable ? "" : "text-sm"}`} style={em(0.9)}>
+            {item.menu_description}
+          </p>
         ) : null;
       case "ingredients":
         return (
-          <div className="mt-1">
+          <div className="mt-1" style={em(0.85)}>
             <button
               type="button"
               onClick={() => setIngredientsOpen((o) => !o)}
-              className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium py-0.5"
+              className={`w-full flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 font-medium py-0.5 ${scalable ? "" : "text-sm"}`}
               aria-expanded={ingredientsOpen}
             >
               <i className="fas fa-eye" aria-hidden />
               <span>Ingredientes</span>
             </button>
             {ingredientsOpen && (
-              <div className="mt-0.5 text-sm text-gray-600 whitespace-pre-wrap">{hasIngredients ? item.menu_ingredients : "—"}</div>
+              <div className={`mt-0.5 text-gray-600 whitespace-pre-wrap ${scalable ? "" : "text-sm"}`}>{hasIngredients ? item.menu_ingredients : "—"}</div>
             )}
           </div>
         );
       case "prep_time":
         return item.prep_minutes != null ? (
           <div
-            className={`flex items-center gap-1.5 text-sm text-gray-500 ${zoneIconSizes.prep_time != null ? "mt-0" : "mt-1"}`}
-            style={nameLineHeight != null && nameLineHeight > 0 ? { lineHeight: nameLineHeight } : undefined}
+            className={`flex items-center gap-1.5 text-gray-500 ${zoneIconSizes.prep_time != null ? "mt-0" : "mt-1"} ${scalable ? "" : "text-sm"}`}
+            style={mergeStyle(nameLineHeight != null && nameLineHeight > 0 ? { lineHeight: nameLineHeight } : undefined, em(0.85))}
           >
             <MenuIcon code="prep-time" size={prepIconSize} />
             <span>{item.prep_minutes}&apos;</span>
@@ -380,14 +399,14 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         ) : null;
       case "allergens":
         return item.allergens && item.allergens.length > 0 ? (
-          <div className="mt-1 flex flex-wrap gap-1 items-center">
-            <span className="text-xs text-gray-500 mr-1">Alergénios:</span>
+          <div className="mt-1 flex flex-wrap gap-1 items-center" style={em(0.8)}>
+            <span className={`text-gray-500 mr-1 ${scalable ? "" : "text-xs"}`}>Alergénios:</span>
             {item.allergens.map((a) => {
               const severity = a.severity != null && a.severity >= 1 && a.severity <= 5 ? a.severity : 2;
               const label = getAllergenLabel(a);
               const badgeClass = SEVERITY_CLASSES[severity] ?? SEVERITY_CLASSES[2];
               return (
-                <span key={a.code} className={`text-xs px-1.5 py-0.5 rounded ${badgeClass}`}>
+                <span key={a.code} className={`px-1.5 py-0.5 rounded ${badgeClass} ${scalable ? "" : "text-xs"}`}>
                   {label}
                 </span>
               );
@@ -396,7 +415,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         ) : null;
       case "price_old":
         return item.is_promotion && (item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)) != null ? (
-          <div className="flex-1 min-w-0 text-sm text-gray-400 line-through" aria-label="Preço antigo">
+          <div className={`flex-1 min-w-0 text-gray-400 line-through ${scalable ? "" : "text-sm"}`} style={em(0.9)} aria-label="Preço antigo">
             {item.price_old_display ?? (item.price_old != null ? formatPrice(item.price_old, currencyCode) : null)}
           </div>
         ) : null;
@@ -406,19 +425,20 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             className={[
               "italic shrink-0",
               item.is_promotion ? "text-amber-700" : "text-gray-900",
-              item.is_promotion ? "text-lg" : priceSizeClass,
+              scalable ? "" : item.is_promotion ? "text-lg" : priceSizeClass,
               priceLeadClass,
             ]
               .filter(Boolean)
               .join(" ")}
-            style={
+            style={mergeStyle(
               pricePaddingRightPx > 0 || (nameLineHeight != null && nameLineHeight > 0)
                 ? {
                     ...(pricePaddingRightPx > 0 ? { paddingRight: pricePaddingRightPx } : {}),
                     ...(nameLineHeight != null && nameLineHeight > 0 ? { lineHeight: nameLineHeight } : {}),
                   }
-                : undefined
-            }
+                : undefined,
+              scalable ? em(1) : undefined
+            )}
           >
             {item.menu_price_display ?? (item.menu_price != null ? formatPrice(item.menu_price, currencyCode) : null)}
           </div>
@@ -478,7 +498,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     ? OBJECT_FIT_TO_CLASS[macroZones.imageObjectFit]
     : "object-cover";
 
-  const renderContentBlock = () => (
+  const renderContentBlock = (scalable = false) => (
     <div
       className="flex flex-col flex-1 min-h-0 min-w-0"
       style={{
@@ -490,7 +510,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         const rowStyle: React.CSSProperties = rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {};
         if (row.length === 1) {
           const type = row[0];
-          const el = renderZone(type);
+          const el = renderZone(type, scalable);
           const minH = getEffectiveZoneHeight(type, zoneHeights);
           const wrapperStyle: React.CSSProperties = { ...rowStyle };
           if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
@@ -508,7 +528,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
           >
             {row.map((type) => {
-              const el = renderZone(type);
+              const el = renderZone(type, scalable);
               const minH = getEffectiveZoneHeight(type, zoneHeights);
               const pct = parseZoneWidthPercent(
                 type,
@@ -581,9 +601,21 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     const imageZone = (
       <div className="flex h-full min-h-0 min-w-0 flex-col">{renderMacroImageButton()}</div>
     );
+    const isHorizontal = mz.direction === "horizontal";
     const contentZone = (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">
-        {mz.contentScaleToFit ? (
+        {isHorizontal ? (
+          <div
+            className="flex h-full min-h-0 w-full flex-col"
+            style={{
+              containerType: "size",
+              height: "100%",
+              fontSize: "8cqh",
+            } as React.CSSProperties}
+          >
+            {renderContentBlock(true)}
+          </div>
+        ) : mz.contentScaleToFit ? (
           <div className="h-full min-h-0 w-full overflow-hidden">
             <div
               className="flex min-w-0 flex-col"
@@ -603,10 +635,19 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
       </div>
     );
 
+    const horizontalFixedHeight =
+      isCover1_1
+        ? { aspectRatio: `${100 / sp}` }
+        : mz.heightMode === "match_reference" && mz.heightReference === "image" && matchRefMin != null
+          ? { height: matchRefMin }
+          : matchRefMin != null
+            ? { minHeight: matchRefMin }
+            : undefined;
+
     return (
       <li className="list-none flex h-full">
         <article
-          className="flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md"
+          className="flex w-full min-w-0 flex-col rounded-xl border border-gray-200 bg-white shadow-md h-full overflow-hidden"
           style={
             mz.direction === "vertical"
               ? { minHeight: verticalBaseH }
@@ -618,15 +659,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           {mz.direction === "horizontal" ? (
             <div
               className="flex w-full flex-row items-stretch overflow-hidden"
-              style={
-                isCover1_1
-                  ? { aspectRatio: `${100 / sp}` }
-                  : mz.heightMode === "match_reference" && mz.heightReference === "image" && matchRefMin != null
-                    ? { height: matchRefMin }
-                    : matchRefMin != null
-                      ? { minHeight: matchRefMin }
-                      : undefined
-              }
+              style={horizontalFixedHeight}
             >
               {mz.imageFirst ? (
                 <>
