@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { unstable_noStore as noStore } from "next/cache";
 import { getPublicMenuInitialByHostname } from "@/lib/supabase";
 import { PublicMenuClient } from "@/components/public-menu-client";
 import { TenantDisabledView } from "@/components/tenant-disabled-view";
@@ -6,6 +7,7 @@ import { TenantDisabledView } from "@/components/tenant-disabled-view";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  noStore();
   const headersList = await headers();
   const host = headersList.get("host") ?? headersList.get("x-forwarded-host") ?? "";
 

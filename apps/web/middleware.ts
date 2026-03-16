@@ -33,6 +33,9 @@ export function middleware(request: NextRequest) {
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set("x-pathname", pathname);
   res.headers.set("x-portal-host", host);
+  if (pathname === "/" && host !== GLOBAL_HOST) {
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  }
   return res;
 }
 
