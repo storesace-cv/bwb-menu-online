@@ -329,24 +329,8 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           </div>
         );
       }
-      case "name": {
-        const showDailyInName = !zoneOrder.includes("daily_name") && !!item.daily_display_name;
-        return showDailyInName ? (
-          <div>
-            <div
-              className={`${scalable ? "text-gray-500 font-normal italic" : `${nameClassName} text-sm text-gray-500 font-normal italic`}`}
-              style={mergeStyle(nameStyle, scalable ? em(0.9) : undefined)}
-            >
-              {item.menu_name}
-            </div>
-            <h3
-              className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
-              style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
-            >
-              {item.daily_display_name}
-            </h3>
-          </div>
-        ) : (
+      case "name":
+        return (
           <h3
             className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
             style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
@@ -354,7 +338,6 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             {item.menu_name}
           </h3>
         );
-      }
       case "daily_name":
         return item.daily_display_name ? (
           <h3
