@@ -138,20 +138,20 @@ export default async function MenuPage({
     }
   }
 
-  const familiaOptions = [
-    ...new Set(
+  const familiaOptions = Array.from(
+    new Set(
       Object.values(itemFamilia)
         .map((f) => f.familia)
         .filter((v): v is string => v != null && v !== "")
-    ),
-  ].sort((a, b) => a.localeCompare(b, "pt"));
-  const subFamiliaOptions = [
-    ...new Set(
+    )
+  ).sort((a, b) => a.localeCompare(b, "pt"));
+  const subFamiliaOptions = Array.from(
+    new Set(
       Object.values(itemFamilia)
         .map((f) => f.sub_familia)
         .filter((v): v is string => v != null && v !== "")
-    ),
-  ].sort((a, b) => a.localeCompare(b, "pt"));
+    )
+  ).sort((a, b) => a.localeCompare(b, "pt"));
 
   const allowedItemIds = new Set<string>();
   for (const id of Object.keys(itemFamilia)) {
