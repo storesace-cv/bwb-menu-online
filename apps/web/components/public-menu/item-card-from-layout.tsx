@@ -332,9 +332,12 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
       case "name":
         if (zoneOrder.includes("daily_name") && item.daily_display_name) {
           return (
-            <div className="text-sm text-gray-500 font-normal italic text-left min-w-0 truncate">
+            <h3
+              className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
+              style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
+            >
               {item.menu_name}
-            </div>
+            </h3>
           );
         }
         return (
@@ -347,12 +350,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         );
       case "daily_name":
         return item.daily_display_name ? (
-          <h3
-            className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
-            style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
-          >
+          <div className="text-sm text-gray-500 font-normal italic text-left min-w-0 truncate">
             {item.daily_display_name}
-          </h3>
+          </div>
         ) : null;
       case "description":
         return item.menu_description ? (
