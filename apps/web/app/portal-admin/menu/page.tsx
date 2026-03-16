@@ -29,7 +29,7 @@ function matchesText(
 export default async function MenuPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; categories?: string | string[]; sections?: string | string[] }>;
+  searchParams: Promise<{ q?: string; familias?: string | string[]; sub_familias?: string | string[] }>;
 }) {
   const params = await searchParams;
   const headersList = await headers();
@@ -59,15 +59,15 @@ export default async function MenuPage({
   }
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
-  const categoryFilterIds: string[] = Array.isArray(params.categories)
-    ? params.categories.filter((c): c is string => typeof c === "string")
-    : typeof params.categories === "string"
-      ? [params.categories]
+  const familiaFilterValues: string[] = Array.isArray(params.familias)
+    ? params.familias.filter((f): f is string => typeof f === "string")
+    : typeof params.familias === "string"
+      ? [params.familias]
       : [];
-  const sectionFilterIds: string[] = Array.isArray(params.sections)
-    ? params.sections.filter((s): s is string => typeof s === "string")
-    : typeof params.sections === "string"
-      ? [params.sections]
+  const subFamiliaFilterValues: string[] = Array.isArray(params.sub_familias)
+    ? params.sub_familias.filter((s): s is string => typeof s === "string")
+    : typeof params.sub_familias === "string"
+      ? [params.sub_familias]
       : [];
 
   const { data: sections } = await supabase
@@ -138,6 +138,33 @@ export default async function MenuPage({
     }
   }
 
+  const familiaOptions = [
+    ...new Set(
+      Object.values(itemFamilia)
+        .map((f) => f.familia)
+        .filter((v): v is string => v != null && v !== "")
+    ),
+  ].sort((a, b) => a.localeCompare(b, "pt"));
+  const subFamiliaOptions = [
+    ...new Set(
+      Object.values(itemFamilia)
+        .map((f) => f.sub_familia)
+        .filter((v): v is string => v != null && v !== "")
+    ),
+  ].sort((a, b) => a.localeCompare(b, "pt"));
+
+  const allowedItemIds = new Set<string>();
+  for (const id of Object.keys(itemFamilia)) {
+    const f = itemFamilia[id];
+    const okFamilia =
+      familiaFilterValues.length === 0 ||
+      (f.familia != null && f.familia !== "" && familiaFilterValues.includes(f.familia));
+    const okSubFamilia =
+      subFamiliaFilterValues.length === 0 ||
+      (f.sub_familia != null && f.sub_familia !== "" && subFamiliaFilterValues.includes(f.sub_familia));
+    if (okFamilia && okSubFamilia) allowedItemIds.add(id);
+  }
+
   const categoryById = new Map((categories ?? []).map((c) => [c.id, c]));
   const sectionById = new Map((sections ?? []).map((s) => [s.id, s]));
   const categoriesByItem = new Map<string, { category_id: string; sort_order: number; has_section: boolean; cat_name: string }[]>();
@@ -175,23 +202,16 @@ export default async function MenuPage({
     }
   }
 
-  const uncategorizedItems = itemsWithResolvedPrice.filter((i) => !itemIdsInCategory.has(i.id));
-
-  const categoriesFiltered =
-    categoryFilterIds.length > 0
-      ? (categories ?? []).filter((c) => categoryFilterIds.includes(c.id))
-      : (categories ?? []);
+  const uncategorizedItems = itemsWithResolvedPrice.filter(
+    (i) => !itemIdsInCategory.has(i.id) && allowedItemIds.has(i.id)
+  );
 
   const tree: SectionNode[] = [];
   const sectionsSorted = [...(sections ?? [])].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"));
-  const noSectionCategories = (categoriesFiltered ?? []).filter((c) => !c.section_id);
+  const noSectionCategories = (categories ?? []).filter((c) => !c.section_id);
   const hasNoSection = noSectionCategories.length > 0;
 
-  const includeNoSection = sectionFilterIds.length === 0 || sectionFilterIds.includes("__none__");
-  const sectionsToInclude = new Set(sectionFilterIds.length > 0 ? sectionFilterIds : null);
-  const includeUncategorized = sectionFilterIds.length === 0 || sectionFilterIds.includes("__uncategorized__");
-
-  if (uncategorizedItems.length > 0 && includeUncategorized) {
+  if (uncategorizedItems.length > 0) {
     const entries = q ? uncategorizedItems.filter((i) => matchesText(q, i)) : uncategorizedItems;
     const sorted = [...entries].sort((a, b) => (a.menu_name_display ?? "").localeCompare(b.menu_name_display ?? "", "pt"));
     const uncategorizedNode: SectionNode = {
@@ -214,13 +234,13 @@ export default async function MenuPage({
   }
 
   type ItemWithOrder = { item: NonNullable<ReturnType<typeof itemsById.get>>; sort_order: number };
-  if (hasNoSection && includeNoSection) {
+  if (hasNoSection) {
     const catNodes = noSectionCategories
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"))
       .map((cat) => {
         const withOrder = (byCategory.get(cat.id) ?? [])
           .map(({ menu_item_id, sort_order }) => ({ item: itemsById.get(menu_item_id), sort_order }))
-          .filter((e): e is ItemWithOrder => e.item != null);
+          .filter((e): e is ItemWithOrder => e.item != null && allowedItemIds.has(e.item.id));
         const filtered = q ? withOrder.filter((e) => matchesText(q, e.item)) : withOrder;
         const sorted = filtered.sort((a, b) => {
           const c = (a.sort_order ?? 0) - (b.sort_order ?? 0);
@@ -240,14 +260,13 @@ export default async function MenuPage({
   }
 
   for (const sec of sectionsSorted) {
-    if (sectionsToInclude !== null && !sectionsToInclude.has(sec.id)) continue;
-    const catsInSection = categoriesFiltered.filter((c) => c.section_id === sec.id);
+    const catsInSection = (categories ?? []).filter((c) => c.section_id === sec.id);
     const catNodes = catsInSection
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"))
       .map((cat) => {
         const withOrder = (byCategory.get(cat.id) ?? [])
           .map(({ menu_item_id, sort_order }) => ({ item: itemsById.get(menu_item_id), sort_order }))
-          .filter((e): e is ItemWithOrder => e.item != null);
+          .filter((e): e is ItemWithOrder => e.item != null && allowedItemIds.has(e.item.id));
         const filtered = q ? withOrder.filter((e) => matchesText(q, e.item)) : withOrder;
         const sorted = filtered.sort((a, b) => {
           const c = (a.sort_order ?? 0) - (b.sort_order ?? 0);
@@ -266,13 +285,12 @@ export default async function MenuPage({
     }
   }
 
-  const allCategories = (categories ?? []).sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt"));
-  const sectionOptions = [
-    { id: "__uncategorized__", label: "Por configurar" },
-    { id: "__none__", label: "Sem secção" },
-    ...(sections ?? []).map((s) => ({ id: s.id, label: s.name ?? "" })),
-  ];
-  const categoryOptions = allCategories.map((c) => ({ id: c.id, label: c.name ?? "" }));
+  const familiaDropdownOptions = familiaOptions.map((v) => ({ id: v, label: v }));
+  const subFamiliaDropdownOptions = subFamiliaOptions.map((v) => ({ id: v, label: v }));
+
+  const { data: canAccessBatchUpdate } = await supabase.rpc("current_user_can_access_settings", {
+    p_store_id: storeId,
+  });
 
   const { data: storeSettingsRow } = await supabase
     .from("store_settings")
@@ -323,17 +341,17 @@ export default async function MenuPage({
               />
             </div>
             <MultiSelectDropdown
-              label="Secções"
-              name="sections"
-              options={sectionOptions}
-              selectedIds={sectionFilterIds}
+              label="Familia"
+              name="familias"
+              options={familiaDropdownOptions}
+              selectedIds={familiaFilterValues}
               placeholder="Todas"
             />
             <MultiSelectDropdown
-              label="Categorias"
-              name="categories"
-              options={categoryOptions}
-              selectedIds={categoryFilterIds}
+              label="Sub Familia"
+              name="sub_familias"
+              options={subFamiliaDropdownOptions}
+              selectedIds={subFamiliaFilterValues}
               placeholder="Todas"
             />
             <button
@@ -362,6 +380,7 @@ export default async function MenuPage({
           categories={categories ?? []}
           articleTypes={articleTypes ?? []}
           currencyCode={currencyCode}
+          canAccessBatchUpdate={!!canAccessBatchUpdate}
         />
       </section>
     </div>

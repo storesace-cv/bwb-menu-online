@@ -32,6 +32,7 @@ export function MenuItemsTableClient({
   categories,
   articleTypes,
   currencyCode = "€",
+  canAccessBatchUpdate = true,
 }: {
   items: MenuTableItem[];
   itemFamilia: Record<string, { familia: string | null; sub_familia: string | null }>;
@@ -40,6 +41,7 @@ export function MenuItemsTableClient({
   categories: Category[];
   articleTypes: ArticleType[];
   currencyCode?: string;
+  canAccessBatchUpdate?: boolean;
 }) {
   const [sortRules, setSortRules] = useState<SortRule[]>(DEFAULT_SORT);
   const [perPage, setPerPage] = useState<number | "all">(50);
@@ -219,14 +221,16 @@ export function MenuItemsTableClient({
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <h3 className="text-slate-200 font-medium m-0">Lista</h3>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setBatchModalOpen(true)}
-            disabled={selectedIds.size === 0}
-          >
-            Alteração em Lote
-          </Button>
+          {canAccessBatchUpdate && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBatchModalOpen(true)}
+              disabled={selectedIds.size === 0}
+            >
+              Alteração em Lote
+            </Button>
+          )}
         </div>
 
         {items.length === 0 ? (

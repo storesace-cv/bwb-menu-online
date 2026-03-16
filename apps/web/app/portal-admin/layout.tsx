@@ -40,7 +40,7 @@ export default async function PortalAdminLayout({
             <Link href="/portal-admin/settings" className={linkClass} prefetch={false}>Definições</Link>
           )}
           <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
-          {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
+          {mode === "tenant" && <Link href="/portal-admin/gestao-diaria" className={linkClass} prefetch={false}>Gestão Diária</Link>}
           <form action="/api/auth/signout" method="post" className="ml-auto">
             <button
               type="submit"
@@ -121,7 +121,7 @@ export default async function PortalAdminLayout({
             <Link href="/portal-admin/settings" className={linkClass} prefetch={false}>Definições</Link>
           )}
           <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
-          {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
+          {mode === "tenant" && <Link href="/portal-admin/gestao-diaria" className={linkClass} prefetch={false}>Gestão Diária</Link>}
           <form action="/api/auth/signout" method="post" className="ml-auto">
             <button
               type="submit"
@@ -152,7 +152,7 @@ export default async function PortalAdminLayout({
               <Link href="/portal-admin/settings" className={linkClass} prefetch={false}>Definições</Link>
             )}
             <Link href="/portal-admin/menu" className={linkClass} prefetch={false}>Menu</Link>
-            {mode === "tenant" && <Link href="/portal-admin/sync" className={linkClass} prefetch={false}>Sync</Link>}
+            {mode === "tenant" && <Link href="/portal-admin/gestao-diaria" className={linkClass} prefetch={false}>Gestão Diária</Link>}
             <form action="/api/auth/signout" method="post" className="ml-auto">
               <button
                 type="submit"
