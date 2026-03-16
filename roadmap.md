@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (tipografia escalável, nome do dia condicional, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-16 (tamanho texto macro horizontal, deploy).
 
 ---
 
@@ -272,6 +272,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Resiliência Gestão de Artigos (502 na query menu_category_items):** Em Definições → Gestão de Artigos as colunas Secção, Categoria, Promo, TA e Tempo prep. dependem da query a `menu_category_items` em batches; em produção o PostgREST/Supabase devolvia por vezes 502 Bad Gateway e as colunas ficavam vazias. Correção: tamanho do batch reduzido (200 → 100 → 50 IDs por pedido) e 4 retries com delays crescentes (1,5 s, 3 s, 5 s, 8 s) em `page.tsx` e na API GET `/api/portal-admin/settings/items`; log `settings_items_mci` em [portal-debug] para diagnóstico em produção.
 - **Tipografia escalável no layout macro horizontal (apresentação independente do dispositivo):** Nos cards do menu público com layout em macro-zonas (imagem + conteúdo), a apresentação deixou de depender do viewport: a zona de texto usa `container-type: size` e `font-size: 8cqh` (8% da altura do content container); nome, preço, descrição e demais textos em `em` relativos (ex.: nome 1.15em, preço 1em), mantendo proporções e cabendo sempre na altura disponível (igual à da zona de imagem). Removido o hack por dispositivo (isNarrowViewport); um único layout em todos os ecrãs. Ficheiro: `item-card-from-layout.tsx`.
 - **Nome do dia na zona "name" só quando o campo está activo no modelo:** A inserção automática do prato do dia (nome genérico + nome do dia) na zona "name" do card passou a ocorrer apenas quando o modelo de layout inclui a zona "Nome do Dia" (`daily_name` em zoneOrder). Se "Nome do Dia" não estiver no layout, na zona "name" mostra-se apenas o nome do artigo. A formatação automática (estilos) mantém-se; a zona "daily_name" continua a renderizar o nome do dia quando está no layout. Ficheiro: `item-card-from-layout.tsx`.
+- **Tamanho do texto no layout macro horizontal (fix):** O cálculo do tamanho base usava `container-type: size` e `font-size: 8cqh` (8% da altura do contentor), o que em PC (várias colunas) tornava o texto enorme e cortado. Corrigido para `container-type: inline-size` e `font-size: clamp(8.5px, 0.95cqi, 12px)`, escalando com a largura da zona de texto e com limites mín/máx; nome e preço continuam em `em` relativos a este base. Ficheiro: `item-card-from-layout.tsx`.
 
 ---
 

@@ -608,9 +608,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
           <div
             className="flex h-full min-h-0 w-full flex-col"
             style={{
-              containerType: "size",
+              containerType: "inline-size",
               height: "100%",
-              fontSize: "8cqh",
+              fontSize: "clamp(8.5px, 0.95cqi, 12px)",
             } as React.CSSProperties}
           >
             {renderContentBlock(true)}
