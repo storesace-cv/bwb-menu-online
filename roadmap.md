@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-08 (revalidação menu público ao guardar layout do modelo, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-16 (confirmação fix layout refletido, remoção instrumentação debug, deploy).
 
 ---
 
@@ -275,6 +275,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Tamanho do texto no layout macro horizontal (fix):** O cálculo do tamanho base usava `container-type: size` e `font-size: 8cqh` (8% da altura do contentor), o que em PC (várias colunas) tornava o texto enorme e cortado. Corrigido para `container-type: inline-size` e `font-size: clamp(8.5px, 0.95cqi, 12px)`, escalando com a largura da zona de texto e com limites mín/máx; nome e preço continuam em `em` relativos a este base. Ficheiro: `item-card-from-layout.tsx`.
 - **Colapso de linhas vazias e zona única a 100%:** Nos cards com layout por zonas, quando uma linha tem várias zonas (ex.: Nome + Nome do Dia) e todas renderizam null, a linha deixa de ser renderizada (evita espaço vazio). Quando só uma zona da linha tem conteúdo (ex.: Nome do Dia null), essa zona passa a ocupar 100% da largura em vez de deixar espaço reservado para a zona vazia. Aplicado no bloco escalável (macro) e no legacy. Ficheiro: `item-card-from-layout.tsx`.
 - **Revalidação do menu público ao guardar layout do modelo:** Ao guardar o layout de um modelo de apresentação (normal ou de destaques) no portal-admin, apenas os paths do admin eram revalidados; a página do menu público (raiz `/`) não era invalidada e o Next.js podia servir uma versão em cache. Em `updatePresentationTemplateLayout` e `updateFeaturedPresentationTemplateLayout` foi adicionado `revalidatePath("/")` após o update à BD, para que a próxima visita ao menu público force um novo render com o layout actualizado. Ficheiro: `apps/web/app/portal-admin/actions.ts`.
+- **Fix layout não refletido confirmado; remoção de instrumentação de debug:** Confirmado que a actualização do modelo de layout no portal-admin se reflete no menu público após refresh (revalidação raiz em vigor). Removida a instrumentação de debug (logs para ingest e fingerprint em getPublicMenuInitialByHostname) usada no diagnóstico.
 
 ---
 
