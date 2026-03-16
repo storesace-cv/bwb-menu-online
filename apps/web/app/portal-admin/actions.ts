@@ -824,6 +824,20 @@ export async function copyPresentationTemplate(_prev: { error?: string } | null,
   return { success: true };
 }
 
+/** Apagar modelo de apresentação (superadmin). Secções e categorias ficam com presentation_template_id = null (ON DELETE SET NULL). */
+export async function deletePresentationTemplate(templateId: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: isSuper } = await supabase.rpc("current_user_is_superadmin");
+  if (!isSuper) return { error: "Acesso reservado a superadmin." };
+  const id = (templateId ?? "").trim();
+  if (!id) return { error: "ID do modelo obrigatório." };
+  const { error } = await supabase.from("menu_presentation_templates").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/portal-admin/settings/presentation-templates");
+  revalidatePath("/");
+  return {};
+}
+
 const LAYOUT_ZONE_TYPES = new Set(["image", "icons", "name", "daily_name", "description", "ingredients", "prep_time", "allergens", "price_old", "price"]);
 const ZONE_WIDTH_VALUES = new Set(["full", "half", "quarter"]);
 const ZONE_HEIGHT_MIN = 12;
@@ -1063,8 +1077,6 @@ export async function updatePresentationTemplateLayout(
     return { error: error.message };
   }
   portalDebugLog("presentation_template_layout", { step: "success" });
-  revalidatePath("/portal-admin/settings/presentation-templates");
-  revalidatePath(`/portal-admin/settings/presentation-templates/${id}/layout`);
   revalidatePath("/");
   return {};
   } catch (e) {
@@ -1267,8 +1279,6 @@ export async function updateFeaturedPresentationTemplateLayout(
     .update({ layout_definition: payload })
     .eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/portal-admin/settings/presentation-templates");
-  revalidatePath(`/portal-admin/settings/presentation-templates/featured/${id}/layout`);
   revalidatePath("/");
   return {};
   } catch (e) {

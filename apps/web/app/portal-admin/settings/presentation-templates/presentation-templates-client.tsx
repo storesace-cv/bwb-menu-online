@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
-import { copyPresentationTemplate } from "../../actions";
+import { useRouter } from "next/navigation";
+import { copyPresentationTemplate, deletePresentationTemplate } from "../../actions";
 import { useFormSubmitLoading } from "@/lib/use-form-submit-loading";
 import { Button, Input, Alert, BwbTable, SubmitButton } from "@/components/admin";
 import type { ColumnDef } from "@/lib/admin/bwbTableSort";
@@ -10,15 +11,36 @@ import type { ColumnDef } from "@/lib/admin/bwbTableSort";
 type Template = { id: string; name: string; component_key: string };
 
 export function PresentationTemplatesClient({ templates }: { templates: Template[] }) {
+  const router = useRouter();
   const [copyState, copyFormAction] = useFormState(copyPresentationTemplate, null);
   const [copySubmitting, copyFormBind] = useFormSubmitLoading(copyState);
   const [copyModalSource, setCopyModalSource] = useState<Template | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (copyState && "success" in copyState && copyState.success) {
       setCopyModalSource(null);
     }
   }, [copyState]);
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleteError(null);
+    setDeleteSubmitting(true);
+    try {
+      const result = await deletePresentationTemplate(deleteTarget.id);
+      if (result?.error) {
+        setDeleteError(result.error);
+        return;
+      }
+      setDeleteTarget(null);
+      router.refresh();
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
 
   const columns: ColumnDef<Template>[] = [
     {
@@ -50,6 +72,14 @@ export function PresentationTemplatesClient({ templates }: { templates: Template
           </a>
           <Button type="button" variant="outline" className="py-1 px-2 text-sm" onClick={() => setCopyModalSource(t)}>
             Copiar
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="py-1 px-2 text-sm border-red-500/50 text-red-400 hover:bg-red-900/30"
+            onClick={() => { setDeleteTarget(t); setDeleteError(null); }}
+          >
+            Apagar
           </Button>
         </span>
       ),
@@ -103,6 +133,45 @@ export function PresentationTemplatesClient({ templates }: { templates: Template
                 </SubmitButton>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-modal-title"
+        >
+          <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h2 id="delete-modal-title" className="text-lg font-semibold text-slate-100 mb-2">
+              Apagar modelo «{deleteTarget.name}»?
+            </h2>
+            <p className="text-slate-400 text-sm mb-4">
+              Secções e categorias que usem este modelo ficarão sem modelo de apresentação (será aplicado o modelo por defeito). Esta acção não pode ser desfeita.
+            </p>
+            {deleteError && (
+              <Alert variant="error" className="mb-4">{deleteError}</Alert>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setDeleteTarget(null); setDeleteError(null); }}
+                disabled={deleteSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                className="border-red-500/50 text-red-400 hover:bg-red-900/30"
+                onClick={handleDeleteConfirm}
+                disabled={deleteSubmitting}
+              >
+                {deleteSubmitting ? "A apagar…" : "Apagar"}
+              </Button>
+            </div>
           </div>
         </div>
       )}
