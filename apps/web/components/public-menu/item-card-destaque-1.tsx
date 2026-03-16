@@ -200,6 +200,10 @@ export function ItemCardDestaque1({
         ) : (
           <h3 className={nameClassName}>{item.menu_name}</h3>
         );
+      case "daily_name":
+        return item.daily_display_name ? (
+          <h3 className={nameClassName}>{item.daily_display_name}</h3>
+        ) : null;
       case "description":
         return item.menu_description ? (
           <p className="mt-0.5 text-white/90 text-sm leading-relaxed text-left break-words">{item.menu_description}</p>

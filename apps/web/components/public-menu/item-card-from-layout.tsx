@@ -341,6 +341,12 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             {item.menu_name}
           </h3>
         );
+      case "daily_name":
+        return item.daily_display_name ? (
+          <h3 className={nameClassName} style={nameStyle}>
+            {item.daily_display_name}
+          </h3>
+        ) : null;
       case "description":
         return item.menu_description ? (
           <p className="mt-0.5 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>

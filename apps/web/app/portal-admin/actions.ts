@@ -819,7 +819,7 @@ export async function copyPresentationTemplate(_prev: { error?: string } | null,
   return { success: true };
 }
 
-const LAYOUT_ZONE_TYPES = new Set(["image", "icons", "name", "description", "ingredients", "prep_time", "allergens", "price_old", "price"]);
+const LAYOUT_ZONE_TYPES = new Set(["image", "icons", "name", "daily_name", "description", "ingredients", "prep_time", "allergens", "price_old", "price"]);
 const ZONE_WIDTH_VALUES = new Set(["full", "half", "quarter"]);
 const ZONE_HEIGHT_MIN = 12;
 const ZONE_HEIGHT_MAX = 600;
