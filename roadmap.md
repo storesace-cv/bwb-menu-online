@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-16 (nome do dia só na zona Nome do Dia, deploy).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-16 (colapso linhas vazias e zona única a 100%, deploy).
 
 ---
 
@@ -273,6 +273,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Tipografia escalável no layout macro horizontal (apresentação independente do dispositivo):** Nos cards do menu público com layout em macro-zonas (imagem + conteúdo), a apresentação deixou de depender do viewport: a zona de texto usa `container-type: size` e `font-size: 8cqh` (8% da altura do content container); nome, preço, descrição e demais textos em `em` relativos (ex.: nome 1.15em, preço 1em), mantendo proporções e cabendo sempre na altura disponível (igual à da zona de imagem). Removido o hack por dispositivo (isNarrowViewport); um único layout em todos os ecrãs. Ficheiro: `item-card-from-layout.tsx`.
 - **Nome do dia apenas na zona "Nome do Dia":** A zona "name" do card mostra sempre só o nome do artigo (`menu_name`); não há inserção automática do prato do dia na zona "name". O nome do dia (`daily_display_name`) só é mostrado quando o modelo de layout inclui a zona "Nome do Dia" (`daily_name`), e apenas nessa zona. Ficheiro: `item-card-from-layout.tsx`.
 - **Tamanho do texto no layout macro horizontal (fix):** O cálculo do tamanho base usava `container-type: size` e `font-size: 8cqh` (8% da altura do contentor), o que em PC (várias colunas) tornava o texto enorme e cortado. Corrigido para `container-type: inline-size` e `font-size: clamp(8.5px, 0.95cqi, 12px)`, escalando com a largura da zona de texto e com limites mín/máx; nome e preço continuam em `em` relativos a este base. Ficheiro: `item-card-from-layout.tsx`.
+- **Colapso de linhas vazias e zona única a 100%:** Nos cards com layout por zonas, quando uma linha tem várias zonas (ex.: Nome + Nome do Dia) e todas renderizam null, a linha deixa de ser renderizada (evita espaço vazio). Quando só uma zona da linha tem conteúdo (ex.: Nome do Dia null), essa zona passa a ocupar 100% da largura em vez de deixar espaço reservado para a zona vazia. Aplicado no bloco escalável (macro) e no legacy. Ficheiro: `item-card-from-layout.tsx`.
 
 ---
 

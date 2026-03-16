@@ -504,29 +504,45 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             </div>
           ) : null;
         }
+        const cells = row.map((type) => ({
+          type,
+          el: renderZone(type, scalable),
+          minH: getEffectiveZoneHeight(type, zoneHeights),
+          pct: parseZoneWidthPercent(type, layoutDefinition.zoneWidthPercent, layoutDefinition.zoneWidths),
+          alignClass: ALIGNMENT_CLASSES[getEffectiveAlignment(type, layoutDefinition.zoneAlignment)],
+        }));
+        const visible = cells.filter((c) => c.el != null);
+        if (visible.length === 0) return null;
+        const gap = `${contentRowGapPx}px`;
         return (
           <div
             key={`r-${rowIdx}`}
             className="flex items-center flex-nowrap"
-            style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
+            style={{ ...rowStyle, gap }}
           >
-            {row.map((type) => {
-              const el = renderZone(type, scalable);
-              const minH = getEffectiveZoneHeight(type, zoneHeights);
-              const pct = parseZoneWidthPercent(
-                type,
-                layoutDefinition.zoneWidthPercent,
-                layoutDefinition.zoneWidths
-              );
-              const wrapperStyle: React.CSSProperties = { flex: `0 0 ${pct}%`, boxSizing: "border-box" };
-              if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
-              const alignClass = ALIGNMENT_CLASSES[getEffectiveAlignment(type, layoutDefinition.zoneAlignment)];
-              return el != null ? (
-                <div key={type} className={`min-w-0 flex flex-col ${alignClass}`} style={wrapperStyle}>
-                  {el}
-                </div>
-              ) : null;
-            })}
+            {visible.length === 1 ? (
+              <div
+                key={visible[0].type}
+                className={`min-w-0 flex flex-col ${visible[0].alignClass}`}
+                style={{
+                  flex: "1 1 100%",
+                  boxSizing: "border-box",
+                  ...(visible[0].minH > 0 ? { minHeight: `${visible[0].minH}px` } : {}),
+                }}
+              >
+                {visible[0].el}
+              </div>
+            ) : (
+              visible.map((c) => {
+                const wrapperStyle: React.CSSProperties = { flex: `0 0 ${c.pct}%`, boxSizing: "border-box" };
+                if (c.minH > 0) wrapperStyle.minHeight = `${c.minH}px`;
+                return (
+                  <div key={c.type} className={`min-w-0 flex flex-col ${c.alignClass}`} style={wrapperStyle}>
+                    {c.el}
+                  </div>
+                );
+              })
+            )}
           </div>
         );
       })}
@@ -723,28 +739,43 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
                 </div>
               ) : null;
             }
+            const cells = row.map((type) => ({
+              type,
+              el: renderZone(type),
+              minH: getEffectiveZoneHeight(type, zoneHeights),
+              pct: parseZoneWidthPercent(type, layoutDefinition.zoneWidthPercent, layoutDefinition.zoneWidths),
+            }));
+            const visible = cells.filter((c) => c.el != null);
+            if (visible.length === 0) return null;
             return (
               <div
                 key={`r-${rowIdx}`}
                 className="flex items-center flex-nowrap"
                 style={{ ...rowStyle, gap: `${contentRowGapPx}px` }}
               >
-                {row.map((type) => {
-                  const el = renderZone(type);
-                  const minH = getEffectiveZoneHeight(type, zoneHeights);
-                  const pct = parseZoneWidthPercent(
-                    type,
-                    layoutDefinition.zoneWidthPercent,
-                    layoutDefinition.zoneWidths
-                  );
-                  const wrapperStyle: React.CSSProperties = { flex: `0 0 ${pct}%`, boxSizing: "border-box" };
-                  if (minH > 0) wrapperStyle.minHeight = `${minH}px`;
-                  return el != null ? (
-                    <div key={type} className="min-w-0" style={wrapperStyle}>
-                      {el}
-                    </div>
-                  ) : null;
-                })}
+                {visible.length === 1 ? (
+                  <div
+                    key={visible[0].type}
+                    className="min-w-0"
+                    style={{
+                      flex: "1 1 100%",
+                      boxSizing: "border-box",
+                      ...(visible[0].minH > 0 ? { minHeight: `${visible[0].minH}px` } : {}),
+                    }}
+                  >
+                    {visible[0].el}
+                  </div>
+                ) : (
+                  visible.map((c) => {
+                    const wrapperStyle: React.CSSProperties = { flex: `0 0 ${c.pct}%`, boxSizing: "border-box" };
+                    if (c.minH > 0) wrapperStyle.minHeight = `${c.minH}px`;
+                    return (
+                      <div key={c.type} className="min-w-0" style={wrapperStyle}>
+                        {c.el}
+                      </div>
+                    );
+                  })
+                )}
               </div>
             );
           })}
