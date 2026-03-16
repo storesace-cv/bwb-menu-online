@@ -7,6 +7,11 @@ const CARDS = [
     label: "Sync",
     description: "Sincronizar catálogo e ver histórico de sync.",
   },
+  {
+    href: "/portal-admin/gestao-diaria/diarias",
+    label: "Gestão de Diárias",
+    description: "Programação semanal dos pratos do dia (nome a mostrar por dia).",
+  },
 ] as const;
 
 export default function GestaoDiariaPage() {

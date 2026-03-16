@@ -192,7 +192,14 @@ export function ItemCardDestaque1({
           </div>
         );
       case "name":
-        return <h3 className={nameClassName}>{item.menu_name}</h3>;
+        return item.daily_display_name ? (
+          <div>
+            <div className={`${nameClassName} text-sm text-white/70 font-normal italic`}>{item.menu_name}</div>
+            <h3 className={nameClassName}>{item.daily_display_name}</h3>
+          </div>
+        ) : (
+          <h3 className={nameClassName}>{item.menu_name}</h3>
+        );
       case "description":
         return item.menu_description ? (
           <p className="mt-0.5 text-white/90 text-sm leading-relaxed text-left break-words">{item.menu_description}</p>
@@ -340,7 +347,14 @@ export function ItemCardDestaque1({
             </>
           ) : (
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold text-lg text-white m-0 break-words">{item.menu_name}</h3>
+              {item.daily_display_name ? (
+                <>
+                  <div className="text-sm text-white/70 font-normal italic m-0 break-words">{item.menu_name}</div>
+                  <h3 className="font-bold text-lg text-white m-0 break-words">{item.daily_display_name}</h3>
+                </>
+              ) : (
+                <h3 className="font-bold text-lg text-white m-0 break-words">{item.menu_name}</h3>
+              )}
               <div className="flex justify-end items-center gap-1.5 flex-wrap">
                 {item.article_type && <MenuIcon code={item.article_type.icon_code} size={22} className="shrink-0 opacity-90" />}
                 {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}

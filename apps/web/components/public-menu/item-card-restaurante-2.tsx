@@ -76,7 +76,14 @@ export function ItemCardRestaurante2({
           {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
         </div>
         <div className={`px-3 ${zoneRowClass}`}>
-          <h3 className="font-bold text-lg text-gray-900 text-left mt-0 m-0">{item.menu_name}</h3>
+          {item.daily_display_name ? (
+            <>
+              <div className="text-sm text-gray-500 font-normal italic text-left mt-0 m-0">{item.menu_name}</div>
+              <h3 className="font-bold text-lg text-gray-900 text-left mt-0 m-0">{item.daily_display_name}</h3>
+            </>
+          ) : (
+            <h3 className="font-bold text-lg text-gray-900 text-left mt-0 m-0">{item.menu_name}</h3>
+          )}
         </div>
         <div className={`px-3 ${zoneRowClass}`}>
           {item.menu_description ? (
@@ -183,7 +190,14 @@ export function ItemCardRestaurante2({
           )}
         </button>
         <div className="flex-[2_2_0] flex flex-col min-w-0 p-3 sm:p-4">
-          <h3 className="font-bold text-lg text-gray-900 text-left mt-0 mb-1">{item.menu_name}</h3>
+          {item.daily_display_name ? (
+            <>
+              <div className="text-sm text-gray-500 font-normal italic text-left mt-0 mb-0">{item.menu_name}</div>
+              <h3 className="font-bold text-lg text-gray-900 text-left mt-0 mb-1">{item.daily_display_name}</h3>
+            </>
+          ) : (
+            <h3 className="font-bold text-lg text-gray-900 text-left mt-0 mb-1">{item.menu_name}</h3>
+          )}
           <div className="flex items-center justify-between gap-2 flex-wrap min-h-[28px]">
             {item.prep_minutes != null ? (
               <div className="flex items-center gap-1.5 text-sm text-gray-500">

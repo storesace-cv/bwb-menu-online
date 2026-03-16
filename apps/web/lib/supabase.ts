@@ -77,6 +77,8 @@ export type PublicMenuItem = {
   price_old_display?: string;
   /** Quando o artigo não tem imagem e a categoria tem sample, a RPC devolve o base_path do sample para fallback no menu. */
   category_sample_image_base_path?: string | null;
+  /** Para pratos do dia: nome programado para a data actual (Gestão de Diárias). Apresentar em destaque; o menu_name fica em pequeno/cinzento/itálico. */
+  daily_display_name?: string | null;
 };
 
 export type PublicMenuStoreSettings = {

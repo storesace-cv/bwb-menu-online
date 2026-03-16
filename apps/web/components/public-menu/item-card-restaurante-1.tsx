@@ -219,9 +219,16 @@ export function ItemCardRestaurante1({
           {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
           {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
         </div>
-        {/* Linha 3: nome (B) */}
+        {/* Linha 3: nome (B); prato do dia: (A) genérico pequeno/cinzento/itálico + (B) nome do dia */}
         <div className={`px-3 ${zoneRowClass}`}>
-          <h3 className="font-bold text-lg text-gray-900 text-left mt-0 m-0">{item.menu_name}</h3>
+          {item.daily_display_name ? (
+            <>
+              <div className="text-sm text-gray-500 font-normal italic text-left mt-0 m-0">{item.menu_name}</div>
+              <h3 className="font-bold text-lg text-gray-900 text-left mt-0 m-0">{item.daily_display_name}</h3>
+            </>
+          ) : (
+            <h3 className="font-bold text-lg text-gray-900 text-left mt-0 m-0">{item.menu_name}</h3>
+          )}
         </div>
         {/* Linha 4: descrição */}
         <div className={`px-3 ${zoneRowClass}`}>
@@ -323,7 +330,14 @@ export function ItemCardRestaurante1({
             {item.is_promotion && <MenuIcon code="on-promo" size={22} className="shrink-0" />}
             {item.take_away && <MenuIcon code="take-away" size={22} className="shrink-0" />}
           </div>
-          <h3 className="font-bold text-lg text-gray-900 text-left mt-0.5">{item.menu_name}</h3>
+          {item.daily_display_name ? (
+            <>
+              <div className="text-sm text-gray-500 font-normal italic text-left mt-0.5">{item.menu_name}</div>
+              <h3 className="font-bold text-lg text-gray-900 text-left mt-0.5">{item.daily_display_name}</h3>
+            </>
+          ) : (
+            <h3 className="font-bold text-lg text-gray-900 text-left mt-0.5">{item.menu_name}</h3>
+          )}
           {item.menu_description && (
             <p className="mt-0.5 text-gray-600 text-sm leading-relaxed text-left">{item.menu_description}</p>
           )}
