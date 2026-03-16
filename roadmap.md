@@ -1,6 +1,6 @@
 # Roadmap — BWB Menu Online
 
-Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-15 (Menu: modal Alteração em Lote igual a Gestão de Artigos).
+Este documento regista o que já está feito e o que está planeado, para manter visibilidade do projeto. Última revisão: 2026-03-16 (Gestão de Artigos: resiliência 502 na query menu_category_items).
 
 ---
 
@@ -264,6 +264,7 @@ Este documento regista o que já está feito e o que está planeado, para manter
 - **Nunca usar "Imagem Sample por defeito" nos três modos:** A imagem `/images/no_image_product.jpg` é tratada como sample por defeito. Nos modos "Não usa nenhuma", "Usa somente as imagens nas categorias" e "Usa somente as imagens dos artigos" a app **não** usa essa imagem: em `fallbackForItem` (item-card-restaurante-1) devolve-se `""` em vez de `FALLBACK_IMAGE`; nos quatro cards (restaurante-1, restaurante-2, from-layout, destaque-1) o `onError` do `<img>` passa a definir `effectiveSrc` para `""` quando `sampleImageUsage` é um destes modos, e quando `effectiveSrc === ""` é renderizado um placeholder (div com aspect-ratio e fundo neutro) em vez de imagem partida.
 - **Upload de imagem sample na edição de categoria (migration 069):** Coluna `image_samples.store_id` (nullable) e RLS para SELECT (globais + da loja) e INSERT/UPDATE/DELETE (superadmin ou tenant com acesso à loja). API de upload de image-samples alargada a tenants (form com `store_id` obrigatório para não-superadmin). Definições → Categorias: query de samples filtrada por `store_id IS NULL OR store_id = storeId`; no formulário de edição de categoria, bloco "Carregar imagem sample" (input file + botão), upload via API, em sucesso `router.refresh()` e Select controlado para preselecionar o novo sample.
 - **Fix "Fetch failed" ao guardar Método de leitura de imagens:** O layout de settings faz early return quando existe `next-action` ou `x-portal-action-post`, sem auth/redirect; a action `updateImageSource` usa `getFormDataValue` para `store_id`, `image_source` e `sample_image_usage` (campos com prefixo `1_` do useFormState são assim lidos). O middleware define `x-portal-action-post: 1` em qualquer POST para `/portal-admin` (exceto login), para o fix funcionar mesmo quando o proxy remove `next-action`. Após deploy, confirmar que o Guardar em Gestão de Imagens deixa de mostrar "Fetch failed" na consola.
+- **Resiliência Gestão de Artigos (502 na query menu_category_items):** Em Definições → Gestão de Artigos as colunas Secção, Categoria, Promo, TA e Tempo prep. dependem da query a `menu_category_items` em batches; em produção o PostgREST/Supabase devolvia por vezes 502 Bad Gateway e as colunas ficavam vazias. Correção: tamanho do batch reduzido (200 → 100 → 50 IDs por pedido) e 4 retries com delays crescentes (1,5 s, 3 s, 5 s, 8 s) em `page.tsx` e na API GET `/api/portal-admin/settings/items`; log `settings_items_mci` em [portal-debug] para diagnóstico em produção.
 
 ---
 
