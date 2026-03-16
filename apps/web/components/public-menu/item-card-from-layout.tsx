@@ -226,9 +226,13 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
   const minHeight = layoutDefinition.canvasHeight != null && layoutDefinition.canvasHeight > 0
     ? layoutDefinition.canvasHeight
     : undefined;
-  const rowSpacingPx = layoutDefinition.rowSpacingPx != null && layoutDefinition.rowSpacingPx >= 0 && layoutDefinition.rowSpacingPx <= 48
+  const rowSpacingPxRaw = layoutDefinition.rowSpacingPx != null && layoutDefinition.rowSpacingPx >= 0 && layoutDefinition.rowSpacingPx <= 48
     ? layoutDefinition.rowSpacingPx
     : 8;
+  const rowSpacingPx =
+    zoneOrder.includes("daily_name")
+      ? Math.min(rowSpacingPxRaw, 2)
+      : rowSpacingPxRaw;
   const zoneHeights = layoutDefinition.zoneHeights;
   const imageHeightPx =
     zoneHeights?.image != null && zoneHeights.image !== 0
@@ -350,7 +354,7 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
         );
       case "daily_name":
         return item.daily_display_name ? (
-          <div className="text-sm text-gray-500 font-normal italic text-left min-w-0 truncate">
+          <div className="text-sm text-gray-500 font-normal italic text-left min-w-0 truncate leading-tight m-0">
             {item.daily_display_name}
           </div>
         ) : null;
