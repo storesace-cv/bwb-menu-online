@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   LAYOUT_ZONE_TYPES,
   LAYOUT_ZONE_LABELS,
@@ -388,8 +388,11 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
     return out;
   });
 
-  // Ao alternar viewport (Smartphone vs Desktop), carregar o layout correspondente no estado.
+  // Sincronizar estado apenas ao trocar viewport (não quando initialLayout/initialLayoutMobile mudam de ref).
+  const lastSyncedViewportRef = useRef<boolean | null>(null);
   useEffect(() => {
+    if (lastSyncedViewportRef.current === forMobileViewport) return;
+    lastSyncedViewportRef.current = forMobileViewport;
     const L: LayoutDefinition | null = forMobileViewport
       ? (initialLayoutMobile ?? initialLayout)
       : initialLayout;
@@ -533,7 +536,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
       }
       return out;
     });
-  }, [forMobileViewport, initialLayout, initialLayoutMobile, defaultLayout]);
+  }, [forMobileViewport]);
 
   const moveUp = useCallback((index: number) => {
     if (index <= 0) return;
@@ -968,58 +971,223 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
           </button>
         </div>
       </div>
+
+      <section className="space-y-6" aria-labelledby="canvas-heading">
+        <h2 id="canvas-heading" className="text-lg font-semibold text-slate-100 border-b border-slate-600 pb-2">Canvas</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className={forMobileViewport ? "max-w-[360px]" : "max-w-[400px]"}>
           <h3 className="text-slate-200 font-medium mb-2">Pré-visualização do card</h3>
-          <p className="text-slate-400 text-sm mb-2">Clica numa zona ou no espaço entre linhas para editar margens e espaçamento.</p>
+          <p className="text-slate-400 text-sm mb-2">Clica numa zona ou no espaço entre linhas para editar no Inspector.</p>
           <div
             className="rounded-xl border-2 border-dashed border-slate-500 bg-slate-100/50 overflow-hidden flex flex-col mt-2"
-            style={canvasHeight != null && canvasHeight > 0 ? { minHeight: `${Math.min(280, canvasHeight)}px` } : undefined}
+            style={
+              macroEnabled && macroDirection === "vertical"
+                ? { minHeight: `${Math.min(400, canvasHeight ?? DEFAULT_CANVAS_HEIGHT)}px` }
+                : canvasHeight != null && canvasHeight > 0
+                  ? { minHeight: `${Math.min(280, canvasHeight)}px` }
+                  : undefined
+            }
           >
-            <div className="flex flex-col flex-1" style={previewPaddingStyle}>
-              {zoneRows.map((row, rowIdx) => (
-                <div key={rowIdx} className="flex flex-col">
-                  {rowIdx > 0 ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setSelectedRowGap(rowIdx);
-                        setSelectedZone(null);
-                      }}
-                      className={`w-full py-0.5 min-h-[6px] flex-shrink-0 ${selectedRowGap === rowIdx ? "ring-2 ring-blue-400 bg-blue-500/20" : "bg-slate-300/50 hover:bg-slate-400/50"}`}
-                      title={`Espaço entre linha ${rowIdx} e ${rowIdx + 1}`}
-                    />
-                  ) : null}
-                  <div
-                    className={`flex items-stretch ${row.length > 1 ? "flex-row border-t-0 border-dashed border-slate-400" : ""}`}
-                    style={{
-                      ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}),
-                    }}
-                  >
-                    {row.map((type) => (
+            {!macroEnabled || !zoneOrder.includes("image") ? (
+              <div className="flex flex-col flex-1" style={previewPaddingStyle}>
+                {zoneRows.map((row, rowIdx) => (
+                  <div key={rowIdx} className="flex flex-col">
+                    {rowIdx > 0 ? (
                       <button
-                        key={type}
                         type="button"
                         onClick={(e) => {
                           e.preventDefault();
-                          setSelectedZone(type);
-                          setSelectedRowGap(null);
+                          setSelectedRowGap(rowIdx);
+                          setSelectedZone(null);
                         }}
-                        className={`flex min-w-0 flex-1 text-left border-0 rounded-none p-0 cursor-pointer ${selectedZone === type ? "ring-2 ring-blue-400 ring-inset" : ""}`}
-                        style={
-                          row.length > 1
-                            ? { flex: `0 0 ${parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)}%` }
-                            : undefined
-                        }
-                      >
-                        {renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths))}
-                      </button>
-                    ))}
+                        className={`w-full py-0.5 min-h-[6px] flex-shrink-0 ${selectedRowGap === rowIdx ? "ring-2 ring-blue-400 bg-blue-500/20" : "bg-slate-300/50 hover:bg-slate-400/50"}`}
+                        title={`Espaço entre linha ${rowIdx} e ${rowIdx + 1}`}
+                      />
+                    ) : null}
+                    <div
+                      className={`flex items-stretch ${row.length > 1 ? "flex-row border-t-0 border-dashed border-slate-400" : ""}`}
+                      style={{ ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}) }}
+                    >
+                      {row.map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setSelectedZone(type);
+                            setSelectedRowGap(null);
+                          }}
+                          className={`flex min-w-0 flex-1 text-left border-0 rounded-none p-0 cursor-pointer ${selectedZone === type ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                          style={row.length > 1 ? { flex: `0 0 ${parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)}%` } : undefined}
+                        >
+                          {renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths))}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : macroDirection === "horizontal" ? (
+              <div className="flex w-full flex-row items-stretch min-h-[180px]">
+                {macroImageFirst ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setSelectedZone("image"); setSelectedRowGap(null); }}
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-green-500 bg-amber-100/90 px-1 py-2 text-center shrink-0 cursor-pointer ${selectedZone === "image" ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                      style={{ width: `${sp}%` }}
+                    >
+                      <span className="text-xs font-medium text-slate-700">Imagem</span>
+                    </button>
+                    <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, ...previewPaddingStyle }}>
+                      {zoneRows.map((row, rowIdx) => (
+                        <div key={rowIdx} className="flex flex-col">
+                          {rowIdx > 0 ? (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setSelectedRowGap(rowIdx); setSelectedZone(null); }}
+                              className={`w-full py-0.5 min-h-[6px] flex-shrink-0 ${selectedRowGap === rowIdx ? "ring-2 ring-blue-400 bg-blue-500/20" : "bg-slate-300/50 hover:bg-slate-400/50"}`}
+                            />
+                          ) : null}
+                          <div className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`} style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}>
+                            {row.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setSelectedZone(type); setSelectedRowGap(null); }}
+                                className={`flex min-w-0 flex-1 text-left border-0 rounded-none p-0 cursor-pointer ${selectedZone === type ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                                style={row.length > 1 ? { flex: `0 0 ${parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)}%` } : undefined}
+                              >
+                                {renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths))}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, ...previewPaddingStyle }}>
+                      {zoneRows.map((row, rowIdx) => (
+                        <div key={rowIdx} className="flex flex-col">
+                          {rowIdx > 0 ? (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setSelectedRowGap(rowIdx); setSelectedZone(null); }}
+                              className={`w-full py-0.5 min-h-[6px] flex-shrink-0 ${selectedRowGap === rowIdx ? "ring-2 ring-blue-400 bg-blue-500/20" : "bg-slate-300/50 hover:bg-slate-400/50"}`}
+                            />
+                          ) : null}
+                          <div className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`} style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}>
+                            {row.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setSelectedZone(type); setSelectedRowGap(null); }}
+                                className={`flex min-w-0 flex-1 text-left border-0 rounded-none p-0 cursor-pointer ${selectedZone === type ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                                style={row.length > 1 ? { flex: `0 0 ${parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)}%` } : undefined}
+                              >
+                                {renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths))}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setSelectedZone("image"); setSelectedRowGap(null); }}
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-green-500 bg-amber-100/90 px-1 py-2 text-center shrink-0 cursor-pointer ${selectedZone === "image" ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                      style={{ width: `${sp}%` }}
+                    >
+                      <span className="text-xs font-medium text-slate-700">Imagem</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div
+                className="grid w-full flex-1 min-h-0"
+                style={{
+                  minHeight: Math.min(300, canvasHeight ?? DEFAULT_CANVAS_HEIGHT),
+                  gridTemplateRows: macroImageFirst ? `${sp}fr ${rest}fr` : `${rest}fr ${sp}fr`,
+                }}
+              >
+                {macroImageFirst ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setSelectedZone("image"); setSelectedRowGap(null); }}
+                      className={`flex items-center justify-center border-b-2 border-dashed border-green-500 bg-amber-100/90 min-h-[60px] cursor-pointer ${selectedZone === "image" ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                    >
+                      <span className="text-xs font-medium text-slate-700">Imagem</span>
+                    </button>
+                    <div className="overflow-auto flex flex-col min-h-0" style={previewPaddingStyle}>
+                      {zoneRows.map((row, rowIdx) => (
+                        <div key={rowIdx} className="flex flex-col">
+                          {rowIdx > 0 ? (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setSelectedRowGap(rowIdx); setSelectedZone(null); }}
+                              className={`w-full py-0.5 min-h-[6px] flex-shrink-0 ${selectedRowGap === rowIdx ? "ring-2 ring-blue-400 bg-blue-500/20" : "bg-slate-300/50 hover:bg-slate-400/50"}`}
+                            />
+                          ) : null}
+                          <div className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`} style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}>
+                            {row.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setSelectedZone(type); setSelectedRowGap(null); }}
+                                className={`flex min-w-0 flex-1 text-left border-0 rounded-none p-0 cursor-pointer ${selectedZone === type ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                                style={row.length > 1 ? { flex: `0 0 ${parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)}%` } : undefined}
+                              >
+                                {renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths))}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="overflow-auto flex flex-col min-h-0 border-b-2 border-dashed border-slate-400" style={previewPaddingStyle}>
+                      {zoneRows.map((row, rowIdx) => (
+                        <div key={rowIdx} className="flex flex-col">
+                          {rowIdx > 0 ? (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setSelectedRowGap(rowIdx); setSelectedZone(null); }}
+                              className={`w-full py-0.5 min-h-[6px] flex-shrink-0 ${selectedRowGap === rowIdx ? "ring-2 ring-blue-400 bg-blue-500/20" : "bg-slate-300/50 hover:bg-slate-400/50"}`}
+                            />
+                          ) : null}
+                          <div className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`} style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}>
+                            {row.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setSelectedZone(type); setSelectedRowGap(null); }}
+                                className={`flex min-w-0 flex-1 text-left border-0 rounded-none p-0 cursor-pointer ${selectedZone === type ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                                style={row.length > 1 ? { flex: `0 0 ${parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)}%` } : undefined}
+                              >
+                                {renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths))}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setSelectedZone("image"); setSelectedRowGap(null); }}
+                      className={`flex items-center justify-center border-t-2 border-dashed border-green-500 bg-amber-100/90 min-h-[60px] cursor-pointer ${selectedZone === "image" ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                    >
+                      <span className="text-xs font-medium text-slate-700">Imagem</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
@@ -1174,136 +1342,6 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
         )}
       </div>
 
-      <div aria-describedby="preview-description">
-        <h3 className="text-slate-200 font-medium mb-2">Pré-visualização do card</h3>
-        <p id="preview-description" className="text-slate-400 text-sm mb-3">
-          Representação aproximada do card no menu público. A ordem e as zonas refletem as definições abaixo.
-        </p>
-        {canvasHeight === null && !macroEnabled && (
-          <p className="text-slate-500 text-sm mb-2">Altura definida pelo conteúdo (mínimo possível).</p>
-        )}
-        {macroEnabled && macroDirection === "vertical" && (
-          <p className="text-slate-500 text-sm mb-2">
-            Vista em coluna: altura total ~{canvasHeight ?? DEFAULT_CANVAS_HEIGHT}px (macro vertical).
-          </p>
-        )}
-        <div
-          className="max-w-sm rounded-xl border-2 border-dashed border-slate-500 bg-slate-100/50 overflow-hidden flex flex-col"
-          style={
-            macroEnabled && macroDirection === "vertical"
-              ? { minHeight: `${canvasHeight ?? DEFAULT_CANVAS_HEIGHT}px` }
-              : canvasHeight != null && canvasHeight > 0
-                ? { minHeight: `${canvasHeight}px` }
-                : undefined
-          }
-        >
-          {!macroEnabled || !zoneOrder.includes("image") ? (
-            <div className="flex flex-col flex-1" style={previewPaddingStyle}>
-              {zoneRows.map((row, rowIdx) => (
-                <div
-                  key={rowIdx}
-                  className={`flex items-stretch ${row.length > 1 ? "flex flex-row border-t-2 border-dashed border-slate-400" : ""}`}
-                  style={{
-                    ...(rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}),
-                    ...(row.length > 1 ? { gap: `${contentRowGapPx}px` } : {}),
-                  }}
-                >
-                  {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
-                </div>
-              ))}
-            </div>
-          ) : macroDirection === "horizontal" ? (
-            <div className="flex w-full flex-row items-stretch min-h-[180px]">
-              {macroImageFirst ? (
-                <>
-                  <div
-                    className="flex flex-col items-center justify-center border-2 border-dashed border-green-500 bg-amber-100/90 px-1 py-2 text-center shrink-0"
-                    style={{ width: `${sp}%` }}
-                  >
-                    <span className="text-xs font-medium text-slate-700">Imagem</span>
-                  </div>
-                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, ...previewPaddingStyle }}>
-                    {zoneRows.map((row, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
-                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
-                      >
-                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="min-w-0 flex-1 flex flex-col" style={{ width: `${rest}%`, ...previewPaddingStyle }}>
-                    {zoneRows.map((row, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
-                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
-                      >
-                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
-                      </div>
-                    ))}
-                  </div>
-                  <div
-                    className="flex flex-col items-center justify-center border-2 border-dashed border-green-500 bg-amber-100/90 px-1 py-2 text-center shrink-0"
-                    style={{ width: `${sp}%` }}
-                  >
-                    <span className="text-xs font-medium text-slate-700">Imagem</span>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div
-              className="grid w-full flex-1 min-h-0"
-              style={{
-                minHeight: canvasHeight ?? DEFAULT_CANVAS_HEIGHT,
-                gridTemplateRows: macroImageFirst ? `${sp}fr ${rest}fr` : `${rest}fr ${sp}fr`,
-              }}
-            >
-              {macroImageFirst ? (
-                <>
-                  <div className="flex items-center justify-center border-b-2 border-dashed border-green-500 bg-amber-100/90 min-h-[60px]">
-                    <span className="text-xs font-medium text-slate-700">Imagem</span>
-                  </div>
-                  <div className="overflow-auto flex flex-col min-h-0" style={previewPaddingStyle}>
-                    {zoneRows.map((row, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
-                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
-                      >
-                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="overflow-auto flex flex-col min-h-0 border-b-2 border-dashed border-slate-400" style={previewPaddingStyle}>
-                    {zoneRows.map((row, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className={`flex items-stretch ${row.length > 1 ? "flex-row gap-1" : ""}`}
-                        style={rowIdx > 0 ? { marginTop: `${rowSpacingPx}px` } : {}}
-                      >
-                        {row.map((type) => renderPreviewBlock(type, row.length > 1, parseZoneWidthPercent(type, zoneWidthPercent, zoneWidths)))}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-center border-t-2 border-dashed border-green-500 bg-amber-100/90 min-h-[60px]">
-                    <span className="text-xs font-medium text-slate-700">Imagem</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
       <div>
         <label className="block text-slate-200 font-medium mb-2">Altura mínima do card</label>
         <div className="flex flex-col gap-3">
@@ -1363,245 +1401,6 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
       </div>
 
       <div>
-        <label htmlFor="row-spacing" className="block text-slate-200 font-medium mb-1">
-          Espaçamento entre linhas (px)
-        </label>
-        <p className="text-slate-400 text-sm mb-2">
-          Margem vertical entre cada linha de campos do card (ex.: entre nome e preço). Valores mais baixos reduzem o espaço vazio.
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <Input
-            id="row-spacing"
-            type="number"
-            min={0}
-            max={48}
-            step={1}
-            value={rowSpacingPx}
-            onChange={(e) => setRowSpacingPx(Math.max(0, Math.min(48, Number(e.target.value) || 0)))}
-            className="w-24"
-          />
-          <span className="text-slate-400 text-sm">ou</span>
-          <select
-            className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
-            value={rowSpacingPx}
-            onChange={(e) => setRowSpacingPx(Number(e.target.value))}
-          >
-            {ROW_SPACING_PRESETS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-slate-200 font-medium mb-2">Estilo do conteúdo</h3>
-        <p className="text-slate-400 text-sm mb-3">
-          Padding interno do card, gap entre colunas na mesma linha e tipografia do nome e do preço.
-        </p>
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="content-padding" className="block text-slate-300 text-sm font-medium mb-1">
-              Padding interno (px)
-            </label>
-            <div className="flex flex-wrap items-center gap-2">
-              <Input
-                id="content-padding"
-                type="number"
-                min={0}
-                max={24}
-                step={1}
-                value={contentPaddingPx}
-                onChange={(e) => setContentPaddingPx(Math.max(0, Math.min(24, Number(e.target.value) ?? 0)))}
-                className="w-20"
-              />
-              {CONTENT_PADDING_PRESETS.map((px) => (
-                <button
-                  key={px}
-                  type="button"
-                  onClick={() => setContentPaddingPx(px)}
-                  className={`rounded px-2 py-1 text-xs border ${contentPaddingPx === px ? "border-emerald-500 bg-emerald-900/40 text-emerald-200" : "border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500"}`}
-                >
-                  {px}
-                </button>
-              ))}
-            </div>
-            <label className="flex items-center gap-2 mt-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={usePaddingSides}
-                onChange={(e) => setUsePaddingSides(e.target.checked)}
-                className="rounded border-slate-500"
-              />
-              <span className="text-slate-300 text-sm">Padding assimétrico (cima, direita, baixo, esquerda)</span>
-            </label>
-            {usePaddingSides && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {(["top", "right", "bottom", "left"] as const).map((k) => (
-                  <label key={k} className="flex items-center gap-1 text-xs text-slate-400">
-                    {k === "top" ? "Cima" : k === "right" ? "Dir" : k === "bottom" ? "Baixo" : "Esq"}
-                    <input
-                      type="number"
-                      min={0}
-                      max={24}
-                      className="w-12 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
-                      value={paddingSides[k]}
-                      onChange={(e) =>
-                        setPaddingSides((p) => ({
-                          ...p,
-                          [k]: Math.max(0, Math.min(24, Number(e.target.value) || 0)),
-                        }))
-                      }
-                    />
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="block text-slate-300 text-sm font-medium mb-1">Ícones (px, opcional)</label>
-            <div className="flex flex-wrap gap-4">
-              <label className="text-slate-400 text-xs">
-                Tempo prep.
-                <input
-                  type="number"
-                  min={10}
-                  max={32}
-                  step={0.5}
-                  placeholder="18"
-                  className="ml-1 w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
-                  value={zoneIconPrep}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setZoneIconPrep(v === "" ? "" : Number(v));
-                  }}
-                />
-              </label>
-              <label className="text-slate-400 text-xs">
-                Ícones artigo
-                <input
-                  type="number"
-                  min={10}
-                  max={32}
-                  step={0.5}
-                  placeholder="22"
-                  className="ml-1 w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
-                  value={zoneIconArticle}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setZoneIconArticle(v === "" ? "" : Number(v));
-                  }}
-                />
-              </label>
-            </div>
-          </div>
-          <div>
-            <label className="block text-slate-300 text-sm font-medium mb-1">Nome: line-height (opcional, ex. 1.15)</label>
-            <input
-              type="number"
-              min={0.9}
-              max={2}
-              step={0.05}
-              className="w-24 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
-              value={nameLineHeightInput}
-              onChange={(e) => {
-                const v = e.target.value;
-                setNameLineHeightInput(v === "" ? "" : Number(v));
-              }}
-              placeholder="—"
-            />
-          </div>
-          <div>
-            <label className="block text-slate-300 text-sm font-medium mb-1">Preço: padding direita (px)</label>
-            <input
-              type="number"
-              min={0}
-              max={24}
-              className="w-20 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
-              value={pricePaddingRightPx}
-              onChange={(e) => setPricePaddingRightPx(Math.max(0, Math.min(24, Number(e.target.value) || 0)))}
-            />
-          </div>
-          <div>
-            <label htmlFor="content-row-gap" className="block text-slate-300 text-sm font-medium mb-1">
-              Gap entre colunas (px)
-            </label>
-            <div className="flex flex-wrap items-center gap-2">
-              <Input
-                id="content-row-gap"
-                type="number"
-                min={0}
-                max={24}
-                step={1}
-                value={contentRowGapPx}
-                onChange={(e) => setContentRowGapPx(Math.max(0, Math.min(24, Number(e.target.value) ?? 0)))}
-                className="w-20"
-              />
-              {CONTENT_ROW_GAP_PRESETS.map((px) => (
-                <button
-                  key={px}
-                  type="button"
-                  onClick={() => setContentRowGapPx(px)}
-                  className={`rounded px-2 py-1 text-xs border ${contentRowGapPx === px ? "border-emerald-500 bg-emerald-900/40 text-emerald-200" : "border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500"}`}
-                >
-                  {px}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <span className="block text-slate-300 text-sm font-medium mb-1">Nome do artigo</span>
-              <div className="flex flex-wrap gap-2">
-                <select
-                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
-                  value={nameFontSize}
-                  onChange={(e) => setNameFontSize(e.target.value as ContentFontSize)}
-                >
-                  {(Object.entries(CONTENT_FONT_SIZE_LABELS) as [ContentFontSize, string][]).map(([v, label]) => (
-                    <option key={v} value={v}>{label}</option>
-                  ))}
-                </select>
-                <select
-                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
-                  value={nameFontWeight}
-                  onChange={(e) => setNameFontWeight(e.target.value as ContentFontWeight)}
-                >
-                  {(Object.entries(CONTENT_FONT_WEIGHT_LABELS) as [ContentFontWeight, string][]).map(([v, label]) => (
-                    <option key={v} value={v}>{label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <span className="block text-slate-300 text-sm font-medium mb-1">Preço</span>
-              <div className="flex flex-wrap gap-2">
-                <select
-                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
-                  value={priceFontSize}
-                  onChange={(e) => setPriceFontSize(e.target.value as ContentFontSize)}
-                >
-                  {(Object.entries(CONTENT_FONT_SIZE_LABELS) as [ContentFontSize, string][]).map(([v, label]) => (
-                    <option key={v} value={v}>{label}</option>
-                  ))}
-                </select>
-                <select
-                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
-                  value={priceLineHeight}
-                  onChange={(e) => setPriceLineHeight(e.target.value as ContentLineHeight)}
-                >
-                  {(Object.entries(CONTENT_LINE_HEIGHT_LABELS) as [ContentLineHeight, string][]).map(([v, label]) => (
-                    <option key={v} value={v}>{label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div>
         <h3 className="text-slate-200 font-medium mb-2">Ordem dos campos</h3>
         <p className="text-slate-400 text-sm mb-2">
           Na mesma linha, o primeiro campo na lista fica à esquerda; use Subir/Descer para alterar a ordem. Campos com o mesmo Nº Linha aparecem na mesma linha no menu, da esquerda para a direita pela ordem da lista.
@@ -1609,7 +1408,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
         <ul className="space-y-1">
           {zoneOrder.map((type, index) => (
             <li
-              key={`${type}-${index}`}
+              key={type}
               className="flex items-center gap-2 py-1.5 px-2 rounded bg-slate-700/50 border border-slate-600 flex-wrap"
             >
               <span className="flex-1 min-w-0 text-slate-200">{LAYOUT_ZONE_LABELS[type as LayoutZoneType] ?? type}</span>
@@ -1747,6 +1546,257 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
           </select>
         </div>
       )}
+      </section>
+
+      <section className="space-y-6" aria-labelledby="margens-heading">
+        <h2 id="margens-heading" className="text-lg font-semibold text-slate-100 border-b border-slate-600 pb-2">Margens</h2>
+        <p className="text-slate-400 text-sm">Margens por zona e espaços entre linhas editam-se no Inspector ao clicar na zona ou no espaço entre linhas na preview.</p>
+      <div>
+        <label htmlFor="row-spacing" className="block text-slate-200 font-medium mb-1">
+          Espaçamento entre linhas (px)
+        </label>
+        <p className="text-slate-400 text-sm mb-2">
+          Margem vertical entre cada linha de campos do card (ex.: entre nome e preço). Valores mais baixos reduzem o espaço vazio.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            id="row-spacing"
+            type="number"
+            min={0}
+            max={48}
+            step={1}
+            value={rowSpacingPx}
+            onChange={(e) => setRowSpacingPx(Math.max(0, Math.min(48, Number(e.target.value) || 0)))}
+            className="w-24"
+          />
+          <span className="text-slate-400 text-sm">ou</span>
+          <select
+            className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+            value={rowSpacingPx}
+            onChange={(e) => setRowSpacingPx(Number(e.target.value))}
+          >
+            {ROW_SPACING_PRESETS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      </section>
+
+      <section className="space-y-6" aria-labelledby="textos-heading">
+        <h2 id="textos-heading" className="text-lg font-semibold text-slate-100 border-b border-slate-600 pb-2">Textos</h2>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <span className="block text-slate-300 text-sm font-medium mb-1">Nome do artigo</span>
+              <div className="flex flex-wrap gap-2">
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={nameFontSize}
+                  onChange={(e) => setNameFontSize(e.target.value as ContentFontSize)}
+                >
+                  {(Object.entries(CONTENT_FONT_SIZE_LABELS) as [ContentFontSize, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={nameFontWeight}
+                  onChange={(e) => setNameFontWeight(e.target.value as ContentFontWeight)}
+                >
+                  {(Object.entries(CONTENT_FONT_WEIGHT_LABELS) as [ContentFontWeight, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <span className="block text-slate-300 text-sm font-medium mb-1">Preço</span>
+              <div className="flex flex-wrap gap-2">
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={priceFontSize}
+                  onChange={(e) => setPriceFontSize(e.target.value as ContentFontSize)}
+                >
+                  {(Object.entries(CONTENT_FONT_SIZE_LABELS) as [ContentFontSize, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+                <select
+                  className="rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1.5 text-sm"
+                  value={priceLineHeight}
+                  onChange={(e) => setPriceLineHeight(e.target.value as ContentLineHeight)}
+                >
+                  {(Object.entries(CONTENT_LINE_HEIGHT_LABELS) as [ContentLineHeight, string][]).map(([v, label]) => (
+                    <option key={v} value={v}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="block text-slate-300 text-sm font-medium mb-1">Nome: line-height (opcional, ex. 1.15)</label>
+            <input
+              type="number"
+              min={0.9}
+              max={2}
+              step={0.05}
+              className="w-24 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
+              value={nameLineHeightInput}
+              onChange={(e) => {
+                const v = e.target.value;
+                setNameLineHeightInput(v === "" ? "" : Number(v));
+              }}
+              placeholder="—"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-300 text-sm font-medium mb-1">Preço: padding direita (px)</label>
+            <input
+              type="number"
+              min={0}
+              max={24}
+              className="w-20 rounded border border-slate-600 bg-slate-800 text-slate-200 px-2 py-1 text-sm"
+              value={pricePaddingRightPx}
+              onChange={(e) => setPricePaddingRightPx(Math.max(0, Math.min(24, Number(e.target.value) || 0)))}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-6" aria-labelledby="paddings-heading">
+        <h2 id="paddings-heading" className="text-lg font-semibold text-slate-100 border-b border-slate-600 pb-2">Paddings</h2>
+        <p className="text-slate-400 text-sm">Padding por zona editam-se no Inspector ao clicar na zona na preview.</p>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="content-padding" className="block text-slate-300 text-sm font-medium mb-1">
+              Padding interno do card (px)
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                id="content-padding"
+                type="number"
+                min={0}
+                max={24}
+                step={1}
+                value={contentPaddingPx}
+                onChange={(e) => setContentPaddingPx(Math.max(0, Math.min(24, Number(e.target.value) ?? 0)))}
+                className="w-20"
+              />
+              {CONTENT_PADDING_PRESETS.map((px) => (
+                <button
+                  key={px}
+                  type="button"
+                  onClick={() => setContentPaddingPx(px)}
+                  className={`rounded px-2 py-1 text-xs border ${contentPaddingPx === px ? "border-emerald-500 bg-emerald-900/40 text-emerald-200" : "border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500"}`}
+                >
+                  {px}
+                </button>
+              ))}
+            </div>
+            <label className="flex items-center gap-2 mt-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={usePaddingSides}
+                onChange={(e) => setUsePaddingSides(e.target.checked)}
+                className="rounded border-slate-500"
+              />
+              <span className="text-slate-300 text-sm">Padding assimétrico (cima, direita, baixo, esquerda)</span>
+            </label>
+            {usePaddingSides && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(["top", "right", "bottom", "left"] as const).map((k) => (
+                  <label key={k} className="flex items-center gap-1 text-xs text-slate-400">
+                    {k === "top" ? "Cima" : k === "right" ? "Dir" : k === "bottom" ? "Baixo" : "Esq"}
+                    <input
+                      type="number"
+                      min={0}
+                      max={24}
+                      className="w-12 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
+                      value={paddingSides[k]}
+                      onChange={(e) =>
+                        setPaddingSides((p) => ({
+                          ...p,
+                          [k]: Math.max(0, Math.min(24, Number(e.target.value) || 0)),
+                        }))
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <label htmlFor="content-row-gap" className="block text-slate-300 text-sm font-medium mb-1">
+              Gap entre colunas (px)
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                id="content-row-gap"
+                type="number"
+                min={0}
+                max={24}
+                step={1}
+                value={contentRowGapPx}
+                onChange={(e) => setContentRowGapPx(Math.max(0, Math.min(24, Number(e.target.value) ?? 0)))}
+                className="w-20"
+              />
+              {CONTENT_ROW_GAP_PRESETS.map((px) => (
+                <button
+                  key={px}
+                  type="button"
+                  onClick={() => setContentRowGapPx(px)}
+                  className={`rounded px-2 py-1 text-xs border ${contentRowGapPx === px ? "border-emerald-500 bg-emerald-900/40 text-emerald-200" : "border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500"}`}
+                >
+                  {px}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-6" aria-labelledby="outros-heading">
+        <h2 id="outros-heading" className="text-lg font-semibold text-slate-100 border-b border-slate-600 pb-2">Outros</h2>
+        <div>
+          <label className="block text-slate-300 text-sm font-medium mb-1">Ícones (px, opcional)</label>
+          <div className="flex flex-wrap gap-4">
+            <label className="text-slate-400 text-xs">
+              Tempo prep.
+              <input
+                type="number"
+                min={10}
+                max={32}
+                step={0.5}
+                placeholder="18"
+                className="ml-1 w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
+                value={zoneIconPrep}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setZoneIconPrep(v === "" ? "" : Number(v));
+                }}
+              />
+            </label>
+            <label className="text-slate-400 text-xs">
+              Ícones artigo
+              <input
+                type="number"
+                min={10}
+                max={32}
+                step={0.5}
+                placeholder="22"
+                className="ml-1 w-16 rounded border border-slate-600 bg-slate-800 text-slate-200 px-1 py-0.5"
+                value={zoneIconArticle}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setZoneIconArticle(v === "" ? "" : Number(v));
+                }}
+              />
+            </label>
+          </div>
+        </div>
 
       {error && <Alert variant="error">{error}</Alert>}
       {saved && <Alert variant="success">Layout guardado.</Alert>}
@@ -1761,6 +1811,7 @@ export function LayoutEditorClient({ templateId, templateName, initialLayout, in
           </Button>
         </a>
       </div>
+      </section>
     </div>
   );
 }
