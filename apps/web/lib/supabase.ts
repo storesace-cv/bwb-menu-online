@@ -318,3 +318,19 @@ export async function getPublicMenuSectionCategories(
     return [];
   }
 }
+
+/** Diagnóstico: qual template (e layout) é usado na primeira secção e categorias do menu para um host. */
+export async function getPublicMenuLayoutDebug(
+  host: string
+): Promise<Record<string, unknown> & { error?: string }> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.rpc("public_menu_layout_debug", {
+      p_host: host ?? "",
+    });
+    if (error) return { error: error.message };
+    return (data as Record<string, unknown>) ?? {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Debug failed" };
+  }
+}

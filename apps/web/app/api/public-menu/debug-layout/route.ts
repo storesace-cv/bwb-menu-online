@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase";
+import { getPublicMenuLayoutDebug } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -20,14 +20,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = getSupabase();
-    const { data, error } = await supabase.rpc("public_menu_layout_debug", {
-      p_host: host,
-    });
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const data = await getPublicMenuLayoutDebug(host);
+    if (data.error && Object.keys(data).length === 1) {
+      return NextResponse.json(data, { status: 500 });
     }
-    return NextResponse.json(data ?? {}, {
+    return NextResponse.json(data, {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });
   } catch (e) {
