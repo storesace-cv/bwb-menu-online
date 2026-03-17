@@ -223,6 +223,28 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
     sampleImageUsage === "none" || sampleImageUsage === "category_only" || sampleImageUsage === "article_only";
   const handleImageError = () => setEffectiveSrc(noDefaultSample ? "" : FALLBACK_IMAGE);
   const zoneOrder = layoutDefinition.zoneOrder ?? [];
+  // #region agent log
+  if (typeof fetch !== "undefined") {
+    const hasDailyName = zoneOrder.includes("daily_name");
+    fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "15f1e1" },
+      body: JSON.stringify({
+        sessionId: "15f1e1",
+        location: "item-card-from-layout.tsx:zoneOrder",
+        message: "Card render zoneOrder and daily_display_name",
+        data: {
+          zoneOrder: zoneOrder.slice(0, 20),
+          hasDailyNameInOrder: hasDailyName,
+          dailyDisplayName: item.daily_display_name ?? null,
+          itemId: item.id?.slice(0, 8) ?? null,
+        },
+        timestamp: Date.now(),
+        hypothesisId: hasDailyName ? "H2" : "H1",
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
   const minHeight = layoutDefinition.canvasHeight != null && layoutDefinition.canvasHeight > 0
     ? layoutDefinition.canvasHeight
     : undefined;
@@ -354,12 +376,9 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
       case "name":
         if (zoneOrder.includes("daily_name") && item.daily_display_name) {
           return (
-            <h3
-              className={scalable ? `${FONT_WEIGHT_CLASSES[nameFontWeight]} text-gray-900 text-left min-w-0 truncate` : nameClassName}
-              style={mergeStyle(nameStyle, scalable ? em(1.15) : undefined)}
-            >
+            <div className="text-sm text-gray-500 font-normal italic text-left min-w-0 truncate leading-tight m-0">
               {item.menu_name}
-            </h3>
+            </div>
           );
         }
         return (
@@ -370,12 +389,29 @@ export function ItemCardFromLayout({ item, layoutDefinition, currencyCode, image
             {item.menu_name}
           </h3>
         );
-      case "daily_name":
+      case "daily_name": {
+        // #region agent log
+        if (typeof fetch !== "undefined") {
+          fetch("http://127.0.0.1:7601/ingest/52367c06-eb17-45e9-837c-183658165c22", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "15f1e1" },
+            body: JSON.stringify({
+              sessionId: "15f1e1",
+              location: "item-card-from-layout.tsx:renderZone daily_name",
+              message: "Rendering daily_name zone",
+              data: { dailyDisplayName: item.daily_display_name ?? null, itemId: item.id?.slice(0, 8) ?? null, willRender: !!item.daily_display_name },
+              timestamp: Date.now(),
+              hypothesisId: "H3",
+            }),
+          }).catch(() => {});
+        }
+        // #endregion
         return item.daily_display_name ? (
-          <div className="text-sm text-gray-500 font-normal italic text-left min-w-0 truncate leading-tight m-0">
+          <h3 className={nameClassName}>
             {item.daily_display_name}
-          </div>
+          </h3>
         ) : null;
+      }
       case "description":
         return item.menu_description ? (
           <p className={`mt-0.5 text-gray-600 leading-relaxed text-left ${scalable ? "" : "text-sm"}`} style={em(0.9)}>
