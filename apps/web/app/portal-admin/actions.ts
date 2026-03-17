@@ -1116,6 +1116,7 @@ export async function updatePresentationTemplateLayout(
   }
   portalDebugLog("presentation_template_layout", { step: "success" });
   revalidatePath("/");
+  revalidatePath(`/portal-admin/settings/presentation-templates/${id}/layout`);
   return {};
   } catch (e) {
     portalDebugLog("presentation_template_layout", { step: "catch", error: e instanceof Error ? e.message : String(e) });
@@ -1352,6 +1353,7 @@ export async function updateFeaturedPresentationTemplateLayout(
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/");
+  revalidatePath(`/portal-admin/settings/presentation-templates/featured/${id}/layout`);
   return {};
   } catch (e) {
     console.error("updateFeaturedPresentationTemplateLayout", e);
