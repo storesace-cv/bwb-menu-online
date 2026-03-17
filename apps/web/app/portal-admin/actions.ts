@@ -1102,9 +1102,13 @@ export async function updatePresentationTemplateLayout(
       : {}),
   };
   const updateColumn = forMobile ? "layout_definition_mobile" : "layout_definition";
+  const updatePayload: Record<string, unknown> = { [updateColumn]: payload };
+  if (!forMobile) {
+    updatePayload.layout_definition_mobile = payload;
+  }
   const { error } = await supabase
     .from("menu_presentation_templates")
-    .update({ [updateColumn]: payload })
+    .update(updatePayload)
     .eq("id", id);
   if (error) {
     portalDebugLog("presentation_template_layout", { step: "db_error", error: error.message });
@@ -1338,9 +1342,13 @@ export async function updateFeaturedPresentationTemplateLayout(
       : {}),
   };
   const updateColumn = forMobile ? "layout_definition_mobile" : "layout_definition";
+  const updatePayload: Record<string, unknown> = { [updateColumn]: payload };
+  if (!forMobile) {
+    updatePayload.layout_definition_mobile = payload;
+  }
   const { error } = await supabase
     .from("menu_featured_presentation_templates")
-    .update({ [updateColumn]: payload })
+    .update(updatePayload)
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/");
