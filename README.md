@@ -14,9 +14,16 @@ Estado do projeto e próximos passos: ver [roadmap.md](roadmap.md).
 
 ## Deploy (local → servidor)
 
-1. Configurar SSH: alias `main-srv-01` ou variáveis `BWB_SERVER_IP` / `BWB_SERVER_HOST` (default `38.19.200.55`).
+1. Configurar SSH: alias `main-srv-01` (preferencial) ou fallback com `BWB_SERVER_IP` / `BWB_SERVER_HOST` (default `38.19.200.55`) + `BWB_SSH_USER` + `BWB_SSH_KEY_PATH`.
 2. No servidor: clone em `/opt/bwb-menu-online`, configurar `.env` e Supabase instance em `/srv/supabase/instances/menu-online`.
 3. Local: `./deploy/update.sh` — faz upload de `remote-update.sh`, corre no servidor (git pull, migrations, nginx, systemd, smoke test). Em cada deploy, as migrations em `migrations/*.sql` são aplicadas automaticamente ao Postgres da instância Supabase menu-online, por ordem (tracking e checksum em `app_schema_migrations`).
+
+Se aparecer `Permission denied (publickey)`, validar:
+- alias `main-srv-01` funcional (`ssh main-srv-01 true`);
+- ou fallback explícito, por exemplo:
+  - `export BWB_SERVER_HOST=38.19.200.55`
+  - `export BWB_SSH_USER=root`
+  - `export BWB_SSH_KEY_PATH=~/.ssh/digitalocean`
 
 A app escuta em `127.0.0.1:8103` (Docker); Nginx faz proxy de `menu.bwb.pt` e `*.menu.bwb.pt` para essa porta. A porta 8102 é usada pelo Kong (Supabase). Resumo das configs do servidor (deploy vs. referência completa): [docs/SERVER_NGINX.md](docs/SERVER_NGINX.md); instância Supabase: [docs/SUPABASE_INSTANCE.md](docs/SUPABASE_INSTANCE.md). O deploy escreve o commit actual em `COMMIT_SHA` no `.env` e, após o health check, verifica que o container reporta esse commit em `/api/health` (versão); se não coincidir, o deploy falha. Para o botão "Configurar Domínio" (portal Tenants) aplicar os hostnames no Nginx do servidor, é necessário instalar o agente no host — ver [docs/NGINX_RECONFIG_AGENT.md](docs/NGINX_RECONFIG_AGENT.md).
 
