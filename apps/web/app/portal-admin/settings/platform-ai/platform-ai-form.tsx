@@ -30,6 +30,7 @@ export function PlatformAISettingsForm({ tenants }: { tenants: TenantOption[] })
   const [aiTone, setAiTone] = useState("profissional e apetitoso (pt-PT)");
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [revealingApiKey, setRevealingApiKey] = useState(false);
   const [selectedTenantIds, setSelectedTenantIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -61,6 +62,11 @@ export function PlatformAISettingsForm({ tenants }: { tenants: TenantOption[] })
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    setApiKey("");
+    setShowApiKey(false);
+  }, [aiProvider]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -143,6 +149,44 @@ export function PlatformAISettingsForm({ tenants }: { tenants: TenantOption[] })
   const hasKeyForProvider =
     (aiProvider === "openai" && config?.has_openai_key) ||
     (aiProvider === "xai" && config?.has_xai_key);
+
+  async function handleToggleApiKeyVisibility() {
+    const nextShow = !showApiKey;
+
+    if (!nextShow) {
+      setShowApiKey(false);
+      return;
+    }
+
+    const canRevealSavedKey =
+      !apiKey &&
+      (aiProvider === "openai" || aiProvider === "xai") &&
+      hasKeyForProvider;
+
+    if (!canRevealSavedKey) {
+      setShowApiKey(true);
+      return;
+    }
+
+    setRevealingApiKey(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/portal-admin/settings/platform-ai/reveal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: aiProvider }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ type: "err", text: data.error ?? "Não foi possível revelar a chave." });
+        return;
+      }
+      setApiKey(typeof data.api_key === "string" ? data.api_key : "");
+      setShowApiKey(true);
+    } finally {
+      setRevealingApiKey(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -230,7 +274,9 @@ export function PlatformAISettingsForm({ tenants }: { tenants: TenantOption[] })
         {(aiProvider === "openai" || aiProvider === "xai") && (
           <div className="space-y-2">
             {hasKeyForProvider && (
-              <p className="text-sm text-slate-400">Chave configurada. Deixe vazio para manter.</p>
+              <p className="text-sm text-slate-300">
+                Chave configurada. Deixe vazio para manter, ou clique em Mostrar para revelar a chave guardada.
+              </p>
             )}
             <div className="flex gap-2 items-center max-w-md">
               <input
@@ -243,11 +289,12 @@ export function PlatformAISettingsForm({ tenants }: { tenants: TenantOption[] })
               />
               <button
                 type="button"
-                onClick={() => setShowApiKey((s) => !s)}
-                className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200"
+                onClick={handleToggleApiKeyVisibility}
+                disabled={revealingApiKey}
+                className="px-3 py-2 text-sm text-slate-200 hover:text-white disabled:opacity-60 disabled:cursor-not-allowed"
                 aria-label={showApiKey ? "Ocultar" : "Mostrar"}
               >
-                {showApiKey ? "Ocultar" : "Mostrar"}
+                {revealingApiKey ? "A revelar…" : showApiKey ? "Ocultar" : "Mostrar"}
               </button>
             </div>
           </div>
